@@ -1,0 +1,19 @@
+apply plugin: "application"
+
+dependencies {
+    testCompile "junit:junit:4.11"
+    compile project(":network")
+}
+
+mainClassName = 'de.upb.swtpra05.shipsink.ai.AiMain'
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ["java"]
+        }
+        resources {
+            srcDirs = ["resources"]
+        }
+    }
+}
