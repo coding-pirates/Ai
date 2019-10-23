@@ -5,7 +5,7 @@ dependencies {
     compile project(":network")
 }
 
-mainClassName = 'de.upb.swtpra05.shipsink.ai.AiMain'
+mainClassName = 'de.upb.codingpirates.battleships.ai.AiMain'
 
 sourceSets {
     main {
