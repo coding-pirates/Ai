@@ -4,6 +4,7 @@ apply plugin: "application"
 dependencies {
     implementation project(":network")
     implementation project(":logic")
+    implementation project(":client")
 
     implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.2'
