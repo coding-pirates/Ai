@@ -8,6 +8,6 @@ public class AiModule extends AbstractClientModule {
     protected void configure() {
         super.configure();
 
-        this.bind(Handler.class).toInstance(new Hnadler());
+        this.bind(Handler.class).toInstance(new AiMessageHandler());
     }
 }
