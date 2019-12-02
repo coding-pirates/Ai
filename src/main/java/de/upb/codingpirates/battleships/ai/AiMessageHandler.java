@@ -14,11 +14,15 @@ public class AiMessageHandler implements Handler {
     //int clientId;
 
     @Override
-    public void handleGameInitNotification(GameInitNotification message) {
+    public void handleGameInitNotification(GameInitNotification message){
         Configuration _config = message.getConfiguration();
         AiMain.ai.setConfig(_config);
         AiMain.ai.clientList = message.getClientList();
-
+        try {
+            AiMain.ai.placeShips(_config.getShipTypes());
+        }catch (IOException e){
+            e.printStackTrace();
+        }
         //TODO Platzieren der Schiffe fehlt
 
 

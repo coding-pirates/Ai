@@ -1,10 +1,8 @@
 package de.upb.codingpirates.battleships.ai;
 
-import com.google.inject.internal.cglib.core.$MethodInfoTransformer;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.logic.util.*;
-import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
@@ -71,15 +69,72 @@ public class Ai {
         this.height = _height;
     }
 
+
+    boolean successful = false;
+    //gets ShipId an PLacementInfo for PlaceShipRequest
+    Map<Integer, PlacementInfo> positions;
+
     public void placeShips(Map<Integer, ShipType> shipConfig) throws IOException {
-        //TODO implment the automatically positioning of the ships fitting to the placeShipsRequestMessage
-        PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(null); //nicht fertig
+        //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der for schleifen achten
+        while (successful = false) {
+            randomShipGuesser(shipConfig);
+        }
+        randomShipGuesser(shipConfig);
+        PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(positions);
         connector.sendMessageToServer(placeShipsRequestMessage);
+    }
+
+
+    ArrayList<Point2D> usedFields = new ArrayList<>();
+
+    private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
+
+        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+
+            int shipId = entry.getKey();
+
+            Collection<Point2D> shipPos = entry.getValue().getPosition();
+
+            Point2D nullPunkt = null;
+
+            for (Point2D p : shipPos) {
+                if (p.getX() == 0 & p.getY() == 0) {
+                    nullPunkt = p;
+                    break;
+                }
+            }
+
+            //random point for placing the ship
+            Point2D guessPoint = getRandomPoint2D();
+
+            int distanceX = guessPoint.getX();
+            int distanceY = guessPoint.getY();
+
+            Collection<Point2D> randomShipPos = new ArrayList<>();
+
+            for (Point2D i : shipPos) {
+                int newX = i.getX() + distanceX;
+                int newY = i.getY() + distanceY;
+                Point2D newPoint = new Point2D(newX, newY);
+                if (usedFields.contains(newPoint)) {
+                    usedFields.clear();
+                    positions.clear();
+                    return;
+                } else {
+                    randomShipPos.add(newPoint);
+                    PlacementInfo pInfo = new PlacementInfo(guessPoint, Rotation.NONE);
+                    positions.put(shipId, pInfo);
+
+
+                }
+            }
+        }
+        successful = true;
+
     }
 
     public void transferClientList(Collection<Client> _clientList) {
         this.clientList = _clientList;
-
         for (Client i : this.clientList) {
             clientArrayList.add(i);
         }
@@ -133,3 +188,110 @@ public class Ai {
     }
 
 }
+//unused code here:
+/*
+
+
+        ArrayList<Point2D> usedFields = new ArrayList<>();
+        ArrayList<ShipType> ships = (ArrayList) shipConfig.values();
+        ArrayList<Point2D> yChange = new ArrayList<>(); //temporär; nur schiffe die nur in y richtung verschoben worden sind
+        ArrayList<Point2D> xChange = new ArrayList<>(); //das ist die fertige Feld mit allen schiffen
+
+
+        Map<Integer, PlacementInfo> psr = new HashMap<>();
+
+        // für jedes Schiff in ships: hole dessen positions (Collection aus Points2D
+        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+            width = AiMain.ai.width - 1;
+            height = AiMain.ai.height - 1;
+
+            //größe des schiffes richtung x und y größte punkte
+            int maxX = -1;
+            int maxY = -1;
+
+
+            int ShipId = entry.getKey();
+            PlacementInfo pInfo = null;
+            Collection<Point2D> positions = entry.getValue().getPosition();
+            //TODO herausfinden , wie weit man maximal nach y und x gehen darf
+            //TODO height und width einschränken
+
+            for (Point2D j : positions) {
+                if (j.getX() > maxX) maxX = j.getX();
+                if (j.getY() > maxY) maxY = j.getY();
+            }
+
+            //Parameter für Verschiebung y Richtung
+            ArrayList<Integer> möglicheGrenzeX = null; //besteht aus besetzetn points über dem schiff
+            int grenzeX = height;
+            ArrayList<Integer> xWerte = new ArrayList();
+
+            //mögliche Verschiebung des Schiffs in y Richtung berechnen
+            if (xChange.isEmpty() == false) {
+
+                for (Point2D i : positions) {
+                    xWerte.add(i.getX());
+                }
+                for (Integer x : xWerte) {
+                    for (Point2D k : xChange) {
+                        if (k.getX() == x) {
+                            möglicheGrenzeX.add(k.getY());
+                        }
+                    }
+                }
+                for (int z : möglicheGrenzeX) {
+                    grenzeX = Collections.min(möglicheGrenzeX);
+                }
+                height = grenzeX;
+            }
+
+            //Verschiebung in y Richtung
+            for (Point2D k : positions) {
+                yChange.add(new Point2D(k.getX(), height - maxY));
+            }
+
+            // Variablen für Verschiebung x richtung
+            ArrayList<Integer> möglicheGrenzeY = null; //besteht aus besetzten points rechts vom schiff
+            int grenzeY = width;
+            ArrayList<Integer> yWerte = new ArrayList();
+
+            //Berechnen der möglichen Verschiebung in X Richtung
+            if (yChange.isEmpty() == false) {
+
+                for (Point2D i : positions) {
+                    yWerte.add(i.getY());
+                }
+                for (Integer y : xWerte) {
+                    for (Point2D k : yChange) {
+                        if (k.getY() == y) {
+                            möglicheGrenzeY.add(k.getX());
+                        }
+                    }
+                }
+                for (int z : möglicheGrenzeY) {
+                    grenzeY = Collections.min(möglicheGrenzeY);
+                }
+                width = grenzeY;
+            }
+
+            //größe des schiffs in x und y richtung festlegen durch höchsten punkt jeweils
+
+
+            for (Point2D l : yChange) {
+                xChange.add(new Point2D(width - maxX, l.getY()));
+            }
+
+            for (Point2D m : positions) {
+                if (m.getX() == 0 & m.getY() == 0) {
+                    int pInfoX = width - maxX;
+                    int pInfoY = height - maxY;
+                    pInfo = new PlacementInfo(new Point2D(pInfoX, pInfoY), Rotation.NONE);
+
+                }
+            }
+
+            psr.put(ShipId, pInfo);
+        }
+
+
+ */
