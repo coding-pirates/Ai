@@ -6,10 +6,12 @@ import de.upb.codingpirates.battleships.logic.util.*;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import org.checkerframework.framework.qual.Unused;
 
 import java.io.IOException;
 import java.util.*;
 
+//TODO getter und setter fehlen zum Teil
 public class Ai {
     int clientId;
     Timer timer;
@@ -21,6 +23,7 @@ public class Ai {
     int gameId;
     Collection<Client> clientList;
     LinkedList<Client> clientArrayList = new LinkedList<>();
+    Collection<Shot> hits;
 
     //PlayerUpdateNotificationInformation
     PlayerUpdateNotification updateNotification;
@@ -48,6 +51,7 @@ public class Ai {
     }
 
     public void setConfig(Configuration _config) {
+        //not used
         this.config = _config;
         int height = config.HEIGHT;
         int width = config.WIDTH;
@@ -124,8 +128,6 @@ public class Ai {
                     randomShipPos.add(newPoint);
                     PlacementInfo pInfo = new PlacementInfo(guessPoint, Rotation.NONE);
                     positions.put(shipId, pInfo);
-
-
                 }
             }
         }
@@ -133,6 +135,8 @@ public class Ai {
 
     }
 
+    //die übergebene Collection clientList in eine LinkedList clientArrayList überführen
+    //für mehr Fubktionalität
     public void transferClientList(Collection<Client> _clientList) {
         this.clientList = _clientList;
         for (Client i : this.clientList) {
@@ -141,31 +145,47 @@ public class Ai {
 
     }
 
+
     public void placeShots() throws IOException {
-        //TODO sobald die erste PlayerUpdateNotification kommt, also nach der ersten Runde, muss geprüft werden,
-        //TODO dass nicht bereits getroffene Felder erneut beschossen werden
-        //TODO also prüfe, ob der random shot in den hits drin ist
+        //nicht außerhalb damit numberOfClients bei jedem aufruf der methode erneut geupdated wird,
+        //falls es eine LeaveNot. gab
+        int numberOfClients = clientArrayList.size();
+        //TODO placeShots sollte nach einem möglichen Treffer nicht wieder random schießen
+
         int maxShots = getShotCount();
         Collection<Shot> requestedShots = null;
-        int numberOfClients = clientArrayList.size();
         int shotClientId;
+
+        //get a random client Id out of the connected clients clientArrayList
+        //using a random index and checking if the index is different from Ais own index
         while (true) {
+            int aiArrayIndex = clientArrayList.indexOf(AiMain.ai); //this.ai ??
             int randomIndex = (int) (Math.random() * numberOfClients);
-            shotClientId = clientArrayList.getFirst().getId();
-            if (shotClientId != this.clientId) {
+            if (randomIndex != aiArrayIndex) {
+                shotClientId = clientArrayList.get(aiArrayIndex).getId();
                 break;
             }
         }
 
+        //placing the shots randomly until the max of shots is not reached
+        //all shots will be placed on the field of only one opponents field(other client)
         int i = 1;
         while (i < maxShots) {
-            Shot shot = new Shot(shotClientId, getRandomPoint2D());
-            requestedShots.add(shot);
-            i++;
-        }
 
+            Point2D aim = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
+
+            //check if the requestedShot of this round or the hits contain the aim shot
+            if (!requestedShots.contains(aim) & !updateNotification.getHits().contains(aim)) {
+                //create a new shot object, add it to requestedShot Array and increase i
+                Shot shot = new Shot(shotClientId, getRandomPoint2D());
+                requestedShots.add(shot);
+                i++;
+            }
+        }
+        //create new shotsrequest Object with the requestedShots Collection
         ShotsRequest shotsRequest = new ShotsRequest(requestedShots);
 
+        //send the shotsRequest object to the server
         connector.sendMessageToServer(shotsRequest);
     }
 
@@ -185,6 +205,17 @@ public class Ai {
 
     public int getShotCount() {
         return this.config.SHOTCOUNT;
+    }
+
+
+    //nicht nötig da schon durch this.PlayerUpdateNotification implementiert
+    public void setHits(Collection<Shot> hits) {
+        this.hits = hits;
+    }
+
+    //nicht nötig da schon durch this.PlayerUpdateNotification implementiert
+    public Collection<Shot> getHits() {
+        return this.hits;
     }
 
 }

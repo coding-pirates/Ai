@@ -32,6 +32,17 @@ public class AiMain {
         ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player", ClientType.PLAYER));
     }
 
+    public static void close(){
+        try {
+            ai.connector.disconnect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //canceling the timer to stop the main method which keeps the ai alive
+        timer.cancel();
+        timer.purge();
+    }
+
 
 
 
