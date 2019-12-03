@@ -75,8 +75,8 @@ public class Ai {
     Map<Integer, PlacementInfo> positions;
 
     public void placeShips(Map<Integer, ShipType> shipConfig) throws IOException {
-        //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der for schleifen achten
-        while (successful = false) {
+        //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der Schleifen achten
+        while (successful == false) {
             randomShipGuesser(shipConfig);
         }
         randomShipGuesser(shipConfig);
