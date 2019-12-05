@@ -6,7 +6,6 @@ import de.upb.codingpirates.battleships.logic.util.*;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
-import org.checkerframework.framework.qual.Unused;
 
 import java.io.IOException;
 import java.util.*;
@@ -73,7 +72,7 @@ public class Ai {
         this.height = _height;
     }
 
-
+//remains false until a
     boolean successful = false;
     //gets ShipId an PLacementInfo for PlaceShipRequest
     Map<Integer, PlacementInfo> positions;
@@ -83,7 +82,7 @@ public class Ai {
         while (successful == false) {
             randomShipGuesser(shipConfig);
         }
-        randomShipGuesser(shipConfig);
+        //randomShipGuesser(shipConfig);
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(positions);
         connector.sendMessageToServer(placeShipsRequestMessage);
     }
@@ -99,14 +98,19 @@ public class Ai {
 
             Collection<Point2D> shipPos = entry.getValue().getPosition();
 
-            Point2D nullPunkt = null;
 
+            //not used, no sense
+            /*
+            Point2D nullPunkt = null;
             for (Point2D p : shipPos) {
                 if (p.getX() == 0 & p.getY() == 0) {
                     nullPunkt = p;
                     break;
                 }
             }
+
+             */
+
 
             //random point for placing the ship
             Point2D guessPoint = getRandomPoint2D();
@@ -120,11 +124,15 @@ public class Ai {
                 int newX = i.getX() + distanceX;
                 int newY = i.getY() + distanceY;
                 Point2D newPoint = new Point2D(newX, newY);
-                if (usedFields.contains(newPoint)) {
+                //checks if... 1. newPoint is already unavailable for placing a ship,
+                // 2. y coordinate is smaller than 0
+                // 3. x coordinate is smaller tham 0
+                // try again to find fitting points if one of the statements is true
+                if (usedFields.contains(newPoint) | newPoint.getY() < 0 | newPoint.getX() <0) {
                     usedFields.clear();
                     positions.clear();
                     return;
-                } else {
+                } else { // if the point is valid add the point to the randomShipPos ArrayList and put it to positions map
                     randomShipPos.add(newPoint);
                     PlacementInfo pInfo = new PlacementInfo(guessPoint, Rotation.NONE);
                     positions.put(shipId, pInfo);
@@ -132,6 +140,7 @@ public class Ai {
             }
         }
         successful = true;
+        return;
 
     }
 
@@ -139,9 +148,7 @@ public class Ai {
     //für mehr Fubktionalität
     public void transferClientList(Collection<Client> _clientList) {
         this.clientList = _clientList;
-        for (Client i : this.clientList) {
-            clientArrayList.add(i);
-        }
+        clientArrayList.addAll(this.clientList);
 
     }
 
