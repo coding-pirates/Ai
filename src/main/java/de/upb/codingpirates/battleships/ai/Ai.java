@@ -39,7 +39,6 @@ public class Ai {
         this.port = port;
         ClientConnector connector = ClientApplication.create(AiModule.class);
         connector.connect(host, port);
-        connector.sendMessageToServer(null);
         setConnector(connector);
     }
 

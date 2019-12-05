@@ -36,7 +36,7 @@ public class AiMessageHandler implements Handler {
 
     @Override
     public void handleConnectionClosedReport(ConnectionClosedReport message, int id) {
-        //n.a.
+        AiMain.close();
     }
 
     @Override

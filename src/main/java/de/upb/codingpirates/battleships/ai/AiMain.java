@@ -27,6 +27,7 @@ public class AiMain {
     public static void createNewAiPlayer(String host, int port) throws IOException {
         ai.connect(host, port);
         //ai client name is AI Player
+        //Create the ServerJoinRequest after connecting to the
         ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player", ClientType.PLAYER));
     }
 
