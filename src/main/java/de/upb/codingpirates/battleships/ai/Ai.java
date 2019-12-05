@@ -21,6 +21,7 @@ public class Ai {
     int gameId;
     Map<Integer, ShipType> shipConfig;
 
+    //convert the Collection clintList in a LinkedList for handling random shots is done in the
     Collection<Client> clientList;
     LinkedList<Client> clientArrayList = new LinkedList<>();
     Collection<Shot> hits;
@@ -33,7 +34,7 @@ public class Ai {
     int width;
     int height;
 
-    public void aiConnect(String host, int port) throws IOException {
+    public void connect(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
         ClientConnector connector = ClientApplication.create(AiModule.class);
@@ -55,7 +56,6 @@ public class Ai {
         int shotCount = config.SHOTCOUNT;
         this.shipConfig = config.getShipTypes();
 
-
     }
 
 
@@ -69,7 +69,6 @@ public class Ai {
         while (successful == false) {
             randomShipGuesser(this.shipConfig);
         }
-        //randomShipGuesser(shipConfig);
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(positions);
         connector.sendMessageToServer(placeShipsRequestMessage);
     }
@@ -102,6 +101,7 @@ public class Ai {
                 // 2. y coordinate is smaller than 0
                 // 3. x coordinate is smaller than 0
                 // try again to find fitting points if one of the statements is true
+
                 if (usedFields.contains(newPoint) | newPoint.getY() < 0 | newPoint.getX() < 0) {
                     usedFields.clear();
                     positions.clear();
@@ -117,35 +117,30 @@ public class Ai {
         return;
 
     }
-
     //die übergebene Collection clientList in eine LinkedList clientArrayList überführen
-    //für mehr Fubktionalität
-    public void setClientList(Collection<Client> _clientList) {
-        this.clientList = _clientList;
-        clientArrayList.addAll(this.clientList);
+    //für mehr Funktionalität in der playShots Methode
+    public void setClientArrayList(Collection<Client> clientList) {
+        clientArrayList.addAll(clientList);
 
     }
 
 
     public void placeShots() throws IOException {
-
-
-        //nicht außerhalb damit numberOfClients bei jedem aufruf der methode erneut geupdated wird,
-        //falls es eine LeaveNot. gab
+        //update numberOfClients every time the method is calles because the number of connected clients could have changed
         int numberOfClients = clientArrayList.size();
-        //TODO placeShots sollte nach einem möglichen Treffer nicht wieder random schießen
-
         int shotCount = getShotCount();
         Collection<Shot> requestedShots = null;
         int shotClientId;
 
         //get a random client Id out of the connected clients clientArrayList
         //using a random index and checking if the index is different from Ais own index
+        //while(true) is used because of the short method; it exits the loop if the randomIndex is not same same as the aiIndex
+        //randomIndex should be different from aiIndex for preventing the ai shooting on its own field
         while (true) {
-            int aiArrayIndex = clientArrayList.indexOf(AiMain.ai); //this.ai ??
+            int aiIndex = clientArrayList.indexOf(AiMain.ai); //get the index of the ai
             int randomIndex = (int) (Math.random() * numberOfClients);
-            if (randomIndex != aiArrayIndex) {
-                shotClientId = clientArrayList.get(aiArrayIndex).getId();
+            if (randomIndex != aiIndex) {
+                shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
                 break;
             }
         }
@@ -165,7 +160,7 @@ public class Ai {
                 i++;
             }
         }
-        //create new shotsrequest Object with the requestedShots Collection
+        //create new shotsRequest Object with the requestedShots Collection
         ShotsRequest shotsRequest = new ShotsRequest(requestedShots);
 
         //send the shotsRequest object to the server
@@ -176,6 +171,14 @@ public class Ai {
         int x = (int) (Math.random() * this.width);
         int y = (int) (Math.random() * this.height);
         return new Point2D(x, y);
+    }
+
+    public void handleLeaveOfPlayer(int leftPlayerID) {
+        for (Client i : clientArrayList) {
+            if (i.getId() == leftPlayerID) {
+                clientArrayList.remove(i);
+            }
+        }
     }
 
 

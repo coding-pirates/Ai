@@ -9,7 +9,6 @@ import java.util.TimerTask;
 
 public class AiMain {
     static Timer timer = new Timer();
-
     static Ai ai = new Ai();
 
     public static void main(String[] args) throws IOException {
@@ -19,14 +18,15 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        //createNewAiPlayer("localhost", 8008); //for building
+        //int port = Properties.PORT; //default port
         createNewAiPlayer(args[0], Integer.parseInt(args[1]));
 
 
     }
 
     public static void createNewAiPlayer(String host, int port) throws IOException {
-        ai.aiConnect(host, port);
+        ai.connect(host, port);
+        //ai client name is AI Player
         ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player", ClientType.PLAYER));
     }
 
