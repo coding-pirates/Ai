@@ -1,25 +1,25 @@
 package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.client.Handler;
-import de.upb.codingpirates.battleships.logic.util.Client;
 import de.upb.codingpirates.battleships.logic.util.Configuration;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.response.*;
 
 import java.io.IOException;
-import java.util.Collection;
 
 public class AiMessageHandler implements Handler {
     int clientId;
 
     @Override
     public void handleGameInitNotification(GameInitNotification message) {
-        Configuration _config = message.getConfiguration();
-        AiMain.ai.setConfig(_config);
-        AiMain.ai.clientList = message.getClientList();
+        Configuration config = message.getConfiguration();
+        AiMain.ai.setConfig(config);
+        //AiMain.ai.clientList = message.getClientList();
+        AiMain.ai.setClientList(message.getClientList());
         try {
-            AiMain.ai.placeShips(_config.getShipTypes());
+            //no need for handing over a shipConfiguration because it is set by the setConfig method
+            AiMain.ai.placeShips();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,8 +54,8 @@ public class AiMessageHandler implements Handler {
     @Override
     public void handleGameJoinPlayer(GameJoinPlayerResponse message) {
         //set gameId from the message to the ai , so that the ai knows the gameid
-        int _gameId = message.getGameId();
-        AiMain.ai.setGameId(_gameId);
+        int gameId = message.getGameId();
+        AiMain.ai.setGameId(gameId);
     }
 
     @Override

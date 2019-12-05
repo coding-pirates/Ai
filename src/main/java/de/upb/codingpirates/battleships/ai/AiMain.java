@@ -1,13 +1,11 @@
 package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.logic.util.Client;
 import de.upb.codingpirates.battleships.logic.util.ClientType;
-import de.upb.codingpirates.battleships.logic.util.Configuration;
-import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class AiMain {
     static Timer timer = new Timer();
@@ -21,8 +19,8 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        createNewAiPlayer("localhost", 8008); //for building
-        //createNewAiPlayer(args[0], Integer.parseInt(args[1])
+        //createNewAiPlayer("localhost", 8008); //for building
+        createNewAiPlayer(args[0], Integer.parseInt(args[1]));
 
 
     }
@@ -32,7 +30,7 @@ public class AiMain {
         ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player", ClientType.PLAYER));
     }
 
-    public static void close(){
+    public static void close() {
         try {
             ai.connector.disconnect();
         } catch (IOException e) {
@@ -42,8 +40,6 @@ public class AiMain {
         timer.cancel();
         timer.purge();
     }
-
-
 
 
 }

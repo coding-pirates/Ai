@@ -13,13 +13,14 @@ import java.util.*;
 //TODO getter und setter fehlen zum Teil
 public class Ai {
     int clientId;
-    Timer timer;
-    GameState gameState;
+    //GameState gameState;
     ClientConnector connector;
-    String host;
+    String host; //ip address
     int port;
     Configuration config;
     int gameId;
+    Map<Integer, ShipType> shipConfig;
+
     Collection<Client> clientList;
     LinkedList<Client> clientArrayList = new LinkedList<>();
     Collection<Shot> hits;
@@ -41,46 +42,32 @@ public class Ai {
         setConnector(connector);
     }
 
-    public void setConnector(ClientConnector connector) {
-        this.connector = connector;
-    }
-
-    public void setClientId(int _clientId) {
-        this.clientId = _clientId;
-    }
 
     public void setConfig(Configuration _config) {
         //not used
         this.config = _config;
-        int height = config.HEIGHT;
-        int width = config.WIDTH;
+        this.height = config.HEIGHT;
+        this.width = config.WIDTH;
         int hitpoints = config.HITPOINTS;
         int sunkpoints = config.SUNKPOINTS;
         long roundTime = config.ROUNDTIME;
         long visualizationTime = config.VISUALIZATIONTIME;
         int shotCount = config.SHOTCOUNT;
-        Map<Integer, ShipType> shipConfig = config.getShipTypes();
+        this.shipConfig = config.getShipTypes();
 
 
     }
 
-    public void setWidth(int _width) {
-        this.width = _width;
-    }
 
-    public void setHeight(int _height) {
-        this.height = _height;
-    }
-
-//remains false until a
+    //remains false until a
     boolean successful = false;
     //gets ShipId an PLacementInfo for PlaceShipRequest
     Map<Integer, PlacementInfo> positions;
 
-    public void placeShips(Map<Integer, ShipType> shipConfig) throws IOException {
+    public void placeShips() throws IOException {
         //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der Schleifen achten
         while (successful == false) {
-            randomShipGuesser(shipConfig);
+            randomShipGuesser(this.shipConfig);
         }
         //randomShipGuesser(shipConfig);
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(positions);
@@ -99,19 +86,6 @@ public class Ai {
             Collection<Point2D> shipPos = entry.getValue().getPosition();
 
 
-            //not used, no sense
-            /*
-            Point2D nullPunkt = null;
-            for (Point2D p : shipPos) {
-                if (p.getX() == 0 & p.getY() == 0) {
-                    nullPunkt = p;
-                    break;
-                }
-            }
-
-             */
-
-
             //random point for placing the ship
             Point2D guessPoint = getRandomPoint2D();
 
@@ -126,9 +100,9 @@ public class Ai {
                 Point2D newPoint = new Point2D(newX, newY);
                 //checks if... 1. newPoint is already unavailable for placing a ship,
                 // 2. y coordinate is smaller than 0
-                // 3. x coordinate is smaller tham 0
+                // 3. x coordinate is smaller than 0
                 // try again to find fitting points if one of the statements is true
-                if (usedFields.contains(newPoint) | newPoint.getY() < 0 | newPoint.getX() <0) {
+                if (usedFields.contains(newPoint) | newPoint.getY() < 0 | newPoint.getX() < 0) {
                     usedFields.clear();
                     positions.clear();
                     return;
@@ -146,7 +120,7 @@ public class Ai {
 
     //die übergebene Collection clientList in eine LinkedList clientArrayList überführen
     //für mehr Fubktionalität
-    public void transferClientList(Collection<Client> _clientList) {
+    public void setClientList(Collection<Client> _clientList) {
         this.clientList = _clientList;
         clientArrayList.addAll(this.clientList);
 
@@ -154,12 +128,14 @@ public class Ai {
 
 
     public void placeShots() throws IOException {
+
+
         //nicht außerhalb damit numberOfClients bei jedem aufruf der methode erneut geupdated wird,
         //falls es eine LeaveNot. gab
         int numberOfClients = clientArrayList.size();
         //TODO placeShots sollte nach einem möglichen Treffer nicht wieder random schießen
 
-        int maxShots = getShotCount();
+        int shotCount = getShotCount();
         Collection<Shot> requestedShots = null;
         int shotClientId;
 
@@ -177,7 +153,7 @@ public class Ai {
         //placing the shots randomly until the max of shots is not reached
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 1;
-        while (i < maxShots) {
+        while (i < shotCount) {
 
             Point2D aim = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
 
@@ -202,6 +178,15 @@ public class Ai {
         return new Point2D(x, y);
     }
 
+
+    public void setConnector(ClientConnector connector) {
+        this.connector = connector;
+    }
+
+    public void setClientId(int _clientId) {
+        this.clientId = _clientId;
+    }
+
     public void setGameId(int _gameId) {
         this.gameId = _gameId;
     }
@@ -212,6 +197,15 @@ public class Ai {
 
     public int getShotCount() {
         return this.config.SHOTCOUNT;
+    }
+
+    //wird direkt durch setConfig festgelegt
+    public void setWidth(int _width) {
+        this.width = _width;
+    }
+
+    public void setHeight(int _height) {
+        this.height = _height;
     }
 
 
