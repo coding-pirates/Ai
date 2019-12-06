@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.logic.util.*;
+import de.upb.codingpirates.battleships.network.message.notification.GameInitNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
@@ -11,6 +12,12 @@ import java.io.IOException;
 import java.util.*;
 
 //TODO getter und setter fehlen zum Teil
+
+/**
+ * Implements the logic of the Ai Player like placing ships and firing shots
+ *
+ * @author Benjamin Kasten
+ */
 public class Ai {
     int clientId;
     //GameState gameState;
@@ -34,6 +41,13 @@ public class Ai {
     int width;
     int height;
 
+    /**
+     * Is called by the {@link AiMain#main(String[])} for connecting to the server
+     *
+     * @param host IP Address
+     * @param port Port number
+     * @throws IOException
+     */
     public void connect(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
@@ -42,18 +56,23 @@ public class Ai {
         setConnector(connector);
     }
 
-
-    public void setConfig(Configuration _config) {
-        //not used
-        this.config = _config;
+    /**
+     * Is called by the {@link AiMessageHandler#handleGameInitNotification(GameInitNotification, int)}
+     * for setting giving the ai access to the game configuration.
+     *
+     * @param config configuration from {@link GameInitNotification}
+     */
+    public void setConfig(Configuration config) {
+        this.config = config;
         this.height = config.HEIGHT;
         this.width = config.WIDTH;
+        this.shipConfig = config.getShipTypes();
+        //not used
         int hitpoints = config.HITPOINTS;
         int sunkpoints = config.SUNKPOINTS;
         long roundTime = config.ROUNDTIME;
         long visualizationTime = config.VISUALIZATIONTIME;
         int shotCount = config.SHOTCOUNT;
-        this.shipConfig = config.getShipTypes();
 
     }
 
@@ -63,6 +82,11 @@ public class Ai {
     //gets ShipId an PLacementInfo for PlaceShipRequest
     Map<Integer, PlacementInfo> positions;
 
+    /**
+     * Calls the {link {@link #randomShipGuesser(Map)}} and if it returns true send the {@link PlaceShipsRequest}
+     *
+     * @throws IOException
+     */
     public void placeShips() throws IOException {
         //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der Schleifen achten
         while (successful == false) {
@@ -75,6 +99,11 @@ public class Ai {
 
     ArrayList<Point2D> usedFields = new ArrayList<>();
 
+    /**
+     * Is calles by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
+     *
+     * @param shipConfig the map of Integer (ShipId) ShipType (Collection<{@link Point2D}>) from the configuration
+     */
     private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
 
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
@@ -118,12 +147,23 @@ public class Ai {
     }
     //die übergebene Collection clientList in eine LinkedList clientArrayList überführen
     //für mehr Funktionalität in der playShots Methode
+
+    /**
+     * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have better
+     * fitting functionality .
+     *
+     * @param clientList from the configuration
+     */
     public void setClientArrayList(Collection<Client> clientList) {
         clientArrayList.addAll(clientList);
 
     }
 
-
+    /**
+     * Places shots randomly on the field of one opponent and sends the fitting message.
+     *
+     * @throws IOException
+     */
     public void placeShots() throws IOException {
         //update numberOfClients every time the method is calles because the number of connected clients could have changed
         int numberOfClients = clientArrayList.size();
@@ -133,7 +173,8 @@ public class Ai {
 
         //get a random client Id out of the connected clients clientArrayList
         //using a random index and checking if the index is different from Ais own index
-        //while(true) is used because of the short method; it exits the loop if the randomIndex is not same same as the aiIndex
+        //while(true) is used because of the short method;
+        //exits the loop if the randomIndex is not same same as the aiIndex
         //randomIndex should be different from aiIndex for preventing the ai shooting on its own field
         while (true) {
             int aiIndex = clientArrayList.indexOf(AiMain.ai); //get the index of the ai
@@ -166,31 +207,41 @@ public class Ai {
         connector.sendMessageToServer(shotsRequest);
     }
 
+    /**
+     * Creates a random point related to the width and height of the game field
+     *
+     * @return Point2d Random Point with X and Y coordinates
+     */
     public Point2D getRandomPoint2D() {
         int x = (int) (Math.random() * this.width);
         int y = (int) (Math.random() * this.height);
         return new Point2D(x, y);
     }
 
+    /**
+     * Removes the client who left the game from the clientArrayList
+     *
+     * @param leftPlayerID ID of the PLayer who left the Game
+     */
     public void handleLeaveOfPlayer(int leftPlayerID) {
-        for (Client i : clientArrayList) {
-            if (i.getId() == leftPlayerID) {
-                clientArrayList.remove(i);
-            }
-        }
+        clientArrayList.removeIf(i -> i.getId() == leftPlayerID);
     }
 
-
+    /**
+     * Used by the connect method to set the connecter
+     *
+     * @param connector
+     */
     public void setConnector(ClientConnector connector) {
         this.connector = connector;
     }
 
-    public void setClientId(int _clientId) {
-        this.clientId = _clientId;
+    public void setClientId(int clientId) {
+        this.clientId = clientId;
     }
 
-    public void setGameId(int _gameId) {
-        this.gameId = _gameId;
+    public void setGameId(int gameId) {
+        this.gameId = gameId;
     }
 
     public int getGameId() {
@@ -222,110 +273,3 @@ public class Ai {
     }
 
 }
-//unused code here:
-/*
-
-
-        ArrayList<Point2D> usedFields = new ArrayList<>();
-        ArrayList<ShipType> ships = (ArrayList) shipConfig.values();
-        ArrayList<Point2D> yChange = new ArrayList<>(); //temporär; nur schiffe die nur in y richtung verschoben worden sind
-        ArrayList<Point2D> xChange = new ArrayList<>(); //das ist die fertige Feld mit allen schiffen
-
-
-        Map<Integer, PlacementInfo> psr = new HashMap<>();
-
-        // für jedes Schiff in ships: hole dessen positions (Collection aus Points2D
-        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            width = AiMain.ai.width - 1;
-            height = AiMain.ai.height - 1;
-
-            //größe des schiffes richtung x und y größte punkte
-            int maxX = -1;
-            int maxY = -1;
-
-
-            int ShipId = entry.getKey();
-            PlacementInfo pInfo = null;
-            Collection<Point2D> positions = entry.getValue().getPosition();
-            //TODO herausfinden , wie weit man maximal nach y und x gehen darf
-            //TODO height und width einschränken
-
-            for (Point2D j : positions) {
-                if (j.getX() > maxX) maxX = j.getX();
-                if (j.getY() > maxY) maxY = j.getY();
-            }
-
-            //Parameter für Verschiebung y Richtung
-            ArrayList<Integer> möglicheGrenzeX = null; //besteht aus besetzetn points über dem schiff
-            int grenzeX = height;
-            ArrayList<Integer> xWerte = new ArrayList();
-
-            //mögliche Verschiebung des Schiffs in y Richtung berechnen
-            if (xChange.isEmpty() == false) {
-
-                for (Point2D i : positions) {
-                    xWerte.add(i.getX());
-                }
-                for (Integer x : xWerte) {
-                    for (Point2D k : xChange) {
-                        if (k.getX() == x) {
-                            möglicheGrenzeX.add(k.getY());
-                        }
-                    }
-                }
-                for (int z : möglicheGrenzeX) {
-                    grenzeX = Collections.min(möglicheGrenzeX);
-                }
-                height = grenzeX;
-            }
-
-            //Verschiebung in y Richtung
-            for (Point2D k : positions) {
-                yChange.add(new Point2D(k.getX(), height - maxY));
-            }
-
-            // Variablen für Verschiebung x richtung
-            ArrayList<Integer> möglicheGrenzeY = null; //besteht aus besetzten points rechts vom schiff
-            int grenzeY = width;
-            ArrayList<Integer> yWerte = new ArrayList();
-
-            //Berechnen der möglichen Verschiebung in X Richtung
-            if (yChange.isEmpty() == false) {
-
-                for (Point2D i : positions) {
-                    yWerte.add(i.getY());
-                }
-                for (Integer y : xWerte) {
-                    for (Point2D k : yChange) {
-                        if (k.getY() == y) {
-                            möglicheGrenzeY.add(k.getX());
-                        }
-                    }
-                }
-                for (int z : möglicheGrenzeY) {
-                    grenzeY = Collections.min(möglicheGrenzeY);
-                }
-                width = grenzeY;
-            }
-
-            //größe des schiffs in x und y richtung festlegen durch höchsten punkt jeweils
-
-
-            for (Point2D l : yChange) {
-                xChange.add(new Point2D(width - maxX, l.getY()));
-            }
-
-            for (Point2D m : positions) {
-                if (m.getX() == 0 & m.getY() == 0) {
-                    int pInfoX = width - maxX;
-                    int pInfoY = height - maxY;
-                    pInfo = new PlacementInfo(new Point2D(pInfoX, pInfoY), Rotation.NONE);
-
-                }
-            }
-
-            psr.put(ShipId, pInfo);
-        }
-
-
- */

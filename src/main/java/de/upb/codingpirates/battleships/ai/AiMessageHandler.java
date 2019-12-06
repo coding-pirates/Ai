@@ -9,6 +9,12 @@ import de.upb.codingpirates.battleships.network.message.response.*;
 
 import java.io.IOException;
 
+/**
+ * Handles incoming messages from the server.
+ *
+ * @author Paul Becker
+ * @author Benjamin Kasten
+ */
 public class AiMessageHandler implements Handler {
     int clientId;
 
@@ -76,9 +82,7 @@ public class AiMessageHandler implements Handler {
 
     @Override
     public void handleLeaveNotification(LeaveNotification message, int id) {
-        //TODO den entsprechenden Client aus der clientList entfernen und
         int leftPlayerId = message.getPlayerId();
-        //TODO own Method in ai class usefull
         AiMain.ai.handleLeaveOfPlayer(leftPlayerId);
 
     }
@@ -131,8 +135,6 @@ public class AiMessageHandler implements Handler {
 
     @Override
     public void handleRoundStartNotification(RoundStartNotification message, int id) {
-        //TODO bei neuer RoundStartNotifitcation erneut placShot Mathode aufrufen
-
         try {
             AiMain.ai.placeShots();
         } catch (IOException e) {
