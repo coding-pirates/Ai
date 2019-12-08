@@ -111,6 +111,10 @@ public class AiMessageHandler implements Handler {
         //immer wenn es eine neue notification gibt, wird diese im ai model neu gesetzt bzw geupdated
         AiMain.ai.updateNotification = message;
 
+        AiMain.ai.setHits(message.getHits());
+        AiMain.ai.setPoints(message.getPoints());
+        AiMain.ai.setSunk(message.getSunk());
+
         //TODO eine logische sinnvolle reaktion auf die Aktionen der Gegner fehlt
 
     }

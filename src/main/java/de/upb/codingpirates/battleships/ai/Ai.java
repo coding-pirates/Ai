@@ -10,8 +10,9 @@ import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
-//TODO getter und setter fehlen zum Teil
+//TODO some getter/setter are missing
 
 /**
  * Implements the logic of the Ai Player like placing ships and firing shots
@@ -19,34 +20,57 @@ import java.util.*;
  * @author Benjamin Kasten
  */
 public class Ai {
-    int clientId;
+    //Logger
+    private static final Logger logger = Logger.getLogger(Ai.class.getName());
+
     //GameState gameState;
     ClientConnector connector;
     String host; //ip address
     int port;
-    Configuration config;
-    int gameId;
-    Map<Integer, ShipType> shipConfig;
 
     //convert the Collection clintList in a LinkedList for handling random shots is done in the
     Collection<Client> clientList;
     LinkedList<Client> clientArrayList = new LinkedList<>();
-    Collection<Shot> hits;
+    Collection<Shot> hits = new ArrayList<>();
 
     //PlayerUpdateNotificationInformation
-    PlayerUpdateNotification updateNotification;
+    //PlayerUpdateNotification updateNotification;
 
 
     //game field parameter
     int width;
     int height;
 
+    int HITPOINTS;
+    int SUNKPOINTS;
+
+    int clientId;
+    int gameId;
+    Configuration config;
+    Map<Integer, ShipType> shipConfig = new HashMap<>();
+
+    long VISUALIZATIONTIME;
+    long ROUNDTIME;
+
+    int SHOTCOUNT;
+
+    //updated values
+    protected Map<Integer, Integer> points = new HashMap<>();
+    protected Collection<Shot> choosenShots = new ArrayList<>();
+    protected Collection<Shot> sunk = new ArrayList<>();
+
+
+    //for testing purpose public
+    public PlayerUpdateNotification updateNotification;
+    public ShotsRequest shotsRequest;
+
+
     /**
      * Is called by the {@link AiMain#main(String[])} for connecting to the server
      *
      * @param host IP Address
      * @param port Port number
-     * @throws IOException
+     * @throws IOException if something with the connection failed
      */
     public void connect(String host, int port) throws IOException {
         this.host = host;
@@ -63,23 +87,21 @@ public class Ai {
      * @param config configuration from {@link GameInitNotification}
      */
     public void setConfig(Configuration config) {
-        this.config = config;
-        this.height = config.HEIGHT;
-        this.width = config.WIDTH;
-        this.shipConfig = config.getShipTypes();
-        //not used
-        int hitpoints = config.HITPOINTS;
-        int sunkpoints = config.SUNKPOINTS;
-        long roundTime = config.ROUNDTIME;
-        long visualizationTime = config.VISUALIZATIONTIME;
-        int shotCount = config.SHOTCOUNT;
+        setHeight(config.HEIGHT);
+        setWidth(config.WIDTH);
+        setShipConfig(config.getShipTypes());
+        setHitpoints(config.HITPOINTS);
+        setSunkpoints(config.SUNKPOINTS);
+        setRoundTimer(config.ROUNDTIME);
+        setVisualizationTime(config.VISUALIZATIONTIME);
+        setShotCount(config.SHOTCOUNT);
 
     }
 
 
     //remains false until a
     boolean successful = false;
-    //gets ShipId an PLacementInfo for PlaceShipRequest
+    //gets ShipId an PlacementInfo for PlaceShipRequest
     Map<Integer, PlacementInfo> positions;
 
     /**
@@ -89,7 +111,7 @@ public class Ai {
      */
     public void placeShips() throws IOException {
         //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der Schleifen achten
-        while (successful == false) {
+        while (!successful) {
             randomShipGuesser(this.shipConfig);
         }
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(positions);
@@ -145,12 +167,11 @@ public class Ai {
         return;
 
     }
-    //die übergebene Collection clientList in eine LinkedList clientArrayList überführen
-    //für mehr Funktionalität in der playShots Methode
 
     /**
-     * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have better
-     * fitting functionality .
+     * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have more
+     * functions.
+     * Called by {@link AiMessageHandler#handleGameInitNotification(GameInitNotification, int)}
      *
      * @param clientList from the configuration
      */
@@ -165,10 +186,12 @@ public class Ai {
      * @throws IOException
      */
     public void placeShots() throws IOException {
-        //update numberOfClients every time the method is calles because the number of connected clients could have changed
+        //reset the 
+        this.shotsRequest = null;
+        this.choosenShots = null;
+        //update numberOfClients every time the method is calls because the number of connected clients could have changed
         int numberOfClients = clientArrayList.size();
         int shotCount = getShotCount();
-        Collection<Shot> requestedShots = null;
         int shotClientId;
 
         //get a random client Id out of the connected clients clientArrayList
@@ -177,7 +200,8 @@ public class Ai {
         //exits the loop if the randomIndex is not same same as the aiIndex
         //randomIndex should be different from aiIndex for preventing the ai shooting on its own field
         while (true) {
-            int aiIndex = clientArrayList.indexOf(AiMain.ai); //get the index of the ai
+
+            int aiIndex = clientArrayList.indexOf(this); //get the index of the ai
             int randomIndex = (int) (Math.random() * numberOfClients);
             if (randomIndex != aiIndex) {
                 shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
@@ -185,26 +209,53 @@ public class Ai {
             }
         }
 
-        //placing the shots randomly until the max of shots is not reached
-        //all shots will be placed on the field of only one opponents field(other client)
-        int i = 1;
-        while (i < shotCount) {
+        this.choosenShots = new ArrayList<>();
 
-            Point2D aim = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
+        ArrayList<Point2D> aimsThisRound = new ArrayList<>();
 
-            //check if the requestedShot of this round or the hits contain the aim shot
-            if (!requestedShots.contains(aim) & !updateNotification.getHits().contains(aim)) {
-                //create a new shot object, add it to requestedShot Array and increase i
-                Shot shot = new Shot(shotClientId, getRandomPoint2D());
-                requestedShots.add(shot);
-                i++;
+        ArrayList<Point2D> hitPoints = new ArrayList<>();
+
+        for (Shot k : updateNotification.getHits()) {
+            if (k.getClientId() == shotClientId) {
+                hitPoints.add(k.getPosition());
             }
         }
-        //create new shotsRequest Object with the requestedShots Collection
-        ShotsRequest shotsRequest = new ShotsRequest(requestedShots);
+
+        //placing the shots randomly until the max of shots is not reached
+        //all shots will be placed on the field of only one opponents field(other client)
+        int i = 0;
+        while (i < shotCount) {
+
+            Point2D aimPoint = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
+            boolean alreadyChoosen = false;
+            for (Point2D p : aimsThisRound) {
+                if (p.getX() == aimPoint.getX() & p.getY() == aimPoint.getY()) {
+                    alreadyChoosen = true;
+                }
+            }
+            for (Point2D h : hitPoints) {
+                if (h.getX() == aimPoint.getX() & h.getY() == aimPoint.getY()) {
+                    alreadyChoosen = true;
+                }
+            }
+            if (alreadyChoosen) continue;
+
+            aimsThisRound.add(aimPoint);
+            //create a new shot object, add it to requestedShot Array and increase i
+            Shot shot = new Shot(shotClientId, aimPoint);
+            choosenShots.add(shot);
+            //System.out.println(choosenShots);
+            i++;
+
+        }
+        //create new shotsRequest Object with the choosenShots Collection
+        System.out.println(choosenShots.size() == this.SHOTCOUNT);
+
+        this.shotsRequest = new ShotsRequest(choosenShots);
 
         //send the shotsRequest object to the server
-        connector.sendMessageToServer(shotsRequest);
+        //TODO only for testing disabled
+        //connector.sendMessageToServer(shotsRequest);
     }
 
     /**
@@ -228,7 +279,7 @@ public class Ai {
     }
 
     /**
-     * Used by the connect method to set the connecter
+     * Used by the connect method to set the connector
      *
      * @param connector
      */
@@ -240,6 +291,14 @@ public class Ai {
         this.clientId = clientId;
     }
 
+    public void setShipConfig(Map<Integer, ShipType> shipConfig) {
+        this.shipConfig = shipConfig;
+    }
+
+    public void setShotCount(int shotCount) {
+        this.SHOTCOUNT = shotCount;
+    }
+
     public void setGameId(int gameId) {
         this.gameId = gameId;
     }
@@ -249,10 +308,9 @@ public class Ai {
     }
 
     public int getShotCount() {
-        return this.config.SHOTCOUNT;
+        return this.SHOTCOUNT;
     }
 
-    //wird direkt durch setConfig festgelegt
     public void setWidth(int _width) {
         this.width = _width;
     }
@@ -261,15 +319,36 @@ public class Ai {
         this.height = _height;
     }
 
+    public void setHitpoints(int hitpoints) {
+        this.HITPOINTS = hitpoints;
+    }
 
-    //nicht nötig da schon durch this.PlayerUpdateNotification implementiert
     public void setHits(Collection<Shot> hits) {
         this.hits = hits;
     }
 
-    //nicht nötig da schon durch this.PlayerUpdateNotification implementiert
     public Collection<Shot> getHits() {
         return this.hits;
+    }
+
+    public void setPoints(Map<Integer, Integer> points) {
+        this.points = points;
+    }
+
+    public void setSunk(Collection<Shot> sunk) {
+        this.sunk = sunk;
+    }
+
+    private void setVisualizationTime(long visualizationTime) {
+        this.VISUALIZATIONTIME = visualizationTime;
+    }
+
+    private void setRoundTimer(long roundTime) {
+        this.ROUNDTIME = roundTime;
+    }
+
+    private void setSunkpoints(int sunkPoints) {
+        this.SUNKPOINTS = sunkPoints;
     }
 
 }
