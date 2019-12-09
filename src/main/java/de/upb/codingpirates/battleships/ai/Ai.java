@@ -101,7 +101,8 @@ public class Ai {
 
     //remains false until a
     boolean successful = false;
-    //gets ShipId an PlacementInfo for PlaceShipRequest
+
+    //the requested argument for the PlaceShipsRequest
     Map<Integer, PlacementInfo> positions = new HashMap<>();
 
     /**
@@ -110,12 +111,13 @@ public class Ai {
      * @throws IOException
      */
     public void placeShips() throws IOException {
-        //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der Schleifen achten
         while (!successful) {
             System.out.println("ps successful false");
             randomShipGuesser(getShipConfig());
         }
         System.out.println("succesfull true");
+
+        //for testing purpose
         for (Map.Entry<Integer, PlacementInfo> entry : positions.entrySet()) {
             System.out.println("Positions of the Ships (ID and pInfo):");
             System.out.println("ID: " + entry.getKey());
@@ -134,26 +136,38 @@ public class Ai {
         this.successful = true;
     }
 
-
-    ArrayList<Point2D> usedFields = new ArrayList<>();
+    /**
+     * contains all the Points which can not be accessed anymore like the distance to a ship or the ship positions;
+     * is used for checking if a point can be used for placing a ship
+     */
+    ArrayList<Point2D> usedPoints = new ArrayList<>();
 
     /**
      * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
      *
-     * @param shipConfig the map of Integer (ShipId) ShipType (Collection<{@link Point2D}>) from the configuration
+     * @param shipConfig map, which maps from the shipId to the ShipType (from the configuration)
      */
     private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
+        //clear all used values from the recent call for safety
+        usedPoints.clear();
+        usedPoints.clear();
+        positions.clear();
+
         logger.info("started random guesser");
+
         //for testing purpose
         System.out.println("height: " + getHeight());
         System.out.println("width: " + getWidth());
 
-
+        //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+            //a logger
             logger.info("entry of shipConfig Map with shipID: " + entry.getKey());
+
+
+            //ship Id
             int shipId = entry.getKey();
-
-
+            //all points of the ship
             Collection<Point2D> shipPos = entry.getValue().getPosition();
 
             //for testing purpose
@@ -164,57 +178,109 @@ public class Ai {
             }
 
 
-            //random point for placing the ship
+            //is the random point wich will be the point for the PlacementInfo
             Point2D guessPoint = getRandomPoint2D();
+
+            //for testing purpose
             System.out.println("guessX: " + guessPoint.getX());
             System.out.println("guessY: " + guessPoint.getY());
 
-
+            //the the distance from zeropoint to random guessPoint
             int distanceX = guessPoint.getX();
             int distanceY = guessPoint.getY();
 
-            //Collection<Point2D> randomShipPos = new ArrayList<>();
 
+            //the positions (points) of a ship well be stored here
+            ArrayList<Point2D> tempShipPos = new ArrayList<>();
 
+            //iterates through every point of the ship (all points in shipPos)
             for (Point2D i : shipPos) {
+                //creating new coordinates by moving every point in x and y direction: The moving distance came from
+                //the guessPoint
                 int newX = i.getX() + distanceX;
                 int newY = i.getY() + distanceY;
+                //create a new point for the new coordinates
                 Point2D newPoint = new Point2D(newX, newY);
+
+                //for testing purpose
                 System.out.print("newX: " + newX);
                 System.out.println(" newY: " + newY);
 
-
-                //checks if...
-                // 1. newPoint is already unavailable for placing a ship,
-                // 2. y coordinate is smaller than 0
-                // 3. x coordinate is smaller than 0
-                // try again to find fitting points if one of the statements is true
-                for (Point2D p : usedFields) {
+                //check for each point in usePoints if the newPoint is already unavailable (is used)
+                for (Point2D p : usedPoints) {
+                    //if the newPoint is unavailable: delete usedPoints, positions and return
+                    //-->starting the loop in placeShips again
                     if ((p.getX() == newPoint.getX()) & (p.getY() == newPoint.getY())) {
-                        usedFields.clear();
+                        usedPoints.clear();
                         positions.clear();
-                        System.err.println("failed: already in usedFields ");
+                        logger.info("failed: newPoint already in usedPoints ");
                         return;
 
                     }
                 }
+
+                //if the newPoint is not unavailable, check if the coordinates fits to the field:
+                // No negative values, no greater values as the fields height and width
                 if (newPoint.getY() < 0 | newPoint.getX() < 0 |
                         newPoint.getX() > (width - 1) | newPoint.getY() > (height - 1)) {
-                    usedFields.clear();
+                    //if the newPoint is unavailable: delete usedPoints, positions and return
+                    //-->starting the loop in placeShips again
+                    usedPoints.clear();
                     positions.clear();
-                    System.err.println("failed: does not fit the field ");
+                    logger.info("failed: newPoint coordinates do not fit the field ");
                     return;
-                } else { // if the point is valid add the point to the randomShipPos ArrayList and put it to positions map
-
-                    usedFields.add(newPoint);
-                    //randomShipPos.add(newPoint);
+                } else {
+                    // if the newPoint is valid...
+                    // ...add the point to the tempShipPos ArrayList
+                    tempShipPos.add(newPoint);
+                    //...add the point to the usedPoints ArrayList
+                    usedPoints.add(newPoint);
+                    //create a new PlacementInfo with the guessPoint (the guessPoint is valid)
                     PlacementInfo pInfo = new PlacementInfo(guessPoint, Rotation.NONE);
+                    //add the shipId and the pInfo to positions Map
                     positions.put(shipId, pInfo);
                 }
             }
+
+            //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
+            //once they are in the usedPoints Array, they can not be used for placing ships anymore
+            for (Point2D point : tempShipPos) {
+                addSurroundingPointsTousedPoints(point);
+            }
+
+            //clear the tempShipPos Array for the next loop
+            tempShipPos.clear();
         }
+        //is called only if the placing of the ships in the positions Map worked for all ships
+        //responsible for leaving the while loop in placeShips()
         setSuccessfulPlacement();
-        return;// not necessary
+    }
+
+    /**
+     * Adds the surrounding points of the point to the usedPoints based on the rules for the game:
+     * each ship must have a minimal distance of one point in each direction to other ships
+     *
+     * @param point adds all the surrounding points of the point to the usedFields Array. (Have a look a the
+     *              game rules: all neighbour points of a used point should not be accessible)
+     */
+    private void addSurroundingPointsTousedPoints(Point2D point) {
+        int x = point.getX();
+        int y = point.getY();
+
+        //add all left neighbours
+        usedPoints.add(new Point2D(x - 1, y + 1));
+        usedPoints.add(new Point2D(x - 1, y));
+        usedPoints.add(new Point2D(x - 1, y - 1));
+
+        //add all right neighbours
+        usedPoints.add(new Point2D(x + 1, y + 1));
+        usedPoints.add(new Point2D(x + 1, y));
+        usedPoints.add(new Point2D(x + 1, y - 1));
+
+        //add the direct neighbours under and over
+        usedPoints.add(new Point2D(x, y + 1));
+        usedPoints.add(new Point2D(x, y - 1));
+
 
     }
 
