@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai.test;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.util.Client;
 import de.upb.codingpirates.battleships.logic.util.Point2D;
+import de.upb.codingpirates.battleships.logic.util.ShipType;
 import de.upb.codingpirates.battleships.logic.util.Shot;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
@@ -10,10 +11,7 @@ import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,9 +42,9 @@ public class AiTests {
         clientList.add(d);
 
         ai.setClientArrayList(clientList);
-        ai.setWidth(10);
-        ai.setHeight(10);
-        ai.setShotCount(3);
+        ai.setWidth(100);
+        ai.setHeight(100);
+        ai.setShotCount(10000);
 
         Collection<Shot> hits = Collections.EMPTY_LIST;
         Map<Integer, Integer> points = Collections.emptyMap();
@@ -76,6 +74,52 @@ public class AiTests {
         //Map<Integer, ShipType> shipTypes;
 
         //Configuration config = new Configuration(5,10, 10, 3, 1, 5, 1000, 1000,  )
+    }
+
+    @Test
+    public void place_Ship_should_return_random_Map_Integer_PlacementInfo() {
+        Ai ai = new Ai();
+        ai.setHeight(10);
+        ai.setWidth(10);
+        Collection<Point2D> shipPos1 = new ArrayList<>();
+        shipPos1.add(new Point2D(0, 0));
+        shipPos1.add(new Point2D(1, 0));
+        shipPos1.add(new Point2D(1, 1));
+
+        Collection<Point2D> shipPos2 = new ArrayList<>();
+        shipPos2.add(new Point2D(0, 0));
+        shipPos2.add(new Point2D(1, 0));
+        shipPos2.add(new Point2D(2, 0));
+        shipPos2.add(new Point2D(2, 1));
+
+        Collection<Point2D> shipPos3 = new ArrayList<>();
+        shipPos3.add(new Point2D(0, 0));
+        shipPos3.add(new Point2D(1, 0));
+        shipPos3.add(new Point2D(1, 1));
+        shipPos3.add(new Point2D(2, 1));
+        shipPos3.add(new Point2D(2, 2));
+
+
+        ShipType ship1 = new ShipType(shipPos1);
+        ShipType ship2 = new ShipType(shipPos2);
+        ShipType ship3 = new ShipType(shipPos3);
+
+
+        Map<Integer, ShipType> shipConfig = new HashMap<Integer, ShipType>();
+        shipConfig.put(1, ship1);
+        shipConfig.put(2, ship2);
+        shipConfig.put(3, ship3);
+
+        ai.setShipConfig(shipConfig);
+        try {
+            ai.placeShips();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        assertTrue(true);
+
+
     }
 
 }

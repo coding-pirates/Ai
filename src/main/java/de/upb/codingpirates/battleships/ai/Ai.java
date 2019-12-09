@@ -102,7 +102,7 @@ public class Ai {
     //remains false until a
     boolean successful = false;
     //gets ShipId an PlacementInfo for PlaceShipRequest
-    Map<Integer, PlacementInfo> positions;
+    Map<Integer, PlacementInfo> positions = new HashMap<>();
 
     /**
      * Calls the {link {@link #randomShipGuesser(Map)}} and if it returns true send the {@link PlaceShipsRequest}
@@ -112,42 +112,73 @@ public class Ai {
     public void placeShips() throws IOException {
         //TODO Funktionalität prüfen und testen, vor allem auf richtigen Ablauf der Schleifen achten
         while (!successful) {
-            randomShipGuesser(this.shipConfig);
+            System.out.println("ps successful false");
+            randomShipGuesser(getShipConfig());
         }
-        PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(positions);
-        connector.sendMessageToServer(placeShipsRequestMessage);
+        System.out.println("succesfull true");
+        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+            ShipType ship = entry.getValue();
+            Collection<Point2D> pos = ship.getPosition();
+            for (Point2D i : pos) {
+                System.out.print("X: " + i.getX());
+                System.out.println(" Y: " + i.getY());
+            }
+        }
+        PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(getPositions());
+
+        //connector.sendMessageToServer(placeShipsRequestMessage);
+    }
+
+
+    public void setSuccessfulPlacement() {
+        this.successful = true;
     }
 
 
     ArrayList<Point2D> usedFields = new ArrayList<>();
 
     /**
-     * Is calles by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
+     * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
      *
      * @param shipConfig the map of Integer (ShipId) ShipType (Collection<{@link Point2D}>) from the configuration
      */
     private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
+        logger.info("started random guesser");
 
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-
+            logger.info("got first entry of shipConfig Map, this is the shipID: " + entry.getKey());
             int shipId = entry.getKey();
+
+            //for testing purpose
+            System.out.println("height: " + getHeight());
+            System.out.println("width: " + getWidth());
+
 
             Collection<Point2D> shipPos = entry.getValue().getPosition();
 
 
             //random point for placing the ship
             Point2D guessPoint = getRandomPoint2D();
+            System.out.println(guessPoint.getX());
+            System.out.println(guessPoint.getY());
+
 
             int distanceX = guessPoint.getX();
             int distanceY = guessPoint.getY();
 
-            Collection<Point2D> randomShipPos = new ArrayList<>();
+            //Collection<Point2D> randomShipPos = new ArrayList<>();
+
 
             for (Point2D i : shipPos) {
                 int newX = i.getX() + distanceX;
                 int newY = i.getY() + distanceY;
                 Point2D newPoint = new Point2D(newX, newY);
-                //checks if... 1. newPoint is already unavailable for placing a ship,
+                System.out.println("newX: " + newX);
+                System.out.println("newY: " + newY);
+
+
+                //checks if...
+                // 1. newPoint is already unavailable for placing a ship,
                 // 2. y coordinate is smaller than 0
                 // 3. x coordinate is smaller than 0
                 // try again to find fitting points if one of the statements is true
@@ -155,16 +186,19 @@ public class Ai {
                 if (usedFields.contains(newPoint) | newPoint.getY() < 0 | newPoint.getX() < 0) {
                     usedFields.clear();
                     positions.clear();
+                    System.err.println("failed");
                     return;
                 } else { // if the point is valid add the point to the randomShipPos ArrayList and put it to positions map
-                    randomShipPos.add(newPoint);
+
+                    usedFields.add(newPoint);
+                    //randomShipPos.add(newPoint);
                     PlacementInfo pInfo = new PlacementInfo(guessPoint, Rotation.NONE);
                     positions.put(shipId, pInfo);
                 }
             }
         }
-        successful = true;
-        return;
+        setSuccessfulPlacement();
+        return;// not necessary
 
     }
 
@@ -186,7 +220,7 @@ public class Ai {
      * @throws IOException
      */
     public void placeShots() throws IOException {
-        //reset the 
+        //reset
         this.shotsRequest = null;
         this.choosenShots = null;
         //update numberOfClients every time the method is calls because the number of connected clients could have changed
@@ -264,8 +298,8 @@ public class Ai {
      * @return Point2d Random Point with X and Y coordinates
      */
     public Point2D getRandomPoint2D() {
-        int x = (int) (Math.random() * this.width);
-        int y = (int) (Math.random() * this.height);
+        int x = (int) (Math.random() * getWidth());
+        int y = (int) (Math.random() * getHeight());
         return new Point2D(x, y);
     }
 
@@ -295,6 +329,10 @@ public class Ai {
         this.shipConfig = shipConfig;
     }
 
+    public Map<Integer, ShipType> getShipConfig() {
+        return this.shipConfig;
+    }
+
     public void setShotCount(int shotCount) {
         this.SHOTCOUNT = shotCount;
     }
@@ -315,8 +353,16 @@ public class Ai {
         this.width = _width;
     }
 
+    public int getWidth() {
+        return this.width;
+    }
+
     public void setHeight(int _height) {
         this.height = _height;
+    }
+
+    public int getHeight() {
+        return this.height;
     }
 
     public void setHitpoints(int hitpoints) {
@@ -349,6 +395,10 @@ public class Ai {
 
     private void setSunkpoints(int sunkPoints) {
         this.SUNKPOINTS = sunkPoints;
+    }
+
+    public Map<Integer, PlacementInfo> getPositions() {
+        return this.positions;
     }
 
 }
