@@ -79,8 +79,8 @@ public class AiTests {
     @Test
     public void place_Ship_should_return_random_Map_Integer_PlacementInfo() {
         Ai ai = new Ai();
-        ai.setHeight(10);
-        ai.setWidth(10);
+        ai.setHeight(4);
+        ai.setWidth(5);
         Collection<Point2D> shipPos1 = new ArrayList<>();
         shipPos1.add(new Point2D(0, 0));
         shipPos1.add(new Point2D(1, 0));
@@ -116,6 +116,7 @@ public class AiTests {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
 
         assertTrue(true);
 

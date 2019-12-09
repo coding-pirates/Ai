@@ -116,13 +116,13 @@ public class Ai {
             randomShipGuesser(getShipConfig());
         }
         System.out.println("succesfull true");
-        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            ShipType ship = entry.getValue();
-            Collection<Point2D> pos = ship.getPosition();
-            for (Point2D i : pos) {
-                System.out.print("X: " + i.getX());
-                System.out.println(" Y: " + i.getY());
-            }
+        for (Map.Entry<Integer, PlacementInfo> entry : positions.entrySet()) {
+            System.out.println("Positions of the Ships (ID and pInfo):");
+            System.out.println("ID: " + entry.getKey());
+            System.out.println(" X: " + entry.getValue().getPosition().getX());
+            System.out.println(" Y: " + entry.getValue().getPosition().getY());
+
+
         }
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(getPositions());
 
@@ -144,23 +144,30 @@ public class Ai {
      */
     private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
         logger.info("started random guesser");
+        //for testing purpose
+        System.out.println("height: " + getHeight());
+        System.out.println("width: " + getWidth());
+
 
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            logger.info("got first entry of shipConfig Map, this is the shipID: " + entry.getKey());
+            logger.info("entry of shipConfig Map with shipID: " + entry.getKey());
             int shipId = entry.getKey();
-
-            //for testing purpose
-            System.out.println("height: " + getHeight());
-            System.out.println("width: " + getWidth());
 
 
             Collection<Point2D> shipPos = entry.getValue().getPosition();
 
+            //for testing purpose
+            for (Point2D j : shipPos) {
+                System.out.print("oldX: " + j.getX());
+                System.out.println(" oldY: " + j.getY());
+
+            }
+
 
             //random point for placing the ship
             Point2D guessPoint = getRandomPoint2D();
-            System.out.println(guessPoint.getX());
-            System.out.println(guessPoint.getY());
+            System.out.println("guessX: " + guessPoint.getX());
+            System.out.println("guessY: " + guessPoint.getY());
 
 
             int distanceX = guessPoint.getX();
@@ -173,8 +180,8 @@ public class Ai {
                 int newX = i.getX() + distanceX;
                 int newY = i.getY() + distanceY;
                 Point2D newPoint = new Point2D(newX, newY);
-                System.out.println("newX: " + newX);
-                System.out.println("newY: " + newY);
+                System.out.print("newX: " + newX);
+                System.out.println(" newY: " + newY);
 
 
                 //checks if...
@@ -182,11 +189,20 @@ public class Ai {
                 // 2. y coordinate is smaller than 0
                 // 3. x coordinate is smaller than 0
                 // try again to find fitting points if one of the statements is true
+                for (Point2D p : usedFields) {
+                    if ((p.getX() == newPoint.getX()) & (p.getY() == newPoint.getY())) {
+                        usedFields.clear();
+                        positions.clear();
+                        System.err.println("failed: already in usedFields ");
+                        return;
 
-                if (usedFields.contains(newPoint) | newPoint.getY() < 0 | newPoint.getX() < 0) {
+                    }
+                }
+                if (newPoint.getY() < 0 | newPoint.getX() < 0 |
+                        newPoint.getX() > (width - 1) | newPoint.getY() > (height - 1)) {
                     usedFields.clear();
                     positions.clear();
-                    System.err.println("failed");
+                    System.err.println("failed: does not fit the field ");
                     return;
                 } else { // if the point is valid add the point to the randomShipPos ArrayList and put it to positions map
 
