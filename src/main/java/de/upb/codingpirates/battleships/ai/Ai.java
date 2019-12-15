@@ -315,49 +315,43 @@ public class Ai {
 
             ArrayList<Point2D> proofed = new ArrayList<>();
             ArrayList<Point2D> candidates = new ArrayList<>();
-            ArrayList<Point2D> tempShips = new ArrayList<>();
+            ArrayList<Shot> tempShips = new ArrayList<>();
 
 
             for (Shot i : sunk) {
                 int x = i.getPosition().getX();
                 int y = i.getPosition().getY();
                 Point2D shotPoint = new Point2D(x, y);
-
-                boolean b = false;
-                //check if shotPoint is in proofed
-                for (Point2D d : proofed) {
-                    if (d.equals(shotPoint)) {
-                        b = true;
+                tempShips.add(i);
+                boolean isInProofed = false;
+                for (Point2D j : proofed) {
+                    if (j.getX() == x & j.getY() == y) {
+                        isInProofed = true;
                     }
                 }
-                if (!b) {
+                if (!isInProofed) {
+                    proofed.add(shotPoint);
 
                     candidates.add(new Point2D(x + 1, y));
                     candidates.add(new Point2D(x, y + 1));
                     candidates.add(new Point2D(x - 1, y));
                     candidates.add(new Point2D(x, y - 1));
 
-                    boolean a = false;
-                    for (Shot j : sunk) {
-                        int _x = j.getPosition().getX();
-                        int _y = j.getPosition().getY();
-                        for (Point2D k : candidates) {
-                            int __x = k.getX();
-                            int __y = k.getY();
-                            if (_x == __x & _y == __y) {
-                                tempShips.add(new Point2D(_x, _y));
-                                a = true;
-                            } else {
-                                proofed.add(new Point2D(_x, _y));
-                                if (!a) {
-                                    candidates.clear();
-                                    sunkShips.add(tempShips);
-                                    tempShips.clear();
-
-                                }
+                    for (Point2D j : candidates) {
+                        for (Shot k : sunk) {
+                            if (j.getX() == k.getPosition().getX() & j.getY() == k.getPosition().getY()) {
+                                tempShips.add(k);
                             }
                         }
                     }
+                    if (tempShips.isEmpty()) {
+                        continue;
+                    } else {
+                        for ()
+
+                    }
+
+
                 }
             }
         }

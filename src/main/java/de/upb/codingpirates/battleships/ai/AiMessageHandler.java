@@ -168,7 +168,7 @@ public class AiMessageHandler implements Handler {
 
     @Override
     public void handlePlayerGameStateResponse(PlayerGameStateResponse message, int id) {
-        //n.a.
+        message.getSunk()
 
     }
 
