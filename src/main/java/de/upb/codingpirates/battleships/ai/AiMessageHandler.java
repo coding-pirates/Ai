@@ -74,7 +74,7 @@ public class AiMessageHandler implements Handler {
     @Override
     public void handleGameStartNotification(GameStartNotification message, int id) {
         try {
-            AiMain.ai.placeShots();
+            AiMain.ai.placeShotsRandom();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -140,7 +140,7 @@ public class AiMessageHandler implements Handler {
     @Override
     public void handleRoundStartNotification(RoundStartNotification message, int id) {
         try {
-            AiMain.ai.placeShots();
+            AiMain.ai.placeShotsRandom();
         } catch (IOException e) {
             e.printStackTrace();
         }

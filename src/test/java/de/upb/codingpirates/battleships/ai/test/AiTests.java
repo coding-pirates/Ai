@@ -18,6 +18,51 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AiTests {
     //added first Tests for placing Shots Method
+    @Test
+    public void sort_The_Sunk_Test(){
+        Ai ai = new Ai();
+        Collection<Shot> sunk = new ArrayList<>();
+        Shot s1 = new Shot(1, new Point2D(0,0));
+        Shot s2 = new Shot(1, new Point2D(1,0));
+        Shot s3 = new Shot(1, new Point2D(1,1));
+        Shot s4 = new Shot(1, new Point2D(3,4));
+        Shot s5 = new Shot(1, new Point2D(4,4));
+
+        sunk.add(s1);
+        sunk.add(s2);
+        sunk.add(s3);
+        sunk.add(s4);
+        sunk.add(s5);
+
+        ai.setSunk(sunk);
+        HashMap<Integer, LinkedList<Shot>> sorted = ai.sortTheSunk();
+    }
+
+    @Test
+    public void count_sunk_ships_Test(){
+        Ai ai = new Ai();
+        Collection<Shot> sunk = new ArrayList<>();
+        Shot s1 = new Shot(1, new Point2D(0,0));
+        Shot s2 = new Shot(1, new Point2D(1,0));
+        Shot s3 = new Shot(1, new Point2D(1,1));
+        Shot s4 = new Shot(1, new Point2D(3,4));
+        Shot s5 = new Shot(1, new Point2D(4,4));
+
+        sunk.add(s1);
+        sunk.add(s2);
+        sunk.add(s3);
+        sunk.add(s4);
+        sunk.add(s5);
+
+        ai.setSunk(sunk);
+        HashMap<Integer, LinkedList<Shot>> sorted = ai.sortTheSunk();
+
+        ai.countSunkShips(sorted);
+
+
+    }
+
+
 
     @Test
     public void getRandomPoint2D_Test() {
@@ -53,7 +98,7 @@ public class AiTests {
         //System.out.println(ai.updateNotification.getHits());
         System.out.println("Test: calls placeShots");
         try {
-            ai.placeShots();
+            ai.placeShotsRandom();
         } catch (IOException e) {
             e.printStackTrace();
         }

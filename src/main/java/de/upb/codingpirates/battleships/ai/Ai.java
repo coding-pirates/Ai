@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import com.google.inject.internal.cglib.core.$ClassInfo;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.logic.util.*;
@@ -9,6 +10,7 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -296,12 +298,115 @@ public class Ai {
 
     }
 
+    private LinkedList<Shot> createArrayListOneArgument(Shot i) {
+        LinkedList<Shot> _list = new LinkedList<>();
+        _list.add(i);
+        return _list;
+    }
+
+    public void countSunkShips(Map<Integer, LinkedList<Shot>> shotsPerClient) {
+        Map<Integer, ArrayList<Point2D>> ssc = new HashMap<>();
+
+        Map<Integer, ArrayList<Integer>> finalMap; //TODO implement
+        //Maps the ids to the number of points of the sunken ships
+        for (Map.Entry<Integer, LinkedList<Shot>> entry : shotsPerClient.entrySet()) {
+            ArrayList<ArrayList<Point2D>> sunkShips = new ArrayList<>();
+            LinkedList<Shot> sunk = entry.getValue();
+
+            ArrayList<Point2D> proofed = new ArrayList<>();
+            ArrayList<Point2D> candidates = new ArrayList<>();
+            ArrayList<Point2D> tempShips = new ArrayList<>();
+
+
+            for (Shot i : sunk) {
+                int x = i.getPosition().getX();
+                int y = i.getPosition().getY();
+                Point2D shotPoint = new Point2D(x, y);
+
+                boolean b = false;
+                //check if shotPoint is in proofed
+                for (Point2D d : proofed) {
+                    if (d.equals(shotPoint)) {
+                        b = true;
+                    }
+                }
+                if (!b) {
+
+                    candidates.add(new Point2D(x + 1, y));
+                    candidates.add(new Point2D(x, y + 1));
+                    candidates.add(new Point2D(x - 1, y));
+                    candidates.add(new Point2D(x, y - 1));
+
+                    boolean a = false;
+                    for (Shot j : sunk) {
+                        int _x = j.getPosition().getX();
+                        int _y = j.getPosition().getY();
+                        for (Point2D k : candidates) {
+                            int __x = k.getX();
+                            int __y = k.getY();
+                            if (_x == __x & _y == __y) {
+                                tempShips.add(new Point2D(_x, _y));
+                                a = true;
+                            } else {
+                                proofed.add(new Point2D(_x, _y));
+                                if (!a) {
+                                    candidates.clear();
+                                    sunkShips.add(tempShips);
+                                    tempShips.clear();
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
+        HashMap<Integer, LinkedList<Shot>> shotsPerClient = new HashMap<>();
+        for (Shot i : sunk) {
+            int clientId = i.getClientId();
+            boolean success = false;
+            for (Map.Entry<Integer, LinkedList<Shot>> entry : shotsPerClient.entrySet()) {
+                if (entry.getKey() == clientId) {
+                    entry.getValue().add(i);
+                    success = true;
+                }
+            }
+            if (!success) {
+                shotsPerClient.put(clientId, createArrayListOneArgument(i));
+            }
+        }
+        return shotsPerClient;
+    }
+
+    public void placeShotsAlgo() {
+        //reset
+        this.shotsRequest = null;
+        this.choosenShots = null;
+        //update numberOfClients every time the method is calls because the number of connected clients could have changed
+        int numberOfClients = clientArrayList.size();
+        int shotCount = getShotCount();
+
+        LinkedList<Shot> hits = (LinkedList<Shot>) this.getHits();
+        LinkedList<Shot> sunk = (LinkedList<Shot>) this.getSunk();
+
+        //find all sunken ships and their number of points
+
+        //Maps the ids to the sunken ships --> call the sortTheSunk method
+        Map<Integer, LinkedList<Shot>> shotsPerClient = sortTheSunk();
+
+
+    }
+
     /**
      * Places shots randomly on the field of one opponent and sends the fitting message.
      *
      * @throws IOException
      */
-    public void placeShots() throws IOException {
+    public void placeShotsRandom() throws IOException {
         //reset
         this.shotsRequest = null;
         this.choosenShots = null;
@@ -457,6 +562,10 @@ public class Ai {
 
     public Collection<Shot> getHits() {
         return this.hits;
+    }
+
+    public Collection<Shot> getSunk() {
+        return this.sunk;
     }
 
     public void setPoints(Map<Integer, Integer> points) {
