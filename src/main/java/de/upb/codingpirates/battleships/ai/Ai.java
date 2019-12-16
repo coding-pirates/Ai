@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.ai;
 
-import com.google.inject.internal.cglib.core.$ClassInfo;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.logic.util.*;
@@ -8,9 +7,11 @@ import de.upb.codingpirates.battleships.network.message.notification.GameInitNot
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.framework.qual.AnnotatedFor;
+import sun.awt.image.ImageWatched;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -298,66 +299,44 @@ public class Ai {
 
     }
 
+    /**
+     * Creates a new ArrayList(Shot) with only one element
+     *
+     * @param i The Shot object which will be the only object in the list
+     * @return The one element list
+     */
     private LinkedList<Shot> createArrayListOneArgument(Shot i) {
-        LinkedList<Shot> _list = new LinkedList<>();
-        _list.add(i);
-        return _list;
+        LinkedList<Shot> list = new LinkedList<>();
+        list.add(i);
+        return list;
     }
 
-    public void countSunkShips(Map<Integer, LinkedList<Shot>> shotsPerClient) {
-        Map<Integer, ArrayList<Point2D>> ssc = new HashMap<>();
+    ArrayList<Point2D> ship = new ArrayList<>();
+    ArrayList<Point2D> neighbours = new ArrayList<>();
 
-        Map<Integer, ArrayList<Integer>> finalMap; //TODO implement
-        //Maps the ids to the number of points of the sunken ships
-        for (Map.Entry<Integer, LinkedList<Shot>> entry : shotsPerClient.entrySet()) {
-            ArrayList<ArrayList<Point2D>> sunkShips = new ArrayList<>();
-            LinkedList<Shot> sunk = entry.getValue();
-
-            ArrayList<Point2D> proofed = new ArrayList<>();
-            ArrayList<Point2D> candidates = new ArrayList<>();
-            ArrayList<Shot> tempShips = new ArrayList<>();
+    public void call() {
+        HashMap<Integer, LinkedList<Shot>> shotsPerClient = sortTheSunk();
+        LinkedList<Shot> sunk = shotsPerClient.get(1); //wenn 1 die clientid wäre
 
 
-            for (Shot i : sunk) {
-                int x = i.getPosition().getX();
-                int y = i.getPosition().getY();
-                Point2D shotPoint = new Point2D(x, y);
-                tempShips.add(i);
-                boolean isInProofed = false;
-                for (Point2D j : proofed) {
-                    if (j.getX() == x & j.getY() == y) {
-                        isInProofed = true;
-                    }
-                }
-                if (!isInProofed) {
-                    proofed.add(shotPoint);
+    }
 
-                    candidates.add(new Point2D(x + 1, y));
-                    candidates.add(new Point2D(x, y + 1));
-                    candidates.add(new Point2D(x - 1, y));
-                    candidates.add(new Point2D(x, y - 1));
-
-                    for (Point2D j : candidates) {
-                        for (Shot k : sunk) {
-                            if (j.getX() == k.getPosition().getX() & j.getY() == k.getPosition().getY()) {
-                                tempShips.add(k);
-                            }
-                        }
-                    }
-                    if (tempShips.isEmpty()) {
-                        continue;
-                    } else {
-                        for ()
-
-                    }
-
-
-                }
+    public void findNeighbours(Point2D point) {
+        for (Shot p : sunk) {
+            if ((p.getPosition().getX() + 1 == point.getX() & p.getPosition().getY() == point.getY())//Todo y is missing
+                    |(p.getPosition().getX() -1 == point.getX() & p.getPosition().getX() == point.getY())){
+                neighbours.add(point);
             }
         }
+
+
     }
 
-
+    /**
+     * Creates a map which maps from the clientID on their sunken ships
+     *
+     * @return The map with ordered shots (sunk)
+     */
     public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
         HashMap<Integer, LinkedList<Shot>> shotsPerClient = new HashMap<>();
         for (Shot i : sunk) {
@@ -376,24 +355,86 @@ public class Ai {
         return shotsPerClient;
     }
 
-    public void placeShotsAlgo() {
-        //reset
-        this.shotsRequest = null;
-        this.choosenShots = null;
-        //update numberOfClients every time the method is calls because the number of connected clients could have changed
-        int numberOfClients = clientArrayList.size();
-        int shotCount = getShotCount();
-
-        LinkedList<Shot> hits = (LinkedList<Shot>) this.getHits();
-        LinkedList<Shot> sunk = (LinkedList<Shot>) this.getSunk();
-
-        //find all sunken ships and their number of points
-
-        //Maps the ids to the sunken ships --> call the sortTheSunk method
-        Map<Integer, LinkedList<Shot>> shotsPerClient = sortTheSunk();
+    /**
+     * Creates a collection of collections of all possible ship rotations
+     *
+     * @param ships Collection of points which represents a ship
+     * @return allPossibleTurns ArrayList of arraylists for each possible rotation
+     */
+    private ArrayList<ArrayList<Point2D>> rotateShips(Collection<Point2D> ships) {
+        RotationMatrix rotate = new RotationMatrix();
+        ArrayList<ArrayList<Point2D>> allPossibleTurns = new ArrayList<>();
+        ArrayList<Point2D> temp;
+        //no turn
+        allPossibleTurns.add((ArrayList<Point2D>) ships);
+        //90 degree
+        allPossibleTurns.add(rotate.turn90(ships));
+        //180 degree
+        temp = rotate.turn90(ships);
+        temp = rotate.turn90(temp);
+        allPossibleTurns.add(temp);
+        temp.clear();
+        //270 degree
+        temp = rotate.turn90(ships);
+        temp = rotate.turn90(temp);
+        temp = rotate.turn90(temp);
+        allPossibleTurns.add(temp);
+        temp.clear();
+        return allPossibleTurns;
 
 
     }
+
+    /*
+    private void findSunkenShips(int clientId, LinkedList<Shot> shotsThisClient) {
+        int height = this.getHeight(); //Höhe Spielfeld
+        int width = this.getWidth(); //Breite Spielfeld
+        //Die shipCondig des aktuellen Spiels
+        Map<Integer, ShipType> shipConfig = this.getShipConfig();
+
+        //alle Schiffe des Clients die noch nicht versunken sind
+        Map<Integer, ShipType> shipsAlive = new HashMap<>();
+        //enthält die SchiffsIDs und alle möglichen Rotationen aller Schiffe des Spiels
+        Map<Integer, ArrayList<ArrayList<Point2D>>> allShipRotations = new HashMap<>();
+
+        //füge für jedes schiff alle Rotationen allShipRotations hinzu
+        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) { //jedes key value pair der shipcinfig (id-->type)
+            int shipId = entry.getKey(); //shipID
+            Collection<Point2D> shipPositions = entry.getValue().getPosition(); //Punkte eines Schiffs
+            //füge alle möglichen Rotationen allShipRotations hinzu
+            allShipRotations.put(shipId, rotateShips(shipPositions));
+        }
+
+        //Hole aus der sortTheSunk Methode die zu diesem client gehörenden Schiffe raus
+        LinkedList<Shot> sunksClient = sortTheSunk().get(clientId); //Liste an sunks dieses clients
+
+        //Prüfe jetzt für jedes Schiff
+        for (Map.Entry<Integer, ArrayList<ArrayList<Point2D>>> entry : allShipRotations.entrySet()) {
+            ArrayList<ArrayList<Point2D>> list = entry.getValue(); // für jedes Schiff die Liste mit allen Rotations Listen
+            for (ArrayList<Point2D> i : list) { //für jede Rotation in der rotationsliste, i ist eine der rotationen
+                //Todo Schiebe jeden Punkt soweit an die x/y Achse wie möglich in RotationMatrix
+                //angenommen die Schiffe sind nah wie möglich an den Achsen
+                //betrachte jeden Punkt k der rotation
+                for (Point2D k : i) {
+                    for (Shot s : sunksClient) {
+                        //sollte Punkt k in sunkClients sein
+                        if (k.getX() == s.getPosition().getX() & k.getY() == s.getPosition().getY()) {
+                        }
+
+                    }
+
+
+                }
+
+            }
+
+
+        }
+
+    }
+
+     */
+
 
     /**
      * Places shots randomly on the field of one opponent and sends the fitting message.
