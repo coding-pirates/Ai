@@ -469,17 +469,16 @@ public class Ai {
                                 findOne = true;
                                 break;
                             }
-                            if (findOne) {
-                                break;
-                            }
-                        }
-                        all = p;
-                        if (!findOne) {
-                            success = true;
                         }
 
                     }
+
                 }
+
+            }
+            all = p;
+            if (!findOne) {
+                success = true;
             }
 
 

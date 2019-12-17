@@ -51,12 +51,12 @@ public class AiTests {
 
         sunk.add(s1);
         sunk.add(s2);
+        sunk.add(s6);
         sunk.add(s3);
         sunk.add(s4);
         sunk.add(s5);
 
         ai.setSunk(sunk);
-        HashMap<Integer, LinkedList<Shot>> sorted = ai.sortTheSunk();
 
 
         LinkedList<LinkedList<Point2D>> ships = ai.findSunkenShips(1,  sunk);
