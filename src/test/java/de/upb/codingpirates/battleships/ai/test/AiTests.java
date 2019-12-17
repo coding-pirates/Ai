@@ -19,14 +19,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AiTests {
     //added first Tests for placing Shots Method
     @Test
-    public void sort_The_Sunk_Test(){
+    public void sort_The_Sunk_Test() {
         Ai ai = new Ai();
         Collection<Shot> sunk = new ArrayList<>();
-        Shot s1 = new Shot(1, new Point2D(0,0));
-        Shot s2 = new Shot(1, new Point2D(1,0));
-        Shot s3 = new Shot(1, new Point2D(1,1));
-        Shot s4 = new Shot(1, new Point2D(3,4));
-        Shot s5 = new Shot(1, new Point2D(4,4));
+        Shot s1 = new Shot(1, new Point2D(0, 0));
+        Shot s2 = new Shot(1, new Point2D(1, 0));
+        Shot s3 = new Shot(1, new Point2D(1, 1));
+        Shot s4 = new Shot(1, new Point2D(3, 4));
+        Shot s5 = new Shot(1, new Point2D(4, 4));
 
         sunk.add(s1);
         sunk.add(s2);
@@ -39,14 +39,15 @@ public class AiTests {
     }
 
     @Test
-    public void count_sunk_ships_Test(){
+    public void count_sunk_ships_Test() {
         Ai ai = new Ai();
-        Collection<Shot> sunk = new ArrayList<>();
-        Shot s1 = new Shot(1, new Point2D(0,0));
-        Shot s2 = new Shot(1, new Point2D(1,0));
-        Shot s3 = new Shot(1, new Point2D(1,1));
-        Shot s4 = new Shot(1, new Point2D(3,4));
-        Shot s5 = new Shot(1, new Point2D(4,4));
+        LinkedList<Shot> sunk = new LinkedList<>();
+        Shot s1 = new Shot(1, new Point2D(0, 0));
+        Shot s6 = new Shot(1, new Point2D(5, 4));
+        Shot s2 = new Shot(1, new Point2D(1, 0));
+        Shot s3 = new Shot(1, new Point2D(1, 1));
+        Shot s4 = new Shot(1, new Point2D(3, 4));
+        Shot s5 = new Shot(1, new Point2D(4, 4));
 
         sunk.add(s1);
         sunk.add(s2);
@@ -57,11 +58,11 @@ public class AiTests {
         ai.setSunk(sunk);
         HashMap<Integer, LinkedList<Shot>> sorted = ai.sortTheSunk();
 
-        ai.countSunkShips(sorted);
+
+        LinkedList<LinkedList<Point2D>> ships = ai.findSunkenShips(1,  sunk);
 
 
     }
-
 
 
     @Test

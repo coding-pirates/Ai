@@ -7,9 +7,6 @@ import de.upb.codingpirates.battleships.network.message.notification.GameInitNot
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.framework.qual.AnnotatedFor;
-import sun.awt.image.ImageWatched;
 
 import java.io.IOException;
 import java.util.*;
@@ -318,13 +315,12 @@ public class Ai {
         HashMap<Integer, LinkedList<Shot>> shotsPerClient = sortTheSunk();
         LinkedList<Shot> sunk = shotsPerClient.get(1); //wenn 1 die clientid wäre
 
-
     }
 
     public void findNeighbours(Point2D point) {
         for (Shot p : sunk) {
             if ((p.getPosition().getX() + 1 == point.getX() & p.getPosition().getY() == point.getY())//Todo y is missing
-                    |(p.getPosition().getX() -1 == point.getX() & p.getPosition().getX() == point.getY())){
+                    | (p.getPosition().getX() - 1 == point.getX() & p.getPosition().getX() == point.getY())) {
                 neighbours.add(point);
             }
         }
@@ -385,56 +381,111 @@ public class Ai {
 
     }
 
-    /*
-    private void findSunkenShips(int clientId, LinkedList<Shot> shotsThisClient) {
-        int height = this.getHeight(); //Höhe Spielfeld
-        int width = this.getWidth(); //Breite Spielfeld
-        //Die shipCondig des aktuellen Spiels
-        Map<Integer, ShipType> shipConfig = this.getShipConfig();
+    public LinkedList<LinkedList<Point2D>> findSunkenShips(int clientId, LinkedList<Shot> shotsThisClient) {
+        LinkedList<Point2D> sunk = new LinkedList<>(); // enthält alle shots als punkte
+        LinkedList<LinkedList<Point2D>> all = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird
+        LinkedList<LinkedList<Point2D>> p; //die temporäre linkedlist zum bearbeiten
 
-        //alle Schiffe des Clients die noch nicht versunken sind
-        Map<Integer, ShipType> shipsAlive = new HashMap<>();
-        //enthält die SchiffsIDs und alle möglichen Rotationen aller Schiffe des Spiels
-        Map<Integer, ArrayList<ArrayList<Point2D>>> allShipRotations = new HashMap<>();
-
-        //füge für jedes schiff alle Rotationen allShipRotations hinzu
-        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) { //jedes key value pair der shipcinfig (id-->type)
-            int shipId = entry.getKey(); //shipID
-            Collection<Point2D> shipPositions = entry.getValue().getPosition(); //Punkte eines Schiffs
-            //füge alle möglichen Rotationen allShipRotations hinzu
-            allShipRotations.put(shipId, rotateShips(shipPositions));
+        for (Shot i : shotsThisClient) { //shots liste in punkte liste umwandeln
+            sunk.add(new Point2D(i.getPosition().getX(), i.getPosition().getY()));
         }
+        for (Point2D z : sunk) {
+            boolean proofed = false;
 
-        //Hole aus der sortTheSunk Methode die zu diesem client gehörenden Schiffe raus
-        LinkedList<Shot> sunksClient = sortTheSunk().get(clientId); //Liste an sunks dieses clients
+            for (LinkedList<Point2D> h : all) {
+                for (Point2D j : h) {
+                    if (z.getX() == j.getX() & z.getY() == j.getY()) {
+                        proofed = true;
+                        break;
+                    }
+                    if (proofed) break;
+                }
+                if (proofed) break;
+            }
+            if (proofed) continue;
+            LinkedList<Point2D> temp = new LinkedList();
+            temp.add(z);//todo check if z already in all
+            for (Point2D t : sunk) {
+                boolean used = false;
+                for (Point2D x : sunk) {
+                    for (LinkedList<Point2D> h : all) {
+                        for (Point2D j : h) {
+                            if (z.getX() == j.getX() & z.getY() == j.getY()) {
+                                used = true;
+                                break;
+                            }
+                            ;
+                        }
+                        if (used) break;
+                        ;
+                    }
+                    if (used) break;
+                }
+                if (used) continue;
 
-        //Prüfe jetzt für jedes Schiff
-        for (Map.Entry<Integer, ArrayList<ArrayList<Point2D>>> entry : allShipRotations.entrySet()) {
-            ArrayList<ArrayList<Point2D>> list = entry.getValue(); // für jedes Schiff die Liste mit allen Rotations Listen
-            for (ArrayList<Point2D> i : list) { //für jede Rotation in der rotationsliste, i ist eine der rotationen
-                //Todo Schiebe jeden Punkt soweit an die x/y Achse wie möglich in RotationMatrix
-                //angenommen die Schiffe sind nah wie möglich an den Achsen
-                //betrachte jeden Punkt k der rotation
-                for (Point2D k : i) {
-                    for (Shot s : sunksClient) {
-                        //sollte Punkt k in sunkClients sein
-                        if (k.getX() == s.getPosition().getX() & k.getY() == s.getPosition().getY()) {
+                if (z == t) continue;
+                boolean checked = false;
+                if ((z.getX() + 1 == t.getX() & z.getY() == t.getY())
+                        | (z.getX() - 1 == t.getX() & z.getY() == t.getY())
+                        | (z.getX() == t.getX() & z.getY() + 1 == t.getY())
+                        | (z.getX() == t.getX() & z.getY() - 1 == t.getY())) {
+                    for (LinkedList<Point2D> k : all) {
+                        for (Point2D u : k) {
+                            if (u.getX() == t.getX() & u.getY() == t.getY()) {
+                                checked = true;
+                                break;
+                            }
+                            if (checked) break;
+                        }
+                        if (checked) break;
+                    }
+                    if (checked) break;
+                    temp.add(t);
+
+                }
+            }
+            all.add(new LinkedList<>(temp));
+            temp.clear();
+        }
+        p = new LinkedList<>(all);
+        boolean success = false;
+        while (!success) {
+            boolean findOne = false;
+            for (LinkedList<Point2D> l : all) {
+                for (LinkedList<Point2D> k : all) {
+                    if (l == k) continue;
+                    for (Point2D r : l) {
+                        for (Point2D d : k) {
+                            if ((r.getX() + 1 == d.getX() & r.getY() == d.getY())
+                                    | (r.getX() - 1 == d.getX() & r.getY() == d.getY())
+                                    | (r.getX() == d.getX() & r.getY() + 1 == d.getY())
+                                    | (r.getX() == d.getX() & r.getY() - 1 == d.getY())) {
+                                int inl = l.indexOf(r);
+                                int ink = k.indexOf(d);
+                                LinkedList<Point2D> u = p.get(inl);
+                                u.addAll(p.get(ink));
+                                p.set(inl, u);
+                                p.remove(ink);
+                                findOne = true;
+                                break;
+                            }
+                            if (findOne) {
+                                break;
+                            }
+                        }
+                        all = p;
+                        if (!findOne) {
+                            success = true;
                         }
 
                     }
-
-
                 }
-
             }
 
 
         }
-
+        return all;
     }
-
-     */
-
 
     /**
      * Places shots randomly on the field of one opponent and sends the fitting message.
