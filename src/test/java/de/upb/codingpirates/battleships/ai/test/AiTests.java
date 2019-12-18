@@ -42,6 +42,7 @@ public class AiTests {
     public void count_sunk_ships_Test() {
         Ai ai = new Ai();
         LinkedList<Shot> sunk = new LinkedList<>();
+        /*
         Shot s1 = new Shot(1, new Point2D(0, 0));
         Shot s6 = new Shot(1, new Point2D(5, 4));
         Shot s2 = new Shot(1, new Point2D(1, 0));
@@ -49,13 +50,48 @@ public class AiTests {
         Shot s4 = new Shot(1, new Point2D(3, 4));
         Shot s5 = new Shot(1, new Point2D(4, 4));
 
-        sunk.add(s1);
-        sunk.add(s2);
-        sunk.add(s6);
-        sunk.add(s3);
-        sunk.add(s4);
-        sunk.add(s5);
+         */
 
+        Shot s1 = new Shot(1, new Point2D(1, 2));
+        Shot s6 = new Shot(1, new Point2D(1, 3));
+        Shot s2 = new Shot(1, new Point2D(1, 4));
+        Shot s3 = new Shot(1, new Point2D(0, 4));
+        Shot s4 = new Shot(1, new Point2D(2, 4));
+
+        Shot s5 = new Shot(1, new Point2D(4, 2));
+        Shot s7 = new Shot(1, new Point2D(4, 3));
+        Shot s8 = new Shot(1, new Point2D(5, 2));
+        Shot s9 = new Shot(1, new Point2D(6, 2));
+        Shot s10 = new Shot(1, new Point2D(6, 3));
+
+        Shot s11 = new Shot(1, new Point2D(10, 10));
+        Shot s12 = new Shot(1, new Point2D(11, 10));
+        Shot s13 = new Shot(1, new Point2D(12, 10));
+
+
+
+        /*
+        Shot s1 = new Shot(1, new Point2D(1, 3));
+        Shot s2 = new Shot(1, new Point2D(1, 4));
+        Shot s3 = new Shot(1, new Point2D(3, 1));
+        Shot s4 = new Shot(1, new Point2D(4, 1));
+        Shot s5 = new Shot(1, new Point2D(3, 2));
+
+         */
+
+        sunk.add(s2);
+        sunk.add(s13);
+        sunk.add(s5);
+        sunk.add(s4);
+        sunk.add(s1);
+        sunk.add(s3);
+        sunk.add(s11);
+        sunk.add(s6);
+        sunk.add(s12);
+        sunk.add(s7);
+        sunk.add(s8);
+        sunk.add(s9);
+        sunk.add(s10);
         ai.setSunk(sunk);
 
 

@@ -448,42 +448,79 @@ public class Ai {
             temp.clear();
         }
         p = new LinkedList<>(all);
-        boolean success = false;
-        while (!success) {
-            boolean findOne = false;
-            for (LinkedList<Point2D> l : all) {
-                for (LinkedList<Point2D> k : all) {
-                    if (l == k) continue;
-                    for (Point2D r : l) {
-                        for (Point2D d : k) {
-                            if ((r.getX() + 1 == d.getX() & r.getY() == d.getY())
-                                    | (r.getX() - 1 == d.getX() & r.getY() == d.getY())
-                                    | (r.getX() == d.getX() & r.getY() + 1 == d.getY())
-                                    | (r.getX() == d.getX() & r.getY() - 1 == d.getY())) {
-                                int inl = l.indexOf(r);
-                                int ink = k.indexOf(d);
-                                LinkedList<Point2D> u = p.get(inl);
-                                u.addAll(p.get(ink));
-                                p.set(inl, u);
-                                p.remove(ink);
+        boolean success = true;
+        boolean findOne = false;
+        while (success) {
+            for (LinkedList<Point2D> a : all) {
+                for (LinkedList<Point2D> b : all) {
+                    if (a == b) {
+                        continue;
+                    }
+                    for (Point2D c : a) {
+                        for (Point2D d : b) {
+                            if ((c.getX() + 1 == d.getX() & c.getY() == d.getY())
+                                    | (c.getX() - 1 == d.getX() & c.getY() == d.getY())
+                                    | (c.getX() == d.getX() & c.getY() + 1 == d.getY())
+                                    | (c.getX() == d.getX() & c.getY() - 1 == d.getY())) {
+                                int inB = all.indexOf(b);
+                                int inA = all.indexOf(a);
+                                LinkedList<Point2D> valueA = p.get(inA);
+                                LinkedList<Point2D> valueB = p.get(inB);
+                                valueA.addAll(valueB);
+                                //p.set(inA, valueA);
+                                p.remove(inB);
                                 findOne = true;
                                 break;
                             }
+                            if (findOne) break;
                         }
-
+                        if (findOne) break;
                     }
+                    if (findOne) break;
+                }
+                if (findOne) break;
+            }
+            all = p;
 
+            if (findOne) {
+                findOne = false;
+
+                for (LinkedList<Point2D> a : p) {
+                    for (LinkedList<Point2D> b : p) {
+                        if (a == b) {
+                            continue;
+                        }
+                        for (Point2D c : a) {
+                            for (Point2D d : b) {
+                                if ((c.getX() + 1 == d.getX() & c.getY() == d.getY())
+                                        | (c.getX() - 1 == d.getX() & c.getY() == d.getY())
+                                        | (c.getX() == d.getX() & c.getY() + 1 == d.getY())
+                                        | (c.getX() == d.getX() & c.getY() - 1 == d.getY())) {
+                                    int inB = p.indexOf(b);
+                                    int inA = p.indexOf(a);
+                                    LinkedList<Point2D> valueA = all.get(inA);
+                                    LinkedList<Point2D> valueB = all.get(inB);
+                                    valueA.addAll(valueB);
+                                    all.set(inA, valueA);
+                                    all.remove(inB);
+                                    findOne = true;
+                                    break;
+                                }
+                                if (findOne) break;
+                            }
+                            if (findOne) break;
+                        }
+                        if (findOne) break;
+                    }
+                    if (findOne) break;
                 }
 
             }
-            all = p;
-            if (!findOne) {
-                success = true;
-            }
-
+            if (!findOne) success = false;
 
         }
         return all;
+
     }
 
     /**
