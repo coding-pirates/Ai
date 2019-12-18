@@ -519,6 +519,7 @@ public class Ai {
             if (!findOne) success = false;
 
         }
+        //todo find the ship id of the sunken ships
         return all;
 
     }
