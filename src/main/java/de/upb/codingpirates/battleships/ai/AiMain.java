@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.logic.util.ClientType;
+import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
 
 import java.io.IOException;
@@ -29,8 +30,8 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        //int port = Properties.PORT; //default port
-        createNewAiPlayer(args[0], Integer.parseInt(args[1]));
+        int port = Properties.PORT; //default port
+        createNewAiPlayer("192.168.0.234", 47345);
 
 
     }

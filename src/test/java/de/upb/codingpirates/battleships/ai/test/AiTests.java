@@ -17,6 +17,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class AiTests {
+    @Test
+    public void find_Sunken_Ships_Test() {
+
+    }
+
     //added first Tests for placing Shots Method
     @Test
     public void sort_The_Sunk_Test() {
@@ -41,7 +46,70 @@ public class AiTests {
     @Test
     public void count_sunk_ships_Test() {
         Ai ai = new Ai();
-        LinkedList<Shot> sunk = new LinkedList<>();
+        LinkedList<Shot> sunk = new LinkedList<>(); //shotsThisClient
+        ai.setWidth(5);
+        ai.setHeight(5);
+
+        //ship 1
+        Collection<Point2D> p1 = new ArrayList<>();
+        p1.add(new Point2D(0, 0));
+        p1.add(new Point2D(0, 1));
+
+        ShipType sh1 = new ShipType(p1);
+
+        //ship 2
+        Collection<Point2D> p2 = new ArrayList<>();
+        p2.add(new Point2D(0, 1));
+        p2.add(new Point2D(0, 0));
+        p2.add(new Point2D(1, 0));
+
+        ShipType sh2 = new ShipType(p2);
+
+        //ship 3
+        Collection<Point2D> p3 = new ArrayList<>();
+        p3.add(new Point2D(0, 0));
+        p3.add(new Point2D(1, 0));
+        p3.add(new Point2D(2, 0));
+        p3.add(new Point2D(1, 1));
+
+
+        ShipType sh3 = new ShipType(p3);
+
+        Map<Integer, ShipType> shipConfig = new HashMap<>();
+        shipConfig.put(1, sh1);
+        shipConfig.put(2, sh2);
+        shipConfig.put(3, sh3);
+
+
+        ai.setShipConfig(shipConfig);
+
+
+
+        Shot s1 = new Shot(1, new Point2D(1, 3));
+        Shot s2 = new Shot(1, new Point2D(1, 4));
+
+        Shot s3 = new Shot(1, new Point2D(3, 3));
+        Shot s4 = new Shot(1, new Point2D(4, 3));
+        Shot s5 = new Shot(1, new Point2D(4, 4));
+
+        Shot s6 = new Shot(1, new Point2D(1, 0));
+        Shot s7 = new Shot(1, new Point2D(2, 0));
+        Shot s8 = new Shot(1, new Point2D(2, 1));
+        Shot s9 = new Shot(1, new Point2D(3,0 ));
+        sunk.add(s2);
+        sunk.add(s1);
+        sunk.add(s5);
+        sunk.add(s4);
+        sunk.add(s3);
+        sunk.add(s6);
+        sunk.add(s7);
+        sunk.add(s8);
+        sunk.add(s9);
+        ai.setSunk(sunk);
+
+
+        LinkedList<Integer> ships = ai.findSunkenShips(sunk);
+
         /*
         Shot s1 = new Shot(1, new Point2D(0, 0));
         Shot s6 = new Shot(1, new Point2D(5, 4));
@@ -51,12 +119,11 @@ public class AiTests {
         Shot s5 = new Shot(1, new Point2D(4, 4));
 
          */
-
+        /*
         Shot s1 = new Shot(1, new Point2D(1, 2));
         Shot s6 = new Shot(1, new Point2D(1, 3));
         Shot s2 = new Shot(1, new Point2D(1, 4));
-        Shot s3 = new Shot(1, new Point2D(0, 4));
-        Shot s4 = new Shot(1, new Point2D(2, 4));
+
 
         Shot s5 = new Shot(1, new Point2D(4, 2));
         Shot s7 = new Shot(1, new Point2D(4, 3));
@@ -68,23 +135,17 @@ public class AiTests {
         Shot s12 = new Shot(1, new Point2D(11, 10));
         Shot s13 = new Shot(1, new Point2D(12, 10));
 
+         */
+
+
+
 
 
         /*
-        Shot s1 = new Shot(1, new Point2D(1, 3));
-        Shot s2 = new Shot(1, new Point2D(1, 4));
-        Shot s3 = new Shot(1, new Point2D(3, 1));
-        Shot s4 = new Shot(1, new Point2D(4, 1));
-        Shot s5 = new Shot(1, new Point2D(3, 2));
-
-         */
-
         sunk.add(s2);
         sunk.add(s13);
         sunk.add(s5);
-        sunk.add(s4);
         sunk.add(s1);
-        sunk.add(s3);
         sunk.add(s11);
         sunk.add(s6);
         sunk.add(s12);
@@ -92,10 +153,9 @@ public class AiTests {
         sunk.add(s8);
         sunk.add(s9);
         sunk.add(s10);
-        ai.setSunk(sunk);
 
+         */
 
-        LinkedList<Integer> ships = ai.findSunkenShips(sunk);
 
     }
 

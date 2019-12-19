@@ -9,8 +9,10 @@ import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdat
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.logging.Logger;
 
 //TODO some getter/setter are missing
@@ -335,21 +337,24 @@ public class Ai {
     private ArrayList<ArrayList<Point2D>> rotateShips(ArrayList<Point2D> ships) {
         RotationMatrix rotate = new RotationMatrix();
         ArrayList<ArrayList<Point2D>> allPossibleTurns = new ArrayList<>();
-        ArrayList<Point2D> temp;
+        ArrayList<Point2D> temp = new ArrayList<>();
         //no turn
         allPossibleTurns.add(rotate.moveToZeroPoint(ships));
         //90 degree
         allPossibleTurns.add(rotate.turn90(ships));
         //180 degree
-        temp = rotate.turn90(ships);
-        temp = rotate.turn90(temp);
-        allPossibleTurns.add(temp);
+        ArrayList<Point2D> temp180;
+        temp180 = rotate.turn90(ships);
+        temp180 = rotate.turn90(temp180);
+        allPossibleTurns.add(temp180);
+
         temp.clear();
         //270 degree
-        temp = rotate.turn90(ships);
-        temp = rotate.turn90(temp);
-        temp = rotate.turn90(temp);
-        allPossibleTurns.add(temp);
+        ArrayList<Point2D> temp270;
+        temp270 = rotate.turn90(ships);
+        temp270 = rotate.turn90(temp270);
+        temp270 = rotate.turn90(temp270);
+        allPossibleTurns.add(temp270);
         temp.clear();
         return allPossibleTurns;
 
@@ -513,13 +518,81 @@ public class Ai {
             if (!findOne) success = false;
 
         }
-        //todo find the ship id of the sunken ships
+
+        LinkedList<Integer> sunkenShipIds = new LinkedList<>();
+        Map<Integer, ShipType> shipconfig = this.getShipConfig();
+
+        for (Map.Entry<Integer, ShipType> entry : shipconfig.entrySet()) {
+            int shipId = entry.getKey();
+            ArrayList<ArrayList<Point2D>> t = rotateShips((ArrayList<Point2D>) entry.getValue().getPosition()); //schiff aus der config wird gedreht
+            for (LinkedList<Point2D> a : all) { //erster Eintrag in all (erstes gesunkens Schiff)
+                boolean find = false;
+
+                for (ArrayList<Point2D> b : t) {//erster Eintrag in t (erstes rotiertes Schiff aus der shipconfig
+
+                    ArrayList<Point2D> bCopy = new ArrayList<>(b);
+                    if (a.size() == b.size()) {
+                        ArrayList<Integer> xValues = new ArrayList<>();
+                        ArrayList<Integer> yValues = new ArrayList<>();
+                        for (Point2D z : bCopy) {
+                            xValues.add(z.getX());
+                            yValues.add(z.getY());
+                        }
+                        Collections.sort(xValues);
+                        Collections.sort(yValues);
+                        int maxX = xValues.get(xValues.size() - 1);
+                        int maxY = yValues.get(yValues.size() - 1);
+                        int initMaxX = xValues.get(xValues.size() - 1);
+                        int initMaxY = yValues.get(yValues.size() - 1);
+                        while (maxY < this.height) {
 
 
+                            while (maxX < this.width) {
 
+                                int size = 0;
+                                for (Point2D k : a) {
+                                    for (Point2D i : bCopy) {
+                                        if (k.getX() == i.getX() & k.getY() == i.getY()) {
+                                            size++;
+                                        } else {
+                                            continue;
+                                        }
+                                        if (size == a.size()) {
+                                            sunkenShipIds.add(shipId);
+                                            find = true;
+                                            break;
+                                        }
+                                    }
+                                    if (find) break;
+                                }
+                                if (find) break;
+                                ArrayList<Point2D> newPos = new ArrayList<>();
+                                for (Point2D u : bCopy) {
+                                    newPos.add(new Point2D(u.getX() + 1, u.getY()));
+                                }
+                                bCopy = new ArrayList<>(newPos);
+                                newPos.clear();
+                                maxX++;
+                            }
+                            maxX = initMaxX;
+                            if (find) break;
+                            ArrayList<Point2D> newPos = new ArrayList<>();
+                            for (Point2D u : bCopy) {
+                                newPos.add(new Point2D(u.getX() - (width - initMaxX), u.getY() + 1));
+                            }
+                            bCopy = new ArrayList<>(newPos);
+                            newPos.clear();
+                            maxY++;
 
+                        }
+                    }else{break;}
+                    if (find) break;
+                }
+                if (find) break;
 
-        return all;
+            }
+        }
+        return sunkenShipIds;
 
     }
 
