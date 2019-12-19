@@ -95,8 +95,7 @@ public class AiTests {
         ai.setSunk(sunk);
 
 
-        LinkedList<LinkedList<Point2D>> ships = ai.findSunkenShips(1,  sunk);
-
+        LinkedList<Integer> ships = ai.findSunkenShips(sunk);
 
     }
 
@@ -199,12 +198,12 @@ public class AiTests {
             e.printStackTrace();
         }
 
-        assertTrue(ai.getPositions().keySet().size() == ai.getPositions().values().size());
+        assertEquals(ai.getPositions().keySet().size(), ai.getPositions().values().size());
         assertFalse(ai.getPositions().values().isEmpty());
         assertFalse(ai.getPositions().values().isEmpty());
 
         //in that case 3 entrys
-        assertTrue(ai.getPositions().size() == 3);
+        assertEquals(3, ai.getPositions().size());
 
 
     }

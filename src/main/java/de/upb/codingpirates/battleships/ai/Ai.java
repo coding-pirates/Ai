@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleship.ai.helper.RotationMatrix;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.logic.util.*;
@@ -59,6 +60,10 @@ public class Ai {
     protected Collection<Shot> choosenShots = new ArrayList<>();
     protected Collection<Shot> sunk = new ArrayList<>();
 
+    //sunken Ships
+    Map<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>(); //
+    Map<Integer, LinkedList<Integer>> allSunkenShips = new HashMap<>();
+
 
     //for testing purpose public
     public PlayerUpdateNotification updateNotification;
@@ -113,28 +118,15 @@ public class Ai {
     public void placeShips() throws IOException {
         while (!successful) {
             System.out.println("ps successful false");
+            logger.info("placing ships failed");
             randomShipGuesser(getShipConfig());
         }
-        System.out.println("succesfull true");
-
-        //for testing purpose
-        for (Map.Entry<Integer, PlacementInfo> entry : positions.entrySet()) {
-            System.out.println("Positions of the Ships (ID and pInfo):");
-            System.out.println("ID: " + entry.getKey());
-            System.out.println(" X: " + entry.getValue().getPosition().getX());
-            System.out.println(" Y: " + entry.getValue().getPosition().getY());
-
-
-        }
+        logger.info("placing ships worked");
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(getPositions());
 
         //connector.sendMessageToServer(placeShipsRequestMessage);
     }
 
-
-    public void setSuccessfulPlacement() {
-        this.successful = true;
-    }
 
     /**
      * contains all the Points which can not be accessed anymore like the distance to a ship or the ship positions;
@@ -245,7 +237,7 @@ public class Ai {
             //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
             //once they are in the usedPoints Array, they can not be used for placing ships anymore
             for (Point2D point : tempShipPos) {
-                addSurroundingPointsTousedPoints(point);
+                addSurroundingPointsToUsedPoints(point);
             }
 
             //clear the tempShipPos Array for the next loop
@@ -258,12 +250,13 @@ public class Ai {
 
     /**
      * Adds the surrounding points of the point to the usedPoints based on the rules for the game:
-     * each ship must have a minimal distance of one point in each direction to other ships
+     * each ship must have a minimal distance of one point in each direction to other ships.
+     * Used by {@link #randomShipGuesser(Map)}
      *
      * @param point adds all the surrounding points of the point to the usedFields Array. (Have a look a the
      *              game rules: all neighbour points of a used point should not be accessible)
      */
-    private void addSurroundingPointsTousedPoints(Point2D point) {
+    private void addSurroundingPointsToUsedPoints(Point2D point) {
         int x = point.getX();
         int y = point.getY();
 
@@ -300,7 +293,7 @@ public class Ai {
      * Creates a new ArrayList(Shot) with only one element
      *
      * @param i The Shot object which will be the only object in the list
-     * @return The one element list
+     * @return The "one element" list
      */
     private LinkedList<Shot> createArrayListOneArgument(Shot i) {
         LinkedList<Shot> list = new LinkedList<>();
@@ -308,25 +301,6 @@ public class Ai {
         return list;
     }
 
-    ArrayList<Point2D> ship = new ArrayList<>();
-    ArrayList<Point2D> neighbours = new ArrayList<>();
-
-    public void call() {
-        HashMap<Integer, LinkedList<Shot>> shotsPerClient = sortTheSunk();
-        LinkedList<Shot> sunk = shotsPerClient.get(1); //wenn 1 die clientid wäre
-
-    }
-
-    public void findNeighbours(Point2D point) {
-        for (Shot p : sunk) {
-            if ((p.getPosition().getX() + 1 == point.getX() & p.getPosition().getY() == point.getY())//Todo y is missing
-                    | (p.getPosition().getX() - 1 == point.getX() & p.getPosition().getX() == point.getY())) {
-                neighbours.add(point);
-            }
-        }
-
-
-    }
 
     /**
      * Creates a map which maps from the clientID on their sunken ships
@@ -351,18 +325,19 @@ public class Ai {
         return shotsPerClient;
     }
 
+
     /**
      * Creates a collection of collections of all possible ship rotations
      *
      * @param ships Collection of points which represents a ship
      * @return allPossibleTurns ArrayList of arraylists for each possible rotation
      */
-    private ArrayList<ArrayList<Point2D>> rotateShips(Collection<Point2D> ships) {
+    private ArrayList<ArrayList<Point2D>> rotateShips(ArrayList<Point2D> ships) {
         RotationMatrix rotate = new RotationMatrix();
         ArrayList<ArrayList<Point2D>> allPossibleTurns = new ArrayList<>();
         ArrayList<Point2D> temp;
         //no turn
-        allPossibleTurns.add((ArrayList<Point2D>) ships);
+        allPossibleTurns.add(rotate.moveToZeroPoint(ships));
         //90 degree
         allPossibleTurns.add(rotate.turn90(ships));
         //180 degree
@@ -381,7 +356,28 @@ public class Ai {
 
     }
 
-    public LinkedList<LinkedList<Point2D>> findSunkenShips(int clientId, LinkedList<Shot> shotsThisClient) {
+    /**
+     * Can be called for getting the id of sunken ships for each client
+     */
+    public Map<Integer, LinkedList<Integer>> getSunkenShipsAllClients() {
+        Map<Integer, LinkedList<Shot>> sortedSunk = getSortedSunk();
+        Map<Integer, LinkedList<Integer>> allSunkenShips = new HashMap<>(); //maps from client id on the sunken ship ids
+        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
+            allSunkenShips.put(entry.getKey(), findSunkenShips(entry.getValue()));
+        }
+        return allSunkenShips;
+    }
+
+
+    /**
+     * Finds the sunken ships of one sunk collection and gets their Id
+     * Called by {@link #getSunkenShipsAllClients()}  for each client who has sunken ships
+     *
+     * @param shotsThisClient All shots on one client
+     * @return Ids of the sunken ships
+     */
+    //todo find the ship ids of the sunken ships -> return type has to be LinkedList<Integer> (shipId instead of collection on points)
+    public LinkedList<Integer> findSunkenShips(LinkedList<Shot> shotsThisClient) {
         LinkedList<Point2D> sunk = new LinkedList<>(); // enthält alle shots als punkte
         LinkedList<LinkedList<Point2D>> all = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird
         LinkedList<LinkedList<Point2D>> p; //die temporäre linkedlist zum bearbeiten
@@ -414,10 +410,8 @@ public class Ai {
                                 used = true;
                                 break;
                             }
-                            ;
                         }
                         if (used) break;
-                        ;
                     }
                     if (used) break;
                 }
@@ -520,6 +514,11 @@ public class Ai {
 
         }
         //todo find the ship id of the sunken ships
+
+
+
+
+
         return all;
 
     }
@@ -538,11 +537,6 @@ public class Ai {
         int shotCount = getShotCount();
         int shotClientId;
 
-        //get a random client Id out of the connected clients clientArrayList
-        //using a random index and checking if the index is different from Ais own index
-        //while(true) is used because of the short method;
-        //exits the loop if the randomIndex is not same same as the aiIndex
-        //randomIndex should be different from aiIndex for preventing the ai shooting on its own field
         while (true) {
 
             int aiIndex = clientArrayList.indexOf(this); //get the index of the ai
@@ -631,6 +625,14 @@ public class Ai {
         this.connector = connector;
     }
 
+    public void setSortedSunk(HashMap<Integer, LinkedList<Shot>> sortedSunk) {
+        this.sortedSunk = sortedSunk;
+    }
+
+    public Map<Integer, LinkedList<Shot>> getSortedSunk() {
+        return this.sortedSunk;
+    }
+
     public void setClientId(int clientId) {
         this.clientId = clientId;
     }
@@ -642,6 +644,11 @@ public class Ai {
     public Map<Integer, ShipType> getShipConfig() {
         return this.shipConfig;
     }
+
+    public void setSuccessfulPlacement() {
+        this.successful = true;
+    }
+
 
     public void setShotCount(int shotCount) {
         this.SHOTCOUNT = shotCount;

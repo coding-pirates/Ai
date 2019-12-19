@@ -114,8 +114,7 @@ public class AiMessageHandler implements Handler {
         AiMain.ai.setHits(message.getHits());
         AiMain.ai.setPoints(message.getPoints());
         AiMain.ai.setSunk(message.getSunk());
-
-        //TODO eine logische sinnvolle reaktion auf die Aktionen der Gegner fehlt
+        AiMain.ai.setSortedSunk(AiMain.ai.sortTheSunk()); //sortiere die sunks nach ihren Clients
 
     }
 
