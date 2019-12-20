@@ -8,13 +8,11 @@ import de.upb.codingpirates.battleships.network.message.notification.GameInitNot
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
-import java.util.logging.Logger;
-
 //TODO some getter/setter are missing
 
 /**
@@ -24,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class Ai {
     //Logger
-    private static final Logger logger = Logger.getLogger(Ai.class.getName());
+    private static final Logger logger = LogManager.getLogger(Ai.class.getName());
 
     //GameState gameState;
     ClientConnector connector;
@@ -310,21 +308,21 @@ public class Ai {
      * @return The map with ordered shots (sunk)
      */
     public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
-        HashMap<Integer, LinkedList<Shot>> shotsPerClient = new HashMap<>();
+        HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
         for (Shot i : sunk) {
             int clientId = i.getClientId();
             boolean success = false;
-            for (Map.Entry<Integer, LinkedList<Shot>> entry : shotsPerClient.entrySet()) {
+            for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
                 if (entry.getKey() == clientId) {
                     entry.getValue().add(i);
                     success = true;
                 }
             }
             if (!success) {
-                shotsPerClient.put(clientId, createArrayListOneArgument(i));
+                sortedSunk.put(clientId, createArrayListOneArgument(i));
             }
         }
-        return shotsPerClient;
+        return sortedSunk;
     }
 
 
@@ -365,11 +363,19 @@ public class Ai {
      * Can be called for getting the id of sunken ships for each client
      */
     public Map<Integer, LinkedList<Integer>> getSunkenShipsAllClients() {
+        logger.info("Try finding sunken ShipIds");
         Map<Integer, LinkedList<Shot>> sortedSunk = getSortedSunk();
         Map<Integer, LinkedList<Integer>> allSunkenShips = new HashMap<>(); //maps from client id on the sunken ship ids
         for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
-            allSunkenShips.put(entry.getKey(), findSunkenShips(entry.getValue()));
+            int clientId = entry.getKey();
+            LinkedList<Integer> a = findSunkenShips(entry.getValue());
+            allSunkenShips.put(clientId, a);
+            logger.info("Found sunken ships of Client: " + clientId);
+            for(int i : a) {
+                logger.info("ShipId: " + i);
+            }
         }
+
         return allSunkenShips;
     }
 
@@ -381,7 +387,6 @@ public class Ai {
      * @param shotsThisClient All shots on one client
      * @return Ids of the sunken ships
      */
-    //todo find the ship ids of the sunken ships -> return type has to be LinkedList<Integer> (shipId instead of collection on points)
     public LinkedList<Integer> findSunkenShips(LinkedList<Shot> shotsThisClient) {
         LinkedList<Point2D> sunk = new LinkedList<>(); // enthält alle shots als punkte
         LinkedList<LinkedList<Point2D>> all = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird

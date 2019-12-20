@@ -42,6 +42,94 @@ public class AiTests {
         ai.setSunk(sunk);
         HashMap<Integer, LinkedList<Shot>> sorted = ai.sortTheSunk();
     }
+    @Test
+    public void get_Sunken_all_Clients(){
+        Ai ai = new Ai();
+        LinkedList<Shot> sunk = new LinkedList<>(); //shotsThisClient
+        ai.setWidth(5);
+        ai.setHeight(5);
+
+        //nur bei Spieler 2 und 3 wurden Schiffe versenkt
+        Shot s1 = new Shot(2, new Point2D(1, 3));
+        Shot s2 = new Shot(2, new Point2D(1, 4));
+
+        Shot s3 = new Shot(2, new Point2D(3, 3));
+        Shot s4 = new Shot(2, new Point2D(4, 3));
+        Shot s5 = new Shot(2, new Point2D(4, 4));
+
+        Shot s6 = new Shot(3, new Point2D(1, 0));
+        Shot s7 = new Shot(3, new Point2D(2, 0));
+        Shot s8 = new Shot(3, new Point2D(2, 1));
+        Shot s9 = new Shot(3, new Point2D(3,0 ));
+        sunk.add(s2);
+        sunk.add(s1);
+        sunk.add(s5);
+        sunk.add(s4);
+        sunk.add(s3);
+        sunk.add(s6);
+        sunk.add(s7);
+        sunk.add(s8);
+        sunk.add(s9);
+        ai.setSunk(sunk);
+
+        //shipConfig erstellen
+        Map<Integer, ShipType> shipConfig = new HashMap<>();
+
+        //ship 1
+        Collection<Point2D> p1 = new ArrayList<>();
+        p1.add(new Point2D(0, 0));
+        p1.add(new Point2D(0, 1));
+
+        ShipType sh1 = new ShipType(p1);
+
+        //ship 2
+        Collection<Point2D> p2 = new ArrayList<>();
+        p2.add(new Point2D(0, 1));
+        p2.add(new Point2D(0, 0));
+        p2.add(new Point2D(1, 0));
+
+        ShipType sh2 = new ShipType(p2);
+
+        //ship 3
+        Collection<Point2D> p3 = new ArrayList<>();
+        p3.add(new Point2D(0, 0));
+        p3.add(new Point2D(1, 0));
+        p3.add(new Point2D(2, 0));
+        p3.add(new Point2D(1, 1));
+
+        ShipType sh3 = new ShipType(p3);
+
+        shipConfig.put(1, sh1);
+        shipConfig.put(2, sh2);
+        shipConfig.put(3, sh3);
+
+        ai.setShipConfig(shipConfig);
+
+        ai.setSunk(sunk);
+        ai.setSortedSunk(ai.sortTheSunk());
+        assertEquals(2, ai.getSortedSunk().size()); //
+
+        Map<Integer, LinkedList<Integer>> sunken = ai.getSunkenShipsAllClients();
+        assertEquals(2, sunken.size());
+        assertEquals(2, sunken.get(2).size());
+        assertEquals(1, sunken.get(3).size());
+
+        assertEquals(1, (int) sunken.get(2).get(0));
+        assertEquals(2, (int) sunken.get(2).get(1));
+        assertEquals(3, (int) sunken.get(3).get(0));
+
+
+
+
+
+
+
+
+
+
+
+
+    }
 
     @Test
     public void count_sunk_ships_Test() {
@@ -78,7 +166,7 @@ public class AiTests {
         Map<Integer, ShipType> shipConfig = new HashMap<>();
         shipConfig.put(1, sh1);
         shipConfig.put(2, sh2);
-        shipConfig.put(3, sh3);
+        shipConfig.put(4, sh3);
 
 
         ai.setShipConfig(shipConfig);
