@@ -8,6 +8,7 @@ import de.upb.codingpirates.battleships.logic.util.Shot;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,12 +18,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class AiTests {
-    @Test
-    public void find_Sunken_Ships_Test() {
+    //create some needed objects and values
+    @BeforeAll
+    public static void create() {
+        //todo implementation needed
 
     }
 
-    //added first Tests for placing Shots Method
     @Test
     public void sort_The_Sunk_Test() {
         Ai ai = new Ai();
@@ -42,8 +44,9 @@ public class AiTests {
         ai.setSunk(sunk);
         HashMap<Integer, LinkedList<Shot>> sorted = ai.sortTheSunk();
     }
+
     @Test
-    public void get_Sunken_all_Clients(){
+    public void get_Sunken_all_Clients() {
         Ai ai = new Ai();
         LinkedList<Shot> sunk = new LinkedList<>(); //shotsThisClient
         ai.setWidth(5);
@@ -60,7 +63,7 @@ public class AiTests {
         Shot s6 = new Shot(3, new Point2D(1, 0));
         Shot s7 = new Shot(3, new Point2D(2, 0));
         Shot s8 = new Shot(3, new Point2D(2, 1));
-        Shot s9 = new Shot(3, new Point2D(3,0 ));
+        Shot s9 = new Shot(3, new Point2D(3, 0));
         sunk.add(s2);
         sunk.add(s1);
         sunk.add(s5);
@@ -110,6 +113,7 @@ public class AiTests {
         assertEquals(2, ai.getSortedSunk().size()); //
 
         Map<Integer, LinkedList<Integer>> sunken = ai.getSunkenShipsAllClients();
+        assertNotNull(sunken);
         assertEquals(2, sunken.size());
         assertEquals(2, sunken.get(2).size());
         assertEquals(1, sunken.get(3).size());
@@ -119,20 +123,10 @@ public class AiTests {
         assertEquals(3, (int) sunken.get(3).get(0));
 
 
-
-
-
-
-
-
-
-
-
-
     }
 
     @Test
-    public void count_sunk_ships_Test() {
+    public void find_sunk_ships_one_Client_Test() {
         Ai ai = new Ai();
         LinkedList<Shot> sunk = new LinkedList<>(); //shotsThisClient
         ai.setWidth(5);
@@ -172,7 +166,6 @@ public class AiTests {
         ai.setShipConfig(shipConfig);
 
 
-
         Shot s1 = new Shot(1, new Point2D(1, 3));
         Shot s2 = new Shot(1, new Point2D(1, 4));
 
@@ -183,7 +176,7 @@ public class AiTests {
         Shot s6 = new Shot(1, new Point2D(1, 0));
         Shot s7 = new Shot(1, new Point2D(2, 0));
         Shot s8 = new Shot(1, new Point2D(2, 1));
-        Shot s9 = new Shot(1, new Point2D(3,0 ));
+        Shot s9 = new Shot(1, new Point2D(3, 0));
         sunk.add(s2);
         sunk.add(s1);
         sunk.add(s5);
@@ -251,9 +244,15 @@ public class AiTests {
     @Test
     public void getRandomPoint2D_Test() {
         Ai ai = new Ai();
+        ai.setWidth(10);
+        ai.setHeight(10);
 
         Point2D randP = ai.getRandomPoint2D();
-        assertTrue(randP instanceof Point2D);
+        assertNotNull(randP);
+        assertTrue(randP.getX() < ai.getWidth());
+        assertTrue(randP.getY() < ai.getHeight());
+        assertTrue(randP.getX() >= 0);
+        assertTrue(randP.getY() >= 0);
     }
 
     @Test

@@ -371,7 +371,7 @@ public class Ai {
             LinkedList<Integer> a = findSunkenShips(entry.getValue());
             allSunkenShips.put(clientId, a);
             logger.info("Found sunken ships of Client: " + clientId);
-            for(int i : a) {
+            for (int i : a) {
                 logger.info("ShipId: " + i);
             }
         }
@@ -590,7 +590,9 @@ public class Ai {
                             maxY++;
 
                         }
-                    }else{break;}
+                    } else {
+                        break;
+                    }
                     if (find) break;
                 }
                 if (find) break;
