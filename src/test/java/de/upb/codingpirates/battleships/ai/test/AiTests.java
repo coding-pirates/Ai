@@ -46,7 +46,7 @@ public class AiTests {
     }
 
     @Test
-    public void get_Sunken_all_Clients() {
+    public void get_Sunken_shipIds_all_Clients() {
         Ai ai = new Ai();
         LinkedList<Shot> sunk = new LinkedList<>(); //shotsThisClient
         ai.setWidth(5);
@@ -236,9 +236,10 @@ public class AiTests {
         sunk.add(s10);
 
          */
-
-
     }
+
+
+
 
 
     @Test

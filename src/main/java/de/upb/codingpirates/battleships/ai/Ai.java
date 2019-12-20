@@ -360,6 +360,60 @@ public class Ai {
     }
 
     /**
+     *
+     */
+    public void createHeatmap() {
+        Map<Integer, LinkedList<Integer>> sunkenShipIds = getSunkenShipsAllClients();
+        Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
+        for (Map.Entry<Integer, ShipType> entry : getShipConfig().entrySet()) {
+            int shipId = entry.getKey();
+            ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPosition();
+            ArrayList<ArrayList<Point2D>> rotated = rotateShips(positions);
+
+            for (ArrayList<Point2D> tShips : rotated) {
+                ArrayList<Point2D> cShip = new ArrayList<>(tShips);
+                ArrayList<Integer> xValues = new ArrayList<>();
+                ArrayList<Integer> yValues = new ArrayList<>();
+                for (Point2D z : cShip) {
+                    xValues.add(z.getX());
+                    yValues.add(z.getY());
+                }
+                Collections.sort(xValues);
+                Collections.sort(yValues);
+                int maxX = xValues.get(xValues.size() - 1);
+                int maxY = yValues.get(yValues.size() - 1);
+                int initMaxX = xValues.get(xValues.size() - 1);
+                int initMaxY = yValues.get(yValues.size() - 1);
+
+                while (maxY < this.height) {
+                    while (maxX < this.width) {
+                        ArrayList<Point2D> newPos = new ArrayList<>();
+                        for (Point2D u : cShip) {
+                            newPos.add(new Point2D(u.getX() + 1, u.getY()));
+                        }
+                        cShip = new ArrayList<>(newPos);
+                        newPos.clear();
+                        maxX++;
+                    }
+                    maxX = initMaxX;
+                    ArrayList<Point2D> newPos = new ArrayList<>();
+                    for (Point2D u : cShip) {
+                        newPos.add(new Point2D(u.getX() - (this.width - initMaxX), u.getY() + 1));
+                    }
+                    cShip = new ArrayList<>(newPos);
+                    newPos.clear();
+                    maxY++;
+
+                }
+
+            }
+
+
+        }
+
+    }
+
+    /**
      * Can be called for getting the id of sunken ships for each client
      */
     public Map<Integer, LinkedList<Integer>> getSunkenShipsAllClients() {
@@ -383,6 +437,8 @@ public class Ai {
     /**
      * Finds the sunken ships of one sunk collection and gets their Id
      * Called by {@link #getSunkenShipsAllClients()}  for each client who has sunken ships
+     * <p>
+     * Warning: call {@link #getSunkenShipsAllClients()} if you want to get a map of clients and their sunken shipIds
      *
      * @param shotsThisClient All shots on one client
      * @return Ids of the sunken ships
@@ -395,6 +451,9 @@ public class Ai {
         for (Shot i : shotsThisClient) { //shots liste in punkte liste umwandeln
             sunk.add(new Point2D(i.getPosition().getX(), i.getPosition().getY()));
         }
+
+        //Algorithmus zum Finden von zusammenhängenden Punkten (Schiffe finden)
+        //1. Bilden einer initialen Verteilung der Schiffe
         for (Point2D z : sunk) {
             boolean proofed = false;
 
@@ -410,7 +469,7 @@ public class Ai {
             }
             if (proofed) continue;
             LinkedList<Point2D> temp = new LinkedList();
-            temp.add(z);//todo check if z already in all
+            temp.add(z);
             for (Point2D t : sunk) {
                 boolean used = false;
                 for (Point2D x : sunk) {
@@ -451,6 +510,11 @@ public class Ai {
             all.add(new LinkedList<>(temp));
             temp.clear();
         }
+        //2. Ausgehend von der initialen Verteilung der Schiffe werden die anderen zugehörigen
+        //   Punkte gesucht und passenden, schon zusammenhängenden Punkteverteilungen hinzugefügt
+        //   Aufgrund der Notwendigkeit des Ersetzens des Iterables wird mit einer Kopie gearbeitet.
+        //   Dann wird über die Kopie iteriert und die "haupt" Liste wird bearbeitet. Zwischen den Loops
+        //   werden die Listen synchronisiert
         p = new LinkedList<>(all);
         boolean success = true;
         boolean findOne = false;
@@ -524,10 +588,14 @@ public class Ai {
 
         }
 
+        //3. Finden der zu den gefundenen Schiffsverteilungen passenden Schiffen aus der shipConfig
+        //   Dazu wird jedes Schiff aus der config einmal in jeder Rotation über das Spielfeld geschoben
+        //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
+        //   aufgenommen
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
-        Map<Integer, ShipType> shipconfig = this.getShipConfig();
+        Map<Integer, ShipType> shipConfig = this.getShipConfig();
 
-        for (Map.Entry<Integer, ShipType> entry : shipconfig.entrySet()) {
+        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             int shipId = entry.getKey();
             ArrayList<ArrayList<Point2D>> t = rotateShips((ArrayList<Point2D>) entry.getValue().getPosition()); //schiff aus der config wird gedreht
             for (LinkedList<Point2D> a : all) { //erster Eintrag in all (erstes gesunkens Schiff)
@@ -550,10 +618,7 @@ public class Ai {
                         int initMaxX = xValues.get(xValues.size() - 1);
                         int initMaxY = yValues.get(yValues.size() - 1);
                         while (maxY < this.height) {
-
-
                             while (maxX < this.width) {
-
                                 int size = 0;
                                 for (Point2D k : a) {
                                     for (Point2D i : bCopy) {
