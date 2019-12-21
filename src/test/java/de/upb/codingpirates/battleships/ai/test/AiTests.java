@@ -112,7 +112,7 @@ public class AiTests {
         ai.setSortedSunk(ai.sortTheSunk());
         assertEquals(2, ai.getSortedSunk().size()); //
 
-        Map<Integer, LinkedList<Integer>> sunken = ai.getSunkenShipsAllClients();
+        Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
         assertNotNull(sunken);
         assertEquals(2, sunken.size());
         assertEquals(2, sunken.get(2).size());

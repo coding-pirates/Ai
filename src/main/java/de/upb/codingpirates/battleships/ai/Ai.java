@@ -10,6 +10,7 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import sun.jvm.hotspot.oops.ArrayKlass;
 
 import java.io.IOException;
 import java.util.*;
@@ -62,7 +63,7 @@ public class Ai {
 
     //sunken Ships
     Map<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>(); //
-    Map<Integer, LinkedList<Integer>> allSunkenShips = new HashMap<>();
+    Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>();
 
 
     //for testing purpose public
@@ -236,9 +237,9 @@ public class Ai {
 
             //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
             //once they are in the usedPoints Array, they can not be used for placing ships anymore
-            for (Point2D point : tempShipPos) {
-                addSurroundingPointsToUsedPoints(point);
-            }
+            //addSurroundingPointsToUsedPoints(tempShipPos);
+            usedPoints.addAll(addSurroundingPointsToUsedPoints(tempShipPos));
+
 
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
@@ -249,30 +250,33 @@ public class Ai {
     }
 
     /**
-     * Adds the surrounding points of the point to the usedPoints based on the rules for the game:
+     * Adds the surrounding points of one points collection to the usedPoints based on the rules for the game:
      * each ship must have a minimal distance of one point in each direction to other ships.
      * Used by {@link #randomShipGuesser(Map)}
      *
-     * @param point adds all the surrounding points of the point to the usedFields Array. (Have a look a the
-     *              game rules: all neighbour points of a used point should not be accessible)
+     * @param shipPos The positions of one ship
      */
-    private void addSurroundingPointsToUsedPoints(Point2D point) {
-        int x = point.getX();
-        int y = point.getY();
+    private ArrayList<Point2D> addSurroundingPointsToUsedPoints(ArrayList<Point2D> shipPos) {
+        ArrayList<Point2D> temp = new ArrayList<>();
+        for (Point2D point : shipPos) {
+            int x = point.getX();
+            int y = point.getY();
 
-        //add all left neighbours
-        usedPoints.add(new Point2D(x - 1, y + 1));
-        usedPoints.add(new Point2D(x - 1, y));
-        usedPoints.add(new Point2D(x - 1, y - 1));
+            //add all left neighbours
+            temp.add(new Point2D(x - 1, y + 1));
+            temp.add(new Point2D(x - 1, y));
+            temp.add(new Point2D(x - 1, y - 1));
 
-        //add all right neighbours
-        usedPoints.add(new Point2D(x + 1, y + 1));
-        usedPoints.add(new Point2D(x + 1, y));
-        usedPoints.add(new Point2D(x + 1, y - 1));
+            //add all right neighbours
+            temp.add(new Point2D(x + 1, y + 1));
+            temp.add(new Point2D(x + 1, y));
+            temp.add(new Point2D(x + 1, y - 1));
 
-        //add the direct neighbours under and over
-        usedPoints.add(new Point2D(x, y + 1));
-        usedPoints.add(new Point2D(x, y - 1));
+            //add the direct neighbours under and over
+            temp.add(new Point2D(x, y + 1));
+            temp.add(new Point2D(x, y - 1));
+        }
+        return temp;
 
 
     }
@@ -362,38 +366,81 @@ public class Ai {
     /**
      *
      */
-    public void createHeatmap() {
-        Map<Integer, LinkedList<Integer>> sunkenShipIds = getSunkenShipsAllClients();
+    public void createHeatmapOneClient(int clientId) {
+        //calcAllSunkenShipsIds(); disabled for testing
+        //todo Es fehlt dass die Umgebung von einem Feld Abstand uz jedem Punkt berücksichtigt wird
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
-        for (Map.Entry<Integer, ShipType> entry : getShipConfig().entrySet()) {
-            int shipId = entry.getKey();
-            ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPosition();
-            ArrayList<ArrayList<Point2D>> rotated = rotateShips(positions);
 
+
+        LinkedList<Integer> sunkenIdsThisClient = getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
+        ArrayList<Point2D> sunkenPointsThisClient = new ArrayList<>();
+        for (Shot s : getSortedSunk().get(clientId)) {
+            sunkenPointsThisClient.add(new Point2D(s.getPosition().getX(), s.getPosition().getY()));
+
+        }
+        ArrayList<Point2D> invalidPoints = addSurroundingPointsToUsedPoints(sunkenPointsThisClient);
+
+        for (Map.Entry<Integer, ShipType> entry : getShipConfig().entrySet()) {
+            if (sunkenIdsThisClient.contains(entry.getKey())) {
+                continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
+            }
+            int shipId = entry.getKey(); //Schiffs Id
+            //Koordinaten des aktuellen Schiffs
+            ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPosition();
+            //Rotiere das aktuelle Schiff
+            ArrayList<ArrayList<Point2D>> rotated = rotateShips(positions);
+            //Betrachte erstes rotiertes Schiff
             for (ArrayList<Point2D> tShips : rotated) {
-                ArrayList<Point2D> cShip = new ArrayList<>(tShips);
-                ArrayList<Integer> xValues = new ArrayList<>();
-                ArrayList<Integer> yValues = new ArrayList<>();
-                for (Point2D z : cShip) {
+                ArrayList<Point2D> cShip = new ArrayList<>(tShips); //kopiere erstes rotiertes Schiff
+                ArrayList<Integer> xValues = new ArrayList<>(); //alle X werte des Schiff
+                ArrayList<Integer> yValues = new ArrayList<>(); //alle y Werte des Schiffs
+                for (Point2D z : cShip) { //füge x und y den Listen hinzu
                     xValues.add(z.getX());
                     yValues.add(z.getY());
                 }
-                Collections.sort(xValues);
+                Collections.sort(xValues);//sortiere die x, y Listen
                 Collections.sort(yValues);
-                int maxX = xValues.get(xValues.size() - 1);
+                int maxX = xValues.get(xValues.size() - 1); //hole größtes x, y der Schiffe
                 int maxY = yValues.get(yValues.size() - 1);
-                int initMaxX = xValues.get(xValues.size() - 1);
+                int initMaxX = xValues.get(xValues.size() - 1);//lege initiales x, y fest
                 int initMaxY = yValues.get(yValues.size() - 1);
 
-                while (maxY < this.height) {
-                    while (maxX < this.width) {
+                while (maxY < getHeight()) {
+                    while (maxX < getWidth()) {
+                        //check if cShip fits on the field
+                        boolean valid = true;
+                        for (Point2D p : cShip) { //jeder Punkt in cShip
+                            for (Point2D s : invalidPoints) { //jeder Shot aus den sunkenShotsThisClient
+                                if (p.getX() == s.getX() & p.getY() == s.getY()) {
+                                    //wenn ein Punkt dem Shot Punkt gleich ist, mache nichts und schiebe Schiff
+                                    //einen weiter
+                                    valid = false;
+                                    break;
+                                }
+                            }
+                            if (!valid) break;
+
+                        }
+                        if (!valid) {
+                            maxX++;
+                            continue;
+                        }
+                        //increment the array positions +1
+                        for (Point2D i : cShip) {
+                            int x = i.getX();
+                            int y = i.getY();
+                            heatmap[y][x]++;
+                        }
+
                         ArrayList<Point2D> newPos = new ArrayList<>();
                         for (Point2D u : cShip) {
                             newPos.add(new Point2D(u.getX() + 1, u.getY()));
                         }
                         cShip = new ArrayList<>(newPos);
+
                         newPos.clear();
                         maxX++;
+
                     }
                     maxX = initMaxX;
                     ArrayList<Point2D> newPos = new ArrayList<>();
@@ -414,31 +461,38 @@ public class Ai {
     }
 
     /**
-     * Can be called for getting the id of sunken ships for each client
+     * Can be called for getting the id of sunken ships for each client.
+     * Sets the sunkenShipIdsAll instead of returning the map
      */
-    public Map<Integer, LinkedList<Integer>> getSunkenShipsAllClients() {
+    public void calcAllSunkenShipsIds() {
         logger.info("Try finding sunken ShipIds");
         Map<Integer, LinkedList<Shot>> sortedSunk = getSortedSunk();
-        Map<Integer, LinkedList<Integer>> allSunkenShips = new HashMap<>(); //maps from client id on the sunken ship ids
+        Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //maps from client id on the sunken ship ids
         for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
             int clientId = entry.getKey();
             LinkedList<Integer> a = findSunkenShips(entry.getValue());
-            allSunkenShips.put(clientId, a);
+            allSunkenShipIds.put(clientId, a);
             logger.info("Found sunken ships of Client: " + clientId);
             for (int i : a) {
                 logger.info("ShipId: " + i);
             }
         }
 
-        return allSunkenShips;
+
+        setAllSunkenShipIds(allSunkenShipIds);
     }
 
+    public void setAllSunkenShipIds(Map<Integer, LinkedList<Integer>> sunkenIds) {
+        this.allSunkenShipIds = sunkenIds;
+    }
+
+    public Map<Integer, LinkedList<Integer>> getAllSunkenShipIds() {
+        return this.allSunkenShipIds;
+    }
 
     /**
-     * Finds the sunken ships of one sunk collection and gets their Id
-     * Called by {@link #getSunkenShipsAllClients()}  for each client who has sunken ships
-     * <p>
-     * Warning: call {@link #getSunkenShipsAllClients()} if you want to get a map of clients and their sunken shipIds
+     * Finds the sunken ship ids of one sunk collection
+     * Called by {@link #calcAllSunkenShipsIds()}  for each client who has sunken ships
      *
      * @param shotsThisClient All shots on one client
      * @return Ids of the sunken ships
