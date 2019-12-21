@@ -368,7 +368,6 @@ public class Ai {
      */
     public void createHeatmapOneClient(int clientId) {
         calcAllSunkenShipsIds();
-        //todo Es fehlt dass die Umgebung von einem Feld Abstand uz jedem Punkt berücksichtigt wird
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
