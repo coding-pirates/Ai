@@ -367,9 +367,12 @@ public class Ai {
      *
      */
     public void createHeatmapOneClient(int clientId) {
-        //calcAllSunkenShipsIds(); disabled for testing
+        calcAllSunkenShipsIds();
         //todo Es fehlt dass die Umgebung von einem Feld Abstand uz jedem Punkt berücksichtigt wird
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
+        for (Integer[] integers : heatmap) {
+            Arrays.fill(integers, 0);
+        }
 
 
         LinkedList<Integer> sunkenIdsThisClient = getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
@@ -406,9 +409,10 @@ public class Ai {
                 int initMaxY = yValues.get(yValues.size() - 1);
 
                 while (maxY < getHeight()) {
+                    boolean valid = true;
+
                     while (maxX < getWidth()) {
                         //check if cShip fits on the field
-                        boolean valid = true;
                         for (Point2D p : cShip) { //jeder Punkt in cShip
                             for (Point2D s : invalidPoints) { //jeder Shot aus den sunkenShotsThisClient
                                 if (p.getX() == s.getX() & p.getY() == s.getY()) {
@@ -421,16 +425,13 @@ public class Ai {
                             if (!valid) break;
 
                         }
-                        if (!valid) {
-                            maxX++;
-                            continue;
-                        }
+                        if(valid){
                         //increment the array positions +1
                         for (Point2D i : cShip) {
                             int x = i.getX();
                             int y = i.getY();
                             heatmap[y][x]++;
-                        }
+                        }}
 
                         ArrayList<Point2D> newPos = new ArrayList<>();
                         for (Point2D u : cShip) {
@@ -442,6 +443,8 @@ public class Ai {
                         maxX++;
 
                     }
+
+
                     maxX = initMaxX;
                     ArrayList<Point2D> newPos = new ArrayList<>();
                     for (Point2D u : cShip) {
