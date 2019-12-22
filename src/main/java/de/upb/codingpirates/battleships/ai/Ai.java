@@ -10,7 +10,7 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sun.jvm.hotspot.oops.ArrayKlass;
+import org.apache.logging.log4j.core.util.ArrayUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -299,7 +299,7 @@ public class Ai {
      * @param i The Shot object which will be the only object in the list
      * @return The "one element" list
      */
-    private LinkedList<Shot> createArrayListOneArgument(Shot i) {
+    public LinkedList<Shot> createArrayListOneArgument(Shot i) {
         LinkedList<Shot> list = new LinkedList<>();
         list.add(i);
         return list;
@@ -324,6 +324,12 @@ public class Ai {
             }
             if (!success) {
                 sortedSunk.put(clientId, createArrayListOneArgument(i));
+            }
+        }
+        for (Client c : this.clientArrayList) {
+            if (!sortedSunk.containsKey(c.getId())) {
+                LinkedList<Shot> emptyList = new LinkedList<>();
+                sortedSunk.put(c.getId(), emptyList);
             }
         }
         return sortedSunk;
@@ -364,10 +370,12 @@ public class Ai {
     }
 
     /**
-     *
+     * Creates a Heatmap for one Client: assigns each Point its maximum occupancy by (not yet sunken) ships
+     * <p>
+     * Attention: This method can be called only if the client has sunken ships (in this version)
      */
     public void createHeatmapOneClient(int clientId) {
-        calcAllSunkenShipsIds();
+        findAllSunkenShipIds();
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
@@ -382,7 +390,9 @@ public class Ai {
         }
         ArrayList<Point2D> invalidPoints = addSurroundingPointsToUsedPoints(sunkenPointsThisClient);
 
-        for (Map.Entry<Integer, ShipType> entry : getShipConfig().entrySet()) {
+        Map<Integer, ShipType> shipConfig = getShipConfig();
+        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+            logger.info("Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
@@ -393,6 +403,8 @@ public class Ai {
             ArrayList<ArrayList<Point2D>> rotated = rotateShips(positions);
             //Betrachte erstes rotiertes Schiff
             for (ArrayList<Point2D> tShips : rotated) {
+                logger.info("traversing the field with the rotated versions of the ship:  " + entry.getKey());
+
                 ArrayList<Point2D> cShip = new ArrayList<>(tShips); //kopiere erstes rotiertes Schiff
                 ArrayList<Integer> xValues = new ArrayList<>(); //alle X werte des Schiff
                 ArrayList<Integer> yValues = new ArrayList<>(); //alle y Werte des Schiffs
@@ -408,9 +420,9 @@ public class Ai {
                 int initMaxY = yValues.get(yValues.size() - 1);
 
                 while (maxY < getHeight()) {
-                    boolean valid = true;
 
                     while (maxX < getWidth()) {
+                        boolean valid = true;
                         //check if cShip fits on the field
                         for (Point2D p : cShip) { //jeder Punkt in cShip
                             for (Point2D s : invalidPoints) { //jeder Shot aus den sunkenShotsThisClient
@@ -424,13 +436,14 @@ public class Ai {
                             if (!valid) break;
 
                         }
-                        if(valid){
-                        //increment the array positions +1
-                        for (Point2D i : cShip) {
-                            int x = i.getX();
-                            int y = i.getY();
-                            heatmap[y][x]++;
-                        }}
+                        if (valid) {
+                            //increment the array positions +1
+                            for (Point2D i : cShip) {
+                                int x = i.getX();
+                                int y = i.getY();
+                                heatmap[y][x]++;
+                            }
+                        }
 
                         ArrayList<Point2D> newPos = new ArrayList<>();
                         for (Point2D u : cShip) {
@@ -443,7 +456,6 @@ public class Ai {
 
                     }
 
-
                     maxX = initMaxX;
                     ArrayList<Point2D> newPos = new ArrayList<>();
                     for (Point2D u : cShip) {
@@ -454,11 +466,20 @@ public class Ai {
                     maxY++;
 
                 }
+                logger.info("Finished Field");
 
             }
 
 
         }
+
+        logger.info("Created heatmap of client: " + clientId);
+        //only reversed the heatmap for testing
+        Collections.reverse(Arrays.asList(heatmap));
+        for (Integer[] row : heatmap) {
+            System.out.println(Arrays.toString(row));
+        }
+
 
     }
 
@@ -466,7 +487,7 @@ public class Ai {
      * Can be called for getting the id of sunken ships for each client.
      * Sets the sunkenShipIdsAll instead of returning the map
      */
-    public void calcAllSunkenShipsIds() {
+    public void findAllSunkenShipIds() {
         logger.info("Try finding sunken ShipIds");
         Map<Integer, LinkedList<Shot>> sortedSunk = getSortedSunk();
         Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //maps from client id on the sunken ship ids
@@ -474,13 +495,14 @@ public class Ai {
             int clientId = entry.getKey();
             LinkedList<Integer> a = findSunkenShips(entry.getValue());
             allSunkenShipIds.put(clientId, a);
-            logger.info("Found sunken ships of Client: " + clientId);
+            if (a.isEmpty()) {
+                logger.info("Found no sunken ships of Client " + clientId);
+            }
+            logger.info("Found sunken ships of Client " + clientId);
             for (int i : a) {
                 logger.info("ShipId: " + i);
             }
         }
-
-
         setAllSunkenShipIds(allSunkenShipIds);
     }
 
@@ -494,7 +516,7 @@ public class Ai {
 
     /**
      * Finds the sunken ship ids of one sunk collection
-     * Called by {@link #calcAllSunkenShipsIds()}  for each client who has sunken ships
+     * Called by {@link #findAllSunkenShipIds()}  for each client who has sunken ships
      *
      * @param shotsThisClient All shots on one client
      * @return Ids of the sunken ships
