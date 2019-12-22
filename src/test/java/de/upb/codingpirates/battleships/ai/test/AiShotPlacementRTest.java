@@ -1,8 +1,8 @@
 package de.upb.codingpirates.battleships.ai.test;
 
 import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.logic.util.Client;
-import de.upb.codingpirates.battleships.logic.util.Shot;
+import de.upb.codingpirates.battleships.logic.Client;
+import de.upb.codingpirates.battleships.logic.Shot;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
@@ -52,8 +52,8 @@ public class AiShotPlacementRTest {
         Collection<Shot> shots = ai.shotsRequest.getShots();
         for (Shot i : shots) {
 
-            System.out.print(i.getPosition().getX() + ",");
-            System.out.println(i.getPosition().getY());
+            System.out.print(i.getTargetField().getX() + ",");
+            System.out.println(i.getTargetField().getY());
             System.out.println(i.getClientId());
             System.out.println();
         }

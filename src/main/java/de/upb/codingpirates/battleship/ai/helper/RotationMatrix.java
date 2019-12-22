@@ -1,6 +1,6 @@
 package de.upb.codingpirates.battleship.ai.helper;
 
-import de.upb.codingpirates.battleships.logic.util.Point2D;
+import de.upb.codingpirates.battleships.logic.Point2D;
 
 import java.util.ArrayList;
 import java.util.Arrays;

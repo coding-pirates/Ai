@@ -1,6 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.logic.util.ClientType;
+import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
 
@@ -16,7 +16,7 @@ import java.util.TimerTask;
  */
 public class AiMain {
     static Timer timer = new Timer();
-    static Ai ai;
+    static Ai ai = new Ai();
 
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}

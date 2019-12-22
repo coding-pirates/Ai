@@ -1,8 +1,8 @@
 package de.upb.codingpirates.battleships.ai.test;
 
 import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.logic.util.Point2D;
-import de.upb.codingpirates.battleships.logic.util.ShipType;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.ShipType;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;

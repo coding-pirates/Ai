@@ -3,7 +3,7 @@ package de.upb.codingpirates.battleships.ai;
 import de.upb.codingpirates.battleship.ai.helper.RotationMatrix;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
-import de.upb.codingpirates.battleships.logic.util.*;
+import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.message.notification.GameInitNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
@@ -82,7 +82,7 @@ public class Ai {
     public void connect(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
-        ClientConnector connector = ClientApplication.create(AiModule.class);
+        ClientConnector connector = ClientApplication.create(AiModule.class);//todo correct
         connector.connect(host, port);
         setConnector(connector);
     }
@@ -94,14 +94,14 @@ public class Ai {
      * @param config configuration from {@link GameInitNotification}
      */
     public void setConfig(Configuration config) {
-        setHeight(config.HEIGHT);
-        setWidth(config.WIDTH);
-        setShipConfig(config.getShipTypes());
-        setHitpoints(config.HITPOINTS);
-        setSunkpoints(config.SUNKPOINTS);
-        setRoundTimer(config.ROUNDTIME);
-        setVisualizationTime(config.VISUALIZATIONTIME);
-        setShotCount(config.SHOTCOUNT);
+        setHeight(config.getHeight());
+        setWidth(config.getWidth());
+        setShipConfig(config.getShips());
+        setHitpoints(config.getHitPoints());
+        setSunkpoints(config.getSunkPoints());
+        setRoundTimer(config.getRoundTime());
+        setVisualizationTime(config.getVisualizationTime());
+        setShotCount(config.getShotCount());
 
     }
 
@@ -161,7 +161,7 @@ public class Ai {
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
-            Collection<Point2D> shipPos = entry.getValue().getPosition();
+            Collection<Point2D> shipPos = entry.getValue().getPositions();
 
             //for testing purpose
             for (Point2D j : shipPos) {
@@ -412,7 +412,7 @@ public class Ai {
         LinkedList<Integer> sunkenIdsThisClient = getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
         ArrayList<Point2D> sunkenPointsThisClient = new ArrayList<>();
         for (Shot s : getSortedSunk().get(clientId)) {
-            sunkenPointsThisClient.add(new Point2D(s.getPosition().getX(), s.getPosition().getY()));
+            sunkenPointsThisClient.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
 
         }
         ArrayList<Point2D> invalidPoints = addSurroundingPointsToUsedPoints(sunkenPointsThisClient);
@@ -426,7 +426,7 @@ public class Ai {
             }
             int shipId = entry.getKey(); //Schiffs Id
             //Koordinaten des aktuellen Schiffs
-            ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPosition();
+            ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPositions();
             //Rotiere das aktuelle Schiff
             ArrayList<ArrayList<Point2D>> rotated = rotateShips(positions);
             //Betrachte erstes rotiertes Schiff
@@ -551,7 +551,7 @@ public class Ai {
         LinkedList<LinkedList<Point2D>> p; //die temporäre linkedlist zum bearbeiten
 
         for (Shot i : shotsThisClient) { //shots liste in punkte liste umwandeln
-            sunk.add(new Point2D(i.getPosition().getX(), i.getPosition().getY()));
+            sunk.add(new Point2D(i.getTargetField().getX(), i.getTargetField().getY()));
         }
 
         //Algorithmus zum Finden von zusammenhängenden Punkten (Schiffe finden)
@@ -699,7 +699,7 @@ public class Ai {
 
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             int shipId = entry.getKey();
-            ArrayList<ArrayList<Point2D>> t = rotateShips((ArrayList<Point2D>) entry.getValue().getPosition()); //schiff aus der config wird gedreht
+            ArrayList<ArrayList<Point2D>> t = rotateShips((ArrayList<Point2D>) entry.getValue().getPositions()); //schiff aus der config wird gedreht
             for (LinkedList<Point2D> a : all) { //erster Eintrag in all (erstes gesunkens Schiff)
                 boolean find = false;
 
@@ -802,7 +802,7 @@ public class Ai {
 
         for (Shot k : updateNotification.getHits()) {
             if (k.getClientId() == shotClientId) {
-                hitPoints.add(k.getPosition());
+                hitPoints.add(k.getTargetField());
             }
         }
 

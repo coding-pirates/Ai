@@ -1,13 +1,15 @@
 package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.client.Handler;
-import de.upb.codingpirates.battleships.logic.util.Configuration;
+import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.response.*;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import java.io.IOException;
+
 
 /**
  * Handles incoming messages from the server.
@@ -16,6 +18,8 @@ import java.io.IOException;
  * @author Benjamin Kasten
  */
 public class AiMessageHandler implements Handler {
+    Logger logger = LogManager.getLogger();
+
     int aiClientId;
 
     @Override
@@ -149,6 +153,7 @@ public class AiMessageHandler implements Handler {
 
     @Override
     public void handleServerJoinResponse(ServerJoinResponse message, int id) {
+
         AiMain.ai.setAiClientId(message.getClientId());
     }
 
