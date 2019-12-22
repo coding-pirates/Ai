@@ -10,8 +10,8 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.util.ArrayUtils;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
 //TODO some getter/setter are missing
@@ -46,7 +46,7 @@ public class Ai {
     int HITPOINTS;
     int SUNKPOINTS;
 
-    int clientId;
+    int aiClientId;
     int gameId;
     Configuration config;
     Map<Integer, ShipType> shipConfig = new HashMap<>();
@@ -69,6 +69,7 @@ public class Ai {
     //for testing purpose public
     public PlayerUpdateNotification updateNotification;
     public ShotsRequest shotsRequest;
+
 
 
     /**
@@ -142,7 +143,6 @@ public class Ai {
      */
     private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
         //clear all used values from the recent call for safety
-        usedPoints.clear();
         usedPoints.clear();
         positions.clear();
 
@@ -369,13 +369,40 @@ public class Ai {
 
     }
 
+    //todo create getter for clientArrayList
+    public void createHeatmapAllClients() {
+        findAllSunkenShipIds();
+        Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
+        for (Client client : this.clientArrayList) {
+            if (client.getId() == getAiClientId()) {
+                continue;
+            }
+            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId()));
+        }
+
+        for (Map.Entry<Integer, Integer[][]> entry : heatmapAllClients.entrySet()) {
+            logger.info("Heatmap of client " + entry.getKey());
+            //only reversed the heatmap for testing purpose
+            Integer[][] heatmapThisClientRotated = entry.getValue();
+            Collections.reverse(Arrays.asList(heatmapThisClientRotated));
+            for (Integer[] row : heatmapThisClientRotated) {
+                System.out.println(Arrays.toString(row));
+            }
+
+        }
+
+
+    }
+
     /**
      * Creates a Heatmap for one Client: assigns each Point its maximum occupancy by (not yet sunken) ships
-     * <p>
-     * Attention: This method can be called only if the client has sunken ships (in this version)
+     *
+     * @param clientId The clientId for whom the heatmap is to be created
+     * @return a heatmap for the client
      */
-    public void createHeatmapOneClient(int clientId) {
-        findAllSunkenShipIds();
+    public Integer[][] createHeatmapOneClient(int clientId) {
+        logger.info("Create heatmap for client " + clientId);
+
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
@@ -394,6 +421,7 @@ public class Ai {
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             logger.info("Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
+                logger.info("ship already sunk: " + entry.getKey());
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
             int shipId = entry.getKey(); //Schiffs Id
@@ -403,8 +431,6 @@ public class Ai {
             ArrayList<ArrayList<Point2D>> rotated = rotateShips(positions);
             //Betrachte erstes rotiertes Schiff
             for (ArrayList<Point2D> tShips : rotated) {
-                logger.info("traversing the field with the rotated versions of the ship:  " + entry.getKey());
-
                 ArrayList<Point2D> cShip = new ArrayList<>(tShips); //kopiere erstes rotiertes Schiff
                 ArrayList<Integer> xValues = new ArrayList<>(); //alle X werte des Schiff
                 ArrayList<Integer> yValues = new ArrayList<>(); //alle y Werte des Schiffs
@@ -466,19 +492,16 @@ public class Ai {
                     maxY++;
 
                 }
-                logger.info("Finished Field");
 
             }
+            logger.info("Finished field with rotated versions of ship " + shipId);
 
 
         }
 
         logger.info("Created heatmap of client: " + clientId);
-        //only reversed the heatmap for testing
-        Collections.reverse(Arrays.asList(heatmap));
-        for (Integer[] row : heatmap) {
-            System.out.println(Arrays.toString(row));
-        }
+
+        return heatmap;
 
 
     }
@@ -497,10 +520,11 @@ public class Ai {
             allSunkenShipIds.put(clientId, a);
             if (a.isEmpty()) {
                 logger.info("Found no sunken ships of Client " + clientId);
-            }
-            logger.info("Found sunken ships of Client " + clientId);
-            for (int i : a) {
-                logger.info("ShipId: " + i);
+            } else {
+                logger.info("Found sunken ships of Client " + clientId);
+                for (int i : a) {
+                    logger.info("ShipId: " + i);
+                }
             }
         }
         setAllSunkenShipIds(allSunkenShipIds);
@@ -546,7 +570,7 @@ public class Ai {
                 if (proofed) break;
             }
             if (proofed) continue;
-            LinkedList<Point2D> temp = new LinkedList();
+            LinkedList<Point2D> temp = new LinkedList<>();
             temp.add(z);
             for (Point2D t : sunk) {
                 boolean used = false;
@@ -856,8 +880,12 @@ public class Ai {
         return this.sortedSunk;
     }
 
-    public void setClientId(int clientId) {
-        this.clientId = clientId;
+    public void setAiClientId(int aiClientId) {
+        this.aiClientId = aiClientId;
+    }
+
+    public int getAiClientId() {
+        return this.aiClientId;
     }
 
     public void setShipConfig(Map<Integer, ShipType> shipConfig) {

@@ -16,7 +16,7 @@ import java.util.TimerTask;
  */
 public class AiMain {
     static Timer timer = new Timer();
-    static Ai ai = new Ai();
+    static Ai ai;
 
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}

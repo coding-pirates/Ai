@@ -18,8 +18,7 @@ public class AiTest {
 
     @BeforeAll
     public static void create() {
-        ai.setHeight(7);
-        ai.setWidth(7);
+
 
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
@@ -51,7 +50,7 @@ public class AiTest {
         ShipType s4 = new ShipType(pos4);
         shipconfig.put(4, s4);
 
-        ai.setShipConfig(shipconfig);
+
 
         //Clients erstellen
         Client c1 = new Client(1, "c1");
@@ -63,7 +62,7 @@ public class AiTest {
         clientList.add(c2);
         clientList.add(c3);
 
-        ai.setClientArrayList(clientList);
+
         //sunk erstellen
 
         ArrayList<Shot> sunk = new ArrayList<>();
@@ -87,6 +86,14 @@ public class AiTest {
         sunk.add(new Shot(2, new Point2D(0, 1)));
         sunk.add(new Shot(2, new Point2D(1, 1)));
         sunk.add(new Shot(2, new Point2D(1, 0)));
+
+        ai.setAiClientId(999);
+
+        //Has to be set before creating heatmaps
+        ai.setHeight(7);
+        ai.setWidth(7);
+        ai.setShipConfig(shipconfig);
+        ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(ai.sortTheSunk());
     }
@@ -100,7 +107,10 @@ public class AiTest {
 
 
     }
-
+    @Test
+    public void create_heatmap_all_clients_Test(){
+        ai.createHeatmapAllClients();
+    }
     @Test
     public void create_Heatmap_one_Client_Test() {
         ai.createHeatmapOneClient(3);
@@ -108,7 +118,7 @@ public class AiTest {
 
     @Test
     public void get_Sunken_shipIds_all_Clients() {
-        assertEquals(2, ai.getSortedSunk().size());
+        assertEquals(3, ai.getSortedSunk().size());
         ai.findAllSunkenShipIds();
         Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
         assertNotNull(sunken);

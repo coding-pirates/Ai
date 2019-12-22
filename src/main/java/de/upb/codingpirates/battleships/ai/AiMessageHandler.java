@@ -16,7 +16,7 @@ import java.io.IOException;
  * @author Benjamin Kasten
  */
 public class AiMessageHandler implements Handler {
-    int clientId;
+    int aiClientId;
 
     @Override
     public void handleGameInitNotification(GameInitNotification message, int id) {
@@ -149,8 +149,7 @@ public class AiMessageHandler implements Handler {
 
     @Override
     public void handleServerJoinResponse(ServerJoinResponse message, int id) {
-        clientId = message.getClientId();
-        AiMain.ai.clientId = clientId;
+        AiMain.ai.setAiClientId(message.getClientId());
     }
 
     @Override
