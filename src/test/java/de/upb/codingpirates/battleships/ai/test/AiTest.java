@@ -87,6 +87,21 @@ public class AiTest {
         sunk.add(new Shot(2, new Point2D(1, 1)));
         sunk.add(new Shot(2, new Point2D(1, 0)));
 
+
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6,6)));
+        ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1,6)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3,3)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3,5)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(4,6)));
+
+        Collection<Shot> hits = new ArrayList<>();
+        hits.add(new Shot(3, new Point2D(1,1)));
+        hits.add(new Shot(3, new Point2D(1,2)));
+        hits.add(new Shot(3, new Point2D(2,2)));
+
+
+        ai.setHits(hits);
+
         ai.setAiClientId(999);
 
         //Has to be set before creating heatmaps

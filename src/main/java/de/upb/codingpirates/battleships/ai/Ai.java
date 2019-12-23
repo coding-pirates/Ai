@@ -3,11 +3,13 @@ package de.upb.codingpirates.battleships.ai;
 import de.upb.codingpirates.battleship.ai.helper.RotationMatrix;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
+import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.message.notification.GameInitNotification;
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import de.upb.codingpirates.battleships.network.message.response.PlaceShipsResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,15 +63,17 @@ public class Ai {
     protected Collection<Shot> choosenShots = new ArrayList<>();
     protected Collection<Shot> sunk = new ArrayList<>();
 
+
     //sunken Ships
     Map<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>(); //
     Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>();
 
 
-    //for testing purpose public
+    //for testing purpose public //todo getter setter
     public PlayerUpdateNotification updateNotification;
     public ShotsRequest shotsRequest;
-
+    public Collection<Shot> misses = new ArrayList<>();
+    public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
 
 
     /**
@@ -82,13 +86,13 @@ public class Ai {
     public void connect(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
-        ClientConnector connector = ClientApplication.create(AiModule.class);//todo correct
+        ClientConnector connector = ClientApplication.create(new ClientModule<>(ClientConnector.class));//todo correct
         connector.connect(host, port);
         setConnector(connector);
     }
 
     /**
-     * Is called by the {@link AiMessageHandler#handleGameInitNotification(GameInitNotification, int)}
+     * Is called by the {@link AiMessageHandler#onGameInitNotification(GameInitNotification, int)}
      * for setting giving the ai access to the game configuration.
      *
      * @param config configuration from {@link GameInitNotification}
@@ -103,6 +107,10 @@ public class Ai {
         setVisualizationTime(config.getVisualizationTime());
         setShotCount(config.getShotCount());
 
+    }
+
+    public Ai getInstance() {
+        return this;
     }
 
 
@@ -124,7 +132,9 @@ public class Ai {
             randomShipGuesser(getShipConfig());
         }
         logger.info("placing ships worked");
+
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(getPositions());
+        //todo made PlaceShipsRequest public
 
         //connector.sendMessageToServer(placeShipsRequestMessage);
     }
@@ -256,8 +266,8 @@ public class Ai {
      *
      * @param shipPos The positions of one ship
      */
-    private ArrayList<Point2D> addSurroundingPointsToUsedPoints(ArrayList<Point2D> shipPos) {
-        ArrayList<Point2D> temp = new ArrayList<>();
+    private LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(ArrayList<Point2D> shipPos) {
+        LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
         for (Point2D point : shipPos) {
             int x = point.getX();
             int y = point.getY();
@@ -284,7 +294,7 @@ public class Ai {
     /**
      * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have more
      * functions.
-     * Called by {@link AiMessageHandler#handleGameInitNotification(GameInitNotification, int)}
+     * Called by {@link AiMessageHandler#onGameInitNotification(GameInitNotification, int)}
      *
      * @param clientList from the configuration
      */
@@ -369,8 +379,51 @@ public class Ai {
 
     }
 
+    public void calcAndSetMisses() {
+        Collection<Shot> misses = new ArrayList<>();
+        for (Shot s : requestedShotsLastRound) {
+            boolean miss = true;
+            for (Shot i : sunk) {
+                if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
+                    miss = false;
+                }
+            }
+            if (miss) misses.add(s);
+        }
+        this.misses.addAll(misses);
+
+    }
+
+    Map<Integer, LinkedHashSet<Point2D>> invalidPointsAll = new HashMap<>();
+
+
+    public void createAnsSetInvalidOne(int clientId) {
+        calcAndSetMisses();
+        invalidPointsAll.putIfAbsent(clientId, null);
+        LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
+        LinkedList<Shot> sortedSunkShotsTC = getSortedSunk().get(clientId);
+        ArrayList<Point2D> sortedSunkPointsTC = new ArrayList<>();
+        for (Shot s : sortedSunkShotsTC) {
+            sortedSunkPointsTC.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
+        }
+        temp.addAll(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
+        for (Shot s : this.misses) {
+            if (s.getClientId() == clientId) {
+                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
+            }
+        }
+        for (Shot s : getHits()){
+            if(s.getClientId() == clientId){
+                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
+            }
+        }
+        invalidPointsAll.replace(clientId, temp);
+    }
+
+
     //todo create getter for clientArrayList
     public void createHeatmapAllClients() {
+        calcAndSetMisses();
         findAllSunkenShipIds();
         Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
         for (Client client : this.clientArrayList) {
@@ -402,20 +455,16 @@ public class Ai {
      */
     public Integer[][] createHeatmapOneClient(int clientId) {
         logger.info("Create heatmap for client " + clientId);
+        createAnsSetInvalidOne(clientId);
 
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
         }
 
-
+        LinkedHashSet<Point2D> invalidPoints = invalidPointsAll.get(clientId);
         LinkedList<Integer> sunkenIdsThisClient = getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
-        ArrayList<Point2D> sunkenPointsThisClient = new ArrayList<>();
-        for (Shot s : getSortedSunk().get(clientId)) {
-            sunkenPointsThisClient.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
 
-        }
-        ArrayList<Point2D> invalidPoints = addSurroundingPointsToUsedPoints(sunkenPointsThisClient);
 
         Map<Integer, ShipType> shipConfig = getShipConfig();
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
@@ -837,6 +886,7 @@ public class Ai {
         System.out.println(choosenShots.size() == this.SHOTCOUNT);
 
         this.shotsRequest = new ShotsRequest(choosenShots);
+        //todo made ShotsRequest public
 
         //send the shotsRequest object to the server
         //TODO only for testing disabled

@@ -2,7 +2,7 @@ package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.Properties;
-import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
+import de.upb.codingpirates.battleships.network.message.request.*;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -17,6 +17,7 @@ import java.util.TimerTask;
 public class AiMain {
     static Timer timer = new Timer();
     static Ai ai = new Ai();
+    static AiMessageHandler aiMessageHandler = new AiMessageHandler();
 
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
@@ -31,7 +32,7 @@ public class AiMain {
             }
         }, 1L, 1L);
         int port = Properties.PORT; //default port
-        createNewAiPlayer("192.168.0.234", 47345);
+        createNewAiPlayer("localhost", 47345);
 
 
     }
