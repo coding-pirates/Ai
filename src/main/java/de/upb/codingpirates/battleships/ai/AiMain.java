@@ -37,12 +37,12 @@ public class AiMain {
         }, 1L, 1L);
 
         //default port: 47345
+        //host = args[0];
+        //port = Integer.parseInt(args[1]);
+        //setDifficultyLevel(Integer.parseInt(args[2]));
+        setDifficultyLevel(3);
 
-        host = args[0];
-        port = Integer.parseInt(args[1]);
-        setDifficultyLevel(Integer.parseInt(args[2]));
-
-        createNewAiPlayer("localhost", 47345);
+        createNewAiPlayer("192.168.0.143", 47345);
     }
 
     /**
@@ -54,10 +54,8 @@ public class AiMain {
      * @throws IOException
      */
     protected static void createNewAiPlayer(String host, int port) throws IOException {
-        ai.connect(host, port);
-        //ai client name is AI Player
-        //Create the ServerJoinRequest after connecting to the server
-        ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player:" + ((int) (Math.random() * 1000000)), ClientType.PLAYER));
+        ai.getTcpConnector().connect(host, port);
+        ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest("AI Player:" + ((int) (Math.random() * 10000)), ClientType.PLAYER));
     }
 
     /**
@@ -66,7 +64,7 @@ public class AiMain {
      */
     public static void close() {
         try {
-            ai.connector.disconnect();
+            ai.getTcpConnector().disconnect();
         } catch (IOException e) {
             e.printStackTrace();
         }

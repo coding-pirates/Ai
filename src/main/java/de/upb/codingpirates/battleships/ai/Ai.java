@@ -28,7 +28,6 @@ public class Ai {
     private static final Logger logger = LogManager.getLogger(Ai.class.getName());
 
     //GameState gameState;
-    ClientConnector connector;
     String host; //ip address
     int port;
 
@@ -75,6 +74,13 @@ public class Ai {
     public Collection<Shot> misses = new ArrayList<>();
     public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
 
+    private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
+    public   Ai instance = this;
+
+    public ClientConnector getTcpConnector(){
+        return tcpConnector;
+    }
+
 
     /**
      * Is called by the {@link AiMain#main(String[])} for connecting to the server
@@ -86,9 +92,7 @@ public class Ai {
     public void connect(String host, int port) throws IOException {
         this.host = host;
         this.port = port;
-        ClientConnector connector = ClientApplication.create(new ClientModule<>(ClientConnector.class));//todo correct
-        connector.connect(host, port);
-        setConnector(connector);
+        tcpConnector.connect(host, port);
     }
 
     /**
@@ -107,10 +111,6 @@ public class Ai {
         setVisualizationTime(config.getVisualizationTime());
         setShotCount(config.getShotCount());
 
-    }
-
-    public Ai getInstance() {
-        return this;
     }
 
     public void placeShots(int difficultyLevel) throws IOException {
@@ -438,13 +438,12 @@ public class Ai {
     public void createAnsSetInvalidPointsOne(int clientId) {
         logger.info("Computing the nvalid Points of client : " + clientId);
         invalidPointsAll.putIfAbsent(clientId, null);
-        LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
         LinkedList<Shot> sortedSunkShotsTC = getSortedSunk().get(clientId);
         ArrayList<Point2D> sortedSunkPointsTC = new ArrayList<>();
         for (Shot s : sortedSunkShotsTC) {
             sortedSunkPointsTC.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
         }
-        temp.addAll(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
+        LinkedHashSet<Point2D> temp = new LinkedHashSet<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
         for (Shot s : this.misses) {
             if (s.getClientId() == clientId) {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
@@ -549,7 +548,7 @@ public class Ai {
      * take the highest value of the 1D Array and iterating through the heatmap until we found the point with this value.
      * It does not matter which position the value came from initially. If this point was a hit or a miss already,
      * we are taking the next smaller value of our 1D array. Else, we create a Shot and add them to our Shot Array.
-     * We are repeating this while the we have less shots than possible in our Shot Array.
+     * We are repeating this while we have less shots than possible in our Shot Array.
      */
     public void placeShots_3() throws IOException {
         createHeatmapAllClients();
@@ -607,7 +606,7 @@ public class Ai {
         }
 
         ShotsRequest shotsRequest = new ShotsRequest(myShotsThisRound);
-        connector.sendMessageToServer(shotsRequest);
+        tcpConnector.sendMessageToServer(shotsRequest);
         requestedShotsLastRound.clear(); //leere die Liste von diesem zug und
         requestedShotsLastRound.addAll(myShotsThisRound);
     }
@@ -1030,14 +1029,6 @@ public class Ai {
         clientArrayList.removeIf(i -> i.getId() == leftPlayerID);
     }
 
-    /**
-     * Used by the connect method to set the connector
-     *
-     * @param connector
-     */
-    public void setConnector(ClientConnector connector) {
-        this.connector = connector;
-    }
 
     public void setSortedSunk(HashMap<Integer, LinkedList<Shot>> sortedSunk) {
         this.sortedSunk = sortedSunk;
