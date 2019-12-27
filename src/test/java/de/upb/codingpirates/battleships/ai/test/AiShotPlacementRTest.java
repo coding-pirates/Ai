@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.ai.test;
 
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.AiMain;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Shot;
 import de.upb.codingpirates.battleships.network.message.Message;
@@ -22,6 +23,8 @@ public class AiShotPlacementRTest {
     public void placing_Shots_randomly_on_field_with_4_Clients_Test() {
         Ai ai = new Ai();
         //set parameters
+        AiMain.setDifficultyLevel(3);
+
         Client a = new Client(1, "a");
         Client b = new Client(2, "b");
         Client c = new Client(3, "c");
@@ -44,7 +47,7 @@ public class AiShotPlacementRTest {
         //System.out.println(ai.updateNotification.getHits());
         System.out.println("Test: calls placeShots");
         try {
-            ai.placeShotsRandom();
+            ai.placeShots(AiMain.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }

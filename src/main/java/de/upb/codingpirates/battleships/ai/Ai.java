@@ -113,10 +113,31 @@ public class Ai {
         return this;
     }
 
+    public void placeShots(int difficultyLevel) throws IOException {
+        switch (difficultyLevel){
+            case 1: {
+                logger.info("Difficulty Level 1 selected");
+                placeShots_1();
+                break;
+            }
+            case 2: {
+                logger.info("Difficulty Level 2 selected");
+                //placeShots_2();
+                break;
+            }
+            case 3: {
+                logger.info("Difficulty level 3 selected");
+                placeShots_3();
+                break;
+            }
+            default: {
+                logger.error("Input is not valid: " + difficultyLevel);
+            }
 
-    //remains false until a
+        }
+    }
+    //falsch solange keine passende Platzierung der Schiffe gefunden wurde
     boolean successful = false;
-
     //the requested argument for the PlaceShipsRequest
     Map<Integer, PlacementInfo> positions = new HashMap<>();
 
@@ -303,6 +324,10 @@ public class Ai {
 
     }
 
+    public LinkedList<Client> getClientArrayList() {
+        return this.clientArrayList;
+    }
+
     /**
      * Creates a new ArrayList(Shot) with only one element
      *
@@ -378,27 +403,40 @@ public class Ai {
 
 
     }
+    //todo requestedShotsLastRound wird jede runde neu geladen und dann wieder geleert
 
-    public void calcAndSetMisses() {
-        Collection<Shot> misses = new ArrayList<>();
+    /**
+     * Computes all misses this Ai Player and adds them to all misses this round
+     */
+    public void calcAndAddMisses() {
+        logger.info("Compute the misses of this round");
+        Collection<Shot> tempMisses = new ArrayList<>();
         for (Shot s : requestedShotsLastRound) {
-            boolean miss = true;
-            for (Shot i : sunk) {
+            boolean miss = true; //assume the shot s is a miss
+            for (Shot i : getHits()) { //check if shot s is a miss
                 if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
-                    miss = false;
+                    miss = false; //no miss, its a hit
                 }
             }
-            if (miss) misses.add(s);
+            if (miss) tempMisses.add(s); // if its not hit, its a miss
         }
-        this.misses.addAll(misses);
+        this.misses.addAll(tempMisses); //add all new misses to all misses of the game
+        tempMisses.clear(); //not necessary
 
     }
 
+    //A map which maps the client id on a collection with all invalid Points of this client
     Map<Integer, LinkedHashSet<Point2D>> invalidPointsAll = new HashMap<>();
 
+    /**
+     * Computes the invalid Points of one client and replaces the current entry of the last round in invalidPointsAll
+     * by the new updated collection of invalid points.
+     *
+     * @param clientId The clientId for computing the invalid points
+     */
 
-    public void createAnsSetInvalidOne(int clientId) {
-        calcAndSetMisses();
+    public void createAnsSetInvalidPointsOne(int clientId) {
+        logger.info("Computing the nvalid Points of client : " + clientId);
         invalidPointsAll.putIfAbsent(clientId, null);
         LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
         LinkedList<Shot> sortedSunkShotsTC = getSortedSunk().get(clientId);
@@ -412,8 +450,8 @@ public class Ai {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
-        for (Shot s : getHits()){
-            if(s.getClientId() == clientId){
+        for (Shot s : getHits()) {
+            if (s.getClientId() == clientId) {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
@@ -421,27 +459,177 @@ public class Ai {
     }
 
 
-    //todo create getter for clientArrayList
+    /**
+     * Places shots randomly on the field of one opponent and sends the fitting message.
+     * <p>
+     * Difficulty level 1.
+     *
+     * @throws IOException
+     */
+    public void placeShots_1() throws IOException {
+        //reset
+        this.shotsRequest = null;
+        this.choosenShots = null;
+        //update numberOfClients every time the method is calls because the number of connected clients could have changed
+        int numberOfClients = clientArrayList.size();
+        int shotCount = getShotCount();
+        int shotClientId;
+
+        while (true) {
+
+            int aiIndex = clientArrayList.indexOf(this); //get the index of the ai
+            int randomIndex = (int) (Math.random() * numberOfClients);
+            if (randomIndex != aiIndex) {
+                shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
+                break;
+            }
+        }
+
+        this.choosenShots = new ArrayList<>();
+
+        ArrayList<Point2D> aimsThisRound = new ArrayList<>();
+
+        ArrayList<Point2D> hitPoints = new ArrayList<>();
+
+        for (Shot k : updateNotification.getHits()) {
+            if (k.getClientId() == shotClientId) {
+                hitPoints.add(k.getTargetField());
+            }
+        }
+
+        //placing the shots randomly until the max of shots is not reached
+        //all shots will be placed on the field of only one opponents field(other client)
+        int i = 0;
+        while (i < shotCount) {
+
+            Point2D aimPoint = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
+            boolean alreadyChoosen = false;
+            for (Point2D p : aimsThisRound) {
+                if (p.getX() == aimPoint.getX() & p.getY() == aimPoint.getY()) {
+                    alreadyChoosen = true;
+                }
+            }
+            for (Point2D h : hitPoints) {
+                if (h.getX() == aimPoint.getX() & h.getY() == aimPoint.getY()) {
+                    alreadyChoosen = true;
+                }
+            }
+            if (alreadyChoosen) continue;
+
+            aimsThisRound.add(aimPoint);
+            //create a new shot object, add it to requestedShot Array and increase i
+            Shot shot = new Shot(shotClientId, aimPoint);
+            choosenShots.add(shot);
+            //System.out.println(choosenShots);
+            i++;
+
+        }
+        //create new shotsRequest Object with the choosenShots Collection
+        System.out.println(choosenShots.size() == this.SHOTCOUNT);
+
+        this.shotsRequest = new ShotsRequest(choosenShots);
+        //todo made ShotsRequest public
+
+        //send the shotsRequest object to the server
+        //TODO only for testing disabled
+        //connector.sendMessageToServer(shotsRequest);
+    }
+
+    /**
+     * The approach in this version is to shoot a the field with the maximum of invalid points.
+     * Send the {@link ShotsRequest} message tho the server.
+     * <p>
+     * Difficulty level 3.
+     *
+     *
+     * <p>
+     * The approach explained more detailed: We are looking for the point position with the maximum value of the field. The
+     * algorithm does not look for south, west, east or north directions. It is always looking for the highest value we
+     * can find. So we are going to put the values of the heatmap into a 1D Array and sorting them. Then we
+     * take the highest value of the 1D Array and iterating through the heatmap until we found the point with this value.
+     * It does not matter which position the value came from initially. If this point was a hit or a miss already,
+     * we are taking the next smaller value of our 1D array. Else, we create a Shot and add them to our Shot Array.
+     * We are repeating this while the we have less shots than possible in our Shot Array.
+     */
+    public void placeShots_3() throws IOException {
+        createHeatmapAllClients();
+        //eine map die von dem Client auf seine Anzahl invalid Points zeigt
+        Map<Integer, Integer> invalidPointsSize = new HashMap<>();
+
+        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : invalidPointsAll.entrySet()) {
+            invalidPointsSize.put(entry.getKey(), entry.getValue().size());
+        }
+        //get the client Id with the highest value of invalid Points
+        int targetClient = Collections.max(invalidPointsSize.entrySet(), Map.Entry.comparingByValue()).getKey();
+        //get the heatmap of this client
+        Integer[][] targetHeatmap = heatmapAllClients.get(targetClient);
+
+        ArrayList<Integer> allHeatValues = new ArrayList<>();
+        for (Integer[] integers : targetHeatmap) {
+            Collections.addAll(allHeatValues, integers);
+        }
+        Collection<Shot> myShotsThisRound = new ArrayList<>();
+        //sort the values in descending order
+        Collections.sort(allHeatValues, Collections.reverseOrder());
+        int counter = 0;
+        boolean isHitOrShot = false;
+        for (int i : allHeatValues) {
+            for (int row = 0; row < targetHeatmap.length; row++) {
+                for (int col = 0; col < targetHeatmap[row].length; col++) {
+                    //wenn der value i im array gefunden wurde ...
+                    if (i == targetHeatmap[row][col]) {
+                        //...prüfe ob das Feld schon ein hit ist und ...
+                        for (Shot h : getHits()) {
+                            if (h.getClientId() == targetClient & h.getTargetField().getX() == col & h.getTargetField().getY() == row) {
+                                isHitOrShot = true;
+                                break;
+                            }
+                        }
+                        //...ob das Feld schon ein miss ist
+                        for (Shot m : getMisses()) {
+                            if (m.getClientId() == targetClient & m.getTargetField().getX() == col & m.getTargetField().getY() == row) {
+                                isHitOrShot = true;
+                                break;
+                            }
+                        }
+                        //Wenn der gewählte shot schon ein hit oder ein miss ist, breache ab und geh zu nächstem value i im array
+                        if (isHitOrShot) break;
+                        Shot target = new Shot(targetClient, new Point2D(row, col));
+                        myShotsThisRound.add(target);
+                        //wenn ein Schuss augewählt wurde, erhöhe den counter
+                        //wenn die anzahl der gewählten Schüsse gleich dem ShotCount ist, beende Schuss Auswahl
+                        if (myShotsThisRound.size() == getShotCount()) return;
+                    }
+                    if (isHitOrShot) break;
+                }
+                if (isHitOrShot) break;
+            }
+        }
+
+        ShotsRequest shotsRequest = new ShotsRequest(myShotsThisRound);
+        connector.sendMessageToServer(shotsRequest);
+        requestedShotsLastRound.clear(); //leere die Liste von diesem zug und
+        requestedShotsLastRound.addAll(myShotsThisRound);
+    }
+
+    /**
+     * Creates a heatmap for every client and calls {@link Ai#createHeatmapOneClient(int clientId)}.
+     * In this version, the heatmaps will be created completely new by clearing the old heatmaps first.
+     *
+     * @see <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
+     */
+    Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
+
     public void createHeatmapAllClients() {
-        calcAndSetMisses();
-        findAllSunkenShipIds();
-        Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
-        for (Client client : this.clientArrayList) {
+        heatmapAllClients.clear(); //delete the heatmaps of the last round
+        calcAndAddMisses(); // compute the new misses for this round
+        findAllSunkenShipIds(); //compute the sunken ship Ids for every client
+        for (Client client : this.getClientArrayList()) {
             if (client.getId() == getAiClientId()) {
                 continue;
             }
+            //create a heatmap for this client and put it into the heatmapAllClients map
             heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId()));
-        }
-
-        for (Map.Entry<Integer, Integer[][]> entry : heatmapAllClients.entrySet()) {
-            logger.info("Heatmap of client " + entry.getKey());
-            //only reversed the heatmap for testing purpose
-            Integer[][] heatmapThisClientRotated = entry.getValue();
-            Collections.reverse(Arrays.asList(heatmapThisClientRotated));
-            for (Integer[] row : heatmapThisClientRotated) {
-                System.out.println(Arrays.toString(row));
-            }
-
         }
 
 
@@ -449,20 +637,23 @@ public class Ai {
 
     /**
      * Creates a Heatmap for one Client: assigns each Point its maximum occupancy by (not yet sunken) ships
+     * <p>
+     * <p>
+     * The algorithm is based on <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
      *
      * @param clientId The clientId for whom the heatmap is to be created
      * @return a heatmap for the client
      */
     public Integer[][] createHeatmapOneClient(int clientId) {
         logger.info("Create heatmap for client " + clientId);
-        createAnsSetInvalidOne(clientId);
+        createAnsSetInvalidPointsOne(clientId);
 
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
         }
 
-        LinkedHashSet<Point2D> invalidPoints = invalidPointsAll.get(clientId);
+        LinkedHashSet<Point2D> invalidPointsThisClient = invalidPointsAll.get(clientId);
         LinkedList<Integer> sunkenIdsThisClient = getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
 
 
@@ -481,7 +672,7 @@ public class Ai {
             //Betrachte erstes rotiertes Schiff
             for (ArrayList<Point2D> tShips : rotated) {
                 ArrayList<Point2D> cShip = new ArrayList<>(tShips); //kopiere erstes rotiertes Schiff
-                ArrayList<Integer> xValues = new ArrayList<>(); //alle X werte des Schiff
+                ArrayList<Integer> xValues = new ArrayList<>(); //alle X werte des Schiffs
                 ArrayList<Integer> yValues = new ArrayList<>(); //alle y Werte des Schiffs
                 for (Point2D z : cShip) { //füge x und y den Listen hinzu
                     xValues.add(z.getX());
@@ -500,7 +691,7 @@ public class Ai {
                         boolean valid = true;
                         //check if cShip fits on the field
                         for (Point2D p : cShip) { //jeder Punkt in cShip
-                            for (Point2D s : invalidPoints) { //jeder Shot aus den sunkenShotsThisClient
+                            for (Point2D s : invalidPointsThisClient) { //jeder invalid Point für diesen Client
                                 if (p.getX() == s.getX() & p.getY() == s.getY()) {
                                     //wenn ein Punkt dem Shot Punkt gleich ist, mache nichts und schiebe Schiff
                                     //einen weiter
@@ -820,80 +1011,6 @@ public class Ai {
     }
 
     /**
-     * Places shots randomly on the field of one opponent and sends the fitting message.
-     *
-     * @throws IOException
-     */
-    public void placeShotsRandom() throws IOException {
-        //reset
-        this.shotsRequest = null;
-        this.choosenShots = null;
-        //update numberOfClients every time the method is calls because the number of connected clients could have changed
-        int numberOfClients = clientArrayList.size();
-        int shotCount = getShotCount();
-        int shotClientId;
-
-        while (true) {
-
-            int aiIndex = clientArrayList.indexOf(this); //get the index of the ai
-            int randomIndex = (int) (Math.random() * numberOfClients);
-            if (randomIndex != aiIndex) {
-                shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
-                break;
-            }
-        }
-
-        this.choosenShots = new ArrayList<>();
-
-        ArrayList<Point2D> aimsThisRound = new ArrayList<>();
-
-        ArrayList<Point2D> hitPoints = new ArrayList<>();
-
-        for (Shot k : updateNotification.getHits()) {
-            if (k.getClientId() == shotClientId) {
-                hitPoints.add(k.getTargetField());
-            }
-        }
-
-        //placing the shots randomly until the max of shots is not reached
-        //all shots will be placed on the field of only one opponents field(other client)
-        int i = 0;
-        while (i < shotCount) {
-
-            Point2D aimPoint = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
-            boolean alreadyChoosen = false;
-            for (Point2D p : aimsThisRound) {
-                if (p.getX() == aimPoint.getX() & p.getY() == aimPoint.getY()) {
-                    alreadyChoosen = true;
-                }
-            }
-            for (Point2D h : hitPoints) {
-                if (h.getX() == aimPoint.getX() & h.getY() == aimPoint.getY()) {
-                    alreadyChoosen = true;
-                }
-            }
-            if (alreadyChoosen) continue;
-
-            aimsThisRound.add(aimPoint);
-            //create a new shot object, add it to requestedShot Array and increase i
-            Shot shot = new Shot(shotClientId, aimPoint);
-            choosenShots.add(shot);
-            //System.out.println(choosenShots);
-            i++;
-
-        }
-        //create new shotsRequest Object with the choosenShots Collection
-        System.out.println(choosenShots.size() == this.SHOTCOUNT);
-
-        this.shotsRequest = new ShotsRequest(choosenShots);
-        //todo made ShotsRequest public
-
-        //send the shotsRequest object to the server
-        //TODO only for testing disabled
-        //connector.sendMessageToServer(shotsRequest);
-    }
-
-    /**
      * Creates a random point related to the width and height of the game field
      *
      * @return Point2d Random Point with X and Y coordinates
@@ -924,6 +1041,11 @@ public class Ai {
 
     public void setSortedSunk(HashMap<Integer, LinkedList<Shot>> sortedSunk) {
         this.sortedSunk = sortedSunk;
+    }
+
+
+    public Collection<Shot> getMisses() {
+        return this.misses;
     }
 
     public Map<Integer, LinkedList<Shot>> getSortedSunk() {

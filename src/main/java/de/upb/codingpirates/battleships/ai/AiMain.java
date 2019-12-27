@@ -19,6 +19,10 @@ public class AiMain {
     static Ai ai = new Ai();
     static AiMessageHandler aiMessageHandler = new AiMessageHandler();
 
+    static String host = "";
+    static int port = 0;
+    static int difficultyLevel = 0;
+
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
      *
@@ -31,10 +35,14 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        int port = Properties.PORT; //default port
+
+        //default port: 47345
+
+        host = args[0];
+        port = Integer.parseInt(args[1]);
+        setDifficultyLevel(Integer.parseInt(args[2]));
+
         createNewAiPlayer("localhost", 47345);
-
-
     }
 
     /**
@@ -48,8 +56,8 @@ public class AiMain {
     protected static void createNewAiPlayer(String host, int port) throws IOException {
         ai.connect(host, port);
         //ai client name is AI Player
-        //Create the ServerJoinRequest after connecting to the
-        ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player", ClientType.PLAYER));
+        //Create the ServerJoinRequest after connecting to the server
+        ai.connector.sendMessageToServer(new ServerJoinRequest("AI Player:" + ((int) (Math.random() * 1000000)), ClientType.PLAYER));
     }
 
     /**
@@ -65,6 +73,14 @@ public class AiMain {
         //canceling the timer to stop the main method which keeps the ai alive
         timer.cancel();
         timer.purge();
+    }
+
+    public static void setDifficultyLevel(int d) {
+        difficultyLevel = d;
+    }
+
+    public static int getDifficultyLevel() {
+        return difficultyLevel;
     }
 
 

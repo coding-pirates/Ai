@@ -5,16 +5,17 @@ import de.upb.codingpirates.battleships.client.network.AbstractClientModule;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.network.ConnectionHandler;
 
-public class AiModule<T extends ConnectionHandler> extends AbstractClientModule<ClientConnector> {
+public class AiModule extends AbstractClientModule<ClientConnector> {
 
-    public AiModule(Class<T> connectionHandler){
-        super(ClientConnector.class);
+    //todo implementaion only for building, does not work
+    public AiModule(){
+        super(null);
     }
 
     @Override
     protected void configure() {
         super.configure();
-        this.bind(ListenerHandler.class).toInstance(AiMain.aiMessageHandler.getInstance()); //todo correct
+        this.bind(ListenerHandler.class).toInstance(null); //todo correct
     }
 
 }

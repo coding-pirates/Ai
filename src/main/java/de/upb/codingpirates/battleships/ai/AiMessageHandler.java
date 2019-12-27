@@ -20,7 +20,7 @@ import java.io.IOException;
  * @author Paul Becker
  * @author Benjamin Kasten
  */
-public class AiMessageHandler extends ListenerHandler implements
+public class AiMessageHandler implements
         BattleshipsExceptionListener,
         ConnectionClosedReportListener,
         ErrorNotificationListener,
@@ -38,10 +38,6 @@ public class AiMessageHandler extends ListenerHandler implements
 
     public AiMessageHandler() {
         ListenerHandler.registerListener(this);
-    }
-
-    public AiMessageHandler getInstance() {
-        return AiMain.aiMessageHandler;
     }
 
     int aiClientId;
@@ -96,7 +92,7 @@ public class AiMessageHandler extends ListenerHandler implements
     public void onGameStartNotification(GameStartNotification message, int clientId) {
         logger.info("GameStartNotification");
         try {
-            AiMain.ai.placeShotsRandom();
+            AiMain.ai.placeShots(AiMain.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -134,7 +130,7 @@ public class AiMessageHandler extends ListenerHandler implements
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
         logger.info("RoundStartNotification");
         try {
-            AiMain.ai.placeShotsRandom();
+            AiMain.ai.placeShots(AiMain.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }
