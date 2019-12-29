@@ -560,7 +560,7 @@ public class Ai {
                 break;
             }
         }
-        Set<Point2D> surroundingPoints = new HashSet<>();
+        Set<Point2D> pot = new HashSet<>();
         for (Shot s : getHits()) {
             ArrayList<Point2D> temp = new ArrayList<>();
             //west
@@ -572,10 +572,9 @@ public class Ai {
             //north
             temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
 
-
             boolean isHitOrMiss = false;
             for (Point2D p : temp) {
-                if (p.getX() > 0 & p.getY() >= 0) {
+                if (p.getX() >= 0 & p.getY() >= 0) {
                     for (Shot h : getHits()) {
                         if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
                             isHitOrMiss = true;
@@ -583,6 +582,7 @@ public class Ai {
                         }
 
                     }
+                    if (isHitOrMiss) continue;
                     for (Shot h : getMisses()) {
                         if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
                             isHitOrMiss = true;
@@ -590,19 +590,44 @@ public class Ai {
                         }
 
                     }
+                    if (isHitOrMiss) continue;
                 } else {
                     continue;
                 }
-                if (isHitOrMiss) continue;
-                else {
-
-
-
-                }
+                pot.add(p);
             }
-
-
         }
+        if (pot.size() < getShotCount()) {
+            for (Point2D p : pot) {
+                myShots.add(new Shot(shotClientId, new Point2D(p.getX(), p.getY())));
+            }
+            boolean invalid = false;
+            while (true) {
+                Point2D point = getRandomPoint2D();
+                int xVal = point.getX();
+                int yVal = point.getY();
+                for (Point2D p : invalidPointsAll.get(shotClientId)) {
+                    if (p.getX() == xVal & p.getY() == yVal) {
+                        invalid = true;
+                        break;
+                    }
+                }
+                if (invalid) continue;
+                else {
+                    myShots.add(new Shot(shotClientId, point));
+                }
+                if (myShots.size() == getShotCount()) break;
+            }
+        } else {
+            for (Point2D p : pot) {
+                myShots.add(new Shot(shotClientId, p));
+                if (myShots.size() == getShotCount()) break;
+            }
+        }
+        pot.clear();
+        requestedShotsLastRound.clear();
+        requestedShotsLastRound.addAll(myShots);
+        tcpConnector.sendMessageToServer(new ShotsRequest(myShots));
 
 
     }
