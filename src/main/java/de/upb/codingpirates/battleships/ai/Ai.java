@@ -124,7 +124,7 @@ public class Ai {
             }
             case 2: {
                 logger.info("Difficulty Level 2 selected");
-                //placeShots_2();
+                placeShots_2();
                 break;
             }
             case 3: {
@@ -472,14 +472,19 @@ public class Ai {
         //reset
         this.shotsRequest = null;
         this.choosenShots = null;
-        //update numberOfClients every time the method is calls because the number of connected clients could have changed
+        //update numberOfClients every time the method is called because the number of connected clients could have changed
         int numberOfClients = clientArrayList.size();
-        int shotCount = getShotCount();
         int shotClientId;
+
+        int aiIndex = -1;
+        for (Client c : clientArrayList) {
+            if (c.getId() == aiClientId) {
+                aiIndex = clientArrayList.indexOf(c);
+            }
+        }
 
         while (true) {
 
-            int aiIndex = clientArrayList.indexOf(this); //get the index of the ai
             int randomIndex = (int) (Math.random() * numberOfClients);
             if (randomIndex != aiIndex) {
                 shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
@@ -493,7 +498,7 @@ public class Ai {
 
         ArrayList<Point2D> hitPoints = new ArrayList<>();
 
-        for (Shot k : updateNotification.getHits()) {
+        for (Shot k : getHits()) {
             if (k.getClientId() == shotClientId) {
                 hitPoints.add(k.getTargetField());
             }
@@ -502,7 +507,7 @@ public class Ai {
         //placing the shots randomly until the max of shots is not reached
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
-        while (i < shotCount) {
+        while (i < getShotCount()) {
 
             Point2D aimPoint = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
             boolean alreadyChoosen = false;
@@ -527,14 +532,79 @@ public class Ai {
 
         }
         //create new shotsRequest Object with the choosenShots Collection
-        System.out.println(choosenShots.size() == this.SHOTCOUNT);
+        System.out.println(choosenShots.size() == this.getShotCount());
 
-        this.shotsRequest = new ShotsRequest(choosenShots);
         //todo made ShotsRequest public
 
         //send the shotsRequest object to the server
-        //TODO only for testing disabled
-        //connector.sendMessageToServer(shotsRequest);
+        tcpConnector.sendMessageToServer(new ShotsRequest(choosenShots));
+    }
+
+    public void placeShots_2() throws IOException {
+        logger.info(MARKER.shot_placement, "Placing shots with difficulty level 2");
+        Collection<Shot> myShots = new ArrayList<>();
+        calcAndAddMisses();
+        int shotClientId;
+
+        int aiIndex = -1;
+        for (Client c : clientArrayList) {
+            if (c.getId() == aiClientId) {
+                aiIndex = clientArrayList.indexOf(c);
+            }
+        }
+
+        while (true) {
+            int randomIndex = (int) (Math.random() * clientArrayList.size());
+            if (randomIndex != aiIndex) {
+                shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
+                break;
+            }
+        }
+        Set<Point2D> surroundingPoints = new HashSet<>();
+        for (Shot s : getHits()) {
+            ArrayList<Point2D> temp = new ArrayList<>();
+            //west
+            temp.add(new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
+            //south
+            temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
+            //east
+            temp.add(new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
+            //north
+            temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
+
+
+            boolean isHitOrMiss = false;
+            for (Point2D p : temp) {
+                if (p.getX() > 0 & p.getY() >= 0) {
+                    for (Shot h : getHits()) {
+                        if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
+                            isHitOrMiss = true;
+                            break;
+                        }
+
+                    }
+                    for (Shot h : getMisses()) {
+                        if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
+                            isHitOrMiss = true;
+                            break;
+                        }
+
+                    }
+                } else {
+                    continue;
+                }
+                if (isHitOrMiss) continue;
+                else {
+
+
+
+                }
+            }
+
+
+        }
+
+
     }
 
     /**
