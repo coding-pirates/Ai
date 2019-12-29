@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleship.ai.helper.RotationMatrix;
+import de.upb.codingpirates.battleship.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
 import de.upb.codingpirates.battleships.client.network.ClientModule;
@@ -9,13 +10,14 @@ import de.upb.codingpirates.battleships.network.message.notification.GameInitNot
 import de.upb.codingpirates.battleships.network.message.notification.PlayerUpdateNotification;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
-import de.upb.codingpirates.battleships.network.message.response.PlaceShipsResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.Marker;
+import org.apache.logging.log4j.MarkerManager;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 //TODO some getter/setter are missing
 
 /**
@@ -75,9 +77,9 @@ public class Ai {
     public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
 
     private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
-    public   Ai instance = this;
+    public Ai instance = this;
 
-    public ClientConnector getTcpConnector(){
+    public ClientConnector getTcpConnector() {
         return tcpConnector;
     }
 
@@ -114,7 +116,7 @@ public class Ai {
     }
 
     public void placeShots(int difficultyLevel) throws IOException {
-        switch (difficultyLevel){
+        switch (difficultyLevel) {
             case 1: {
                 logger.info("Difficulty Level 1 selected");
                 placeShots_1();
@@ -136,6 +138,7 @@ public class Ai {
 
         }
     }
+
     //falsch solange keine passende Platzierung der Schiffe gefunden wurde
     boolean successful = false;
     //the requested argument for the PlaceShipsRequest
@@ -436,7 +439,7 @@ public class Ai {
      */
 
     public void createAnsSetInvalidPointsOne(int clientId) {
-        logger.info("Computing the nvalid Points of client : " + clientId);
+        logger.info(MARKER.invalid_points, "Computing the invalid points of client : " + clientId);
         invalidPointsAll.putIfAbsent(clientId, null);
         LinkedList<Shot> sortedSunkShotsTC = getSortedSunk().get(clientId);
         ArrayList<Point2D> sortedSunkPointsTC = new ArrayList<>();
@@ -536,79 +539,72 @@ public class Ai {
 
     /**
      * The approach in this version is to shoot a the field with the maximum of invalid points.
-     * Send the {@link ShotsRequest} message tho the server.
+     * Sends the {@link ShotsRequest} message tho the server.
      * <p>
      * Difficulty level 3.
      *
      *
      * <p>
-     * The approach explained more detailed: We are looking for the point position with the maximum value of the field. The
-     * algorithm does not look for south, west, east or north directions. It is always looking for the highest value we
-     * can find. So we are going to put the values of the heatmap into a 1D Array and sorting them. Then we
-     * take the highest value of the 1D Array and iterating through the heatmap until we found the point with this value.
-     * It does not matter which position the value came from initially. If this point was a hit or a miss already,
-     * we are taking the next smaller value of our 1D array. Else, we create a Shot and add them to our Shot Array.
-     * We are repeating this while we have less shots than possible in our Shot Array.
+     * The approach explained more detailed:
      */
     public void placeShots_3() throws IOException {
+        logger.info(MARKER.shot_placement, "Placing shots with difficulty level 3");
         createHeatmapAllClients();
-        //eine map die von dem Client auf seine Anzahl invalid Points zeigt
         Map<Integer, Integer> invalidPointsSize = new HashMap<>();
 
         for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : invalidPointsAll.entrySet()) {
             invalidPointsSize.put(entry.getKey(), entry.getValue().size());
         }
+
         //get the client Id with the highest value of invalid Points
         int targetClient = Collections.max(invalidPointsSize.entrySet(), Map.Entry.comparingByValue()).getKey();
         //get the heatmap of this client
         Integer[][] targetHeatmap = heatmapAllClients.get(targetClient);
 
-        ArrayList<Integer> allHeatValues = new ArrayList<>();
-        for (Integer[] integers : targetHeatmap) {
-            Collections.addAll(allHeatValues, integers);
-        }
-        Collection<Shot> myShotsThisRound = new ArrayList<>();
-        //sort the values in descending order
-        Collections.sort(allHeatValues, Collections.reverseOrder());
-        int counter = 0;
-        boolean isHitOrShot = false;
-        for (int i : allHeatValues) {
-            for (int row = 0; row < targetHeatmap.length; row++) {
-                for (int col = 0; col < targetHeatmap[row].length; col++) {
-                    //wenn der value i im array gefunden wurde ...
-                    if (i == targetHeatmap[row][col]) {
-                        //...prüfe ob das Feld schon ein hit ist und ...
-                        for (Shot h : getHits()) {
-                            if (h.getClientId() == targetClient & h.getTargetField().getX() == col & h.getTargetField().getY() == row) {
-                                isHitOrShot = true;
-                                break;
-                            }
-                        }
-                        //...ob das Feld schon ein miss ist
-                        for (Shot m : getMisses()) {
-                            if (m.getClientId() == targetClient & m.getTargetField().getX() == col & m.getTargetField().getY() == row) {
-                                isHitOrShot = true;
-                                break;
-                            }
-                        }
-                        //Wenn der gewählte shot schon ein hit oder ein miss ist, breache ab und geh zu nächstem value i im array
-                        if (isHitOrShot) break;
-                        Shot target = new Shot(targetClient, new Point2D(row, col));
-                        myShotsThisRound.add(target);
-                        //wenn ein Schuss augewählt wurde, erhöhe den counter
-                        //wenn die anzahl der gewählten Schüsse gleich dem ShotCount ist, beende Schuss Auswahl
-                        if (myShotsThisRound.size() == getShotCount()) return;
-                    }
-                    if (isHitOrShot) break;
-                }
-                if (isHitOrShot) break;
+        Map<Point2D, Integer> pointsToValue = new LinkedHashMap<>();
+
+        for (int row = 0; row < targetHeatmap.length; row++) {
+            for (int col = 0; col < targetHeatmap[row].length; col++) {
+                pointsToValue.put(new Point2D(col, row), targetHeatmap[row][col]);
             }
         }
+        Map<Point2D, Integer> pointsToValueOrdered = pointsToValue.entrySet()
+                .stream()
+                .sorted((Map.Entry.<Point2D, Integer>comparingByValue().reversed()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
-        ShotsRequest shotsRequest = new ShotsRequest(myShotsThisRound);
-        tcpConnector.sendMessageToServer(shotsRequest);
-        requestedShotsLastRound.clear(); //leere die Liste von diesem zug und
-        requestedShotsLastRound.addAll(myShotsThisRound);
+        Collection<Shot> myShotsThisRound = new ArrayList<>();
+        boolean isHitOrShot;
+
+        for (Map.Entry<Point2D, Integer> entry : pointsToValueOrdered.entrySet()) {
+            isHitOrShot = false;
+            //prüfe ob der Punkt schon genutzt wird
+            for (Shot s : getMisses()) {
+                if (entry.getKey().getX() == s.getTargetField().getX() & entry.getKey().getY() == s.getTargetField().getY()) {
+                    isHitOrShot = true;
+                    break;
+                }
+            }
+            if (isHitOrShot) {
+                break;
+            }
+            for (Shot s : getHits()) {
+                if (entry.getKey().getX() == s.getTargetField().getX() & entry.getKey().getY() == s.getTargetField().getY()) {
+                    isHitOrShot = true;
+                    break;
+                }
+            }
+            if (isHitOrShot) {
+                continue;
+            }
+            myShotsThisRound.add(new Shot(targetClient, new Point2D(entry.getKey().getX(), entry.getKey().getY())));
+            if (myShotsThisRound.size() == getShotCount()) {
+                tcpConnector.sendMessageToServer(new ShotsRequest(myShotsThisRound));
+                requestedShotsLastRound.clear(); //leere die Liste von dieser Runde
+                requestedShotsLastRound.addAll(myShotsThisRound);
+                return;
+            }
+        }
     }
 
     /**
@@ -644,7 +640,7 @@ public class Ai {
      * @return a heatmap for the client
      */
     public Integer[][] createHeatmapOneClient(int clientId) {
-        logger.info("Create heatmap for client " + clientId);
+        logger.info(MARKER.heatmap, "Create heatmap for client " + clientId);
         createAnsSetInvalidPointsOne(clientId);
 
         Integer[][] heatmap = new Integer[getHeight()][getWidth()]; //heatmap array
@@ -660,7 +656,7 @@ public class Ai {
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             logger.info("Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
-                logger.info("ship already sunk: " + entry.getKey());
+                logger.info(MARKER.check, "ship already sunk: " + entry.getKey());
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
             int shipId = entry.getKey(); //Schiffs Id
@@ -738,7 +734,7 @@ public class Ai {
 
         }
 
-        logger.info("Created heatmap of client: " + clientId);
+        logger.info(MARKER.heatmap, "Created heatmap of client: " + clientId);
 
         return heatmap;
 
