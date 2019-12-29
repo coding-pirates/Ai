@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai.test;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,14 +15,13 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class AiShipPlacementRTest {
-    //Todo Beforeall Methode implementieren
+public class AiShipPlacementRandTest {
+    static Ai ai = new Ai();
+    @BeforeAll
+    public static void create(){
 
-    @Test
-    public void place_Ship_should_return_random_Map_Integer_PlacementInfo() {
-        Ai ai = new Ai();
-        ai.setHeight(8);
-        ai.setWidth(8);
+        ai.setHeight(6);
+        ai.setWidth(6);
         Collection<Point2D> shipPos1 = new ArrayList<>();
         shipPos1.add(new Point2D(0, 0));
         shipPos1.add(new Point2D(1, 0));
@@ -52,6 +52,12 @@ public class AiShipPlacementRTest {
         shipConfig.put(3, ship3);
 
         ai.setShipConfig(shipConfig);
+
+    }
+
+    @Test
+    public void place_Ship_should_return_random_Map_Integer_PlacementInfo() {
+
         try{
             ai.placeShips();
         } catch (IOException e) {
@@ -62,7 +68,7 @@ public class AiShipPlacementRTest {
         assertFalse(ai.getPositions().values().isEmpty());
         assertFalse(ai.getPositions().values().isEmpty());
 
-        //in that case 3 entries
+        //in this case 3 entries
         assertEquals(3, ai.getPositions().size());
 
 

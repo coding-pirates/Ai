@@ -61,7 +61,6 @@ public class Ai {
 
     //updated values
     protected Map<Integer, Integer> points = new HashMap<>();
-    protected Collection<Shot> choosenShots = new ArrayList<>();
     protected Collection<Shot> sunk = new ArrayList<>();
 
 
@@ -72,7 +71,7 @@ public class Ai {
 
     //for testing purpose public //todo getter setter
     public PlayerUpdateNotification updateNotification;
-    public ShotsRequest shotsRequest;
+
     public Collection<Shot> misses = new ArrayList<>();
     public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
 
@@ -462,16 +461,14 @@ public class Ai {
 
 
     /**
-     * Places shots randomly on the field of one opponent and sends the fitting message.
+     * Places shots randomly on the field of one opponent and sends the {@link ShotsRequest} message.
      * <p>
      * Difficulty level 1.
      *
-     * @throws IOException
+     * @throws IOException Network error (see report)
      */
     public void placeShots_1() throws IOException {
-        //reset
-        this.shotsRequest = null;
-        this.choosenShots = null;
+
         //update numberOfClients every time the method is called because the number of connected clients could have changed
         int numberOfClients = clientArrayList.size();
         int shotClientId;
@@ -488,37 +485,39 @@ public class Ai {
             int randomIndex = (int) (Math.random() * numberOfClients);
             if (randomIndex != aiIndex) {
                 shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
+                logger.info("Shooting on client with id: {} ", shotClientId);
                 break;
             }
         }
 
-        this.choosenShots = new ArrayList<>();
+        Collection<Shot> choosenShots = new ArrayList<>();
 
         ArrayList<Point2D> aimsThisRound = new ArrayList<>();
-
-        ArrayList<Point2D> hitPoints = new ArrayList<>();
-
-        for (Shot k : getHits()) {
-            if (k.getClientId() == shotClientId) {
-                hitPoints.add(k.getTargetField());
-            }
-        }
 
         //placing the shots randomly until the max of shots is not reached
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
         while (i < getShotCount()) {
+            logger.info("Trying to find  {}. shot", i+1);
 
             Point2D aimPoint = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
             boolean alreadyChoosen = false;
             for (Point2D p : aimsThisRound) {
                 if (p.getX() == aimPoint.getX() & p.getY() == aimPoint.getY()) {
                     alreadyChoosen = true;
+                    logger.info("Shot was already selected this round" + p);
                 }
             }
-            for (Point2D h : hitPoints) {
-                if (h.getX() == aimPoint.getX() & h.getY() == aimPoint.getY()) {
+            for (Shot h : getHits()) {
+                if (h.getTargetField().getX() == aimPoint.getX() & h.getTargetField().getY() == aimPoint.getY() & h.getClientId() == shotClientId) {
                     alreadyChoosen = true;
+                    logger.info("Shot is already a hit " + h);
+                }
+            }
+            for (Shot s : getMisses()){
+                if (s.getClientId() == shotClientId & s.getTargetField().getX() == aimPoint.getX() & s.getTargetField().getY() == aimPoint.getY()){
+                    alreadyChoosen = true;
+                    logger.info("Shot is already a miss " + s);
                 }
             }
             if (alreadyChoosen) continue;
@@ -527,19 +526,20 @@ public class Ai {
             //create a new shot object, add it to requestedShot Array and increase i
             Shot shot = new Shot(shotClientId, aimPoint);
             choosenShots.add(shot);
-            //System.out.println(choosenShots);
             i++;
+            logger.info("Found shot {}", shot);
 
         }
-        //create new shotsRequest Object with the choosenShots Collection
-        System.out.println(choosenShots.size() == this.getShotCount());
-
-        //todo made ShotsRequest public
 
         //send the shotsRequest object to the server
         tcpConnector.sendMessageToServer(new ShotsRequest(choosenShots));
     }
 
+    /**
+     * Places shots using the hunt and target algorithm.
+     * Difficulty level 2.
+     * @throws IOException Network error (see report)
+     */
     public void placeShots_2() throws IOException {
         logger.info(MARKER.shot_placement, "Placing shots with difficulty level 2");
         Collection<Shot> myShots = new ArrayList<>();
