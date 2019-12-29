@@ -418,12 +418,18 @@ public class Ai {
             for (Shot i : getHits()) { //check if shot s is a miss
                 if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
                     miss = false; //no miss, its a hit
+                    logger.info("A hit {}", s);
                 }
             }
-            if (miss) tempMisses.add(s); // if its not hit, its a miss
+            if (miss) {
+                tempMisses.add(s); // if its not hit, its a miss
+                logger.info("A miss {}", s);
+            }
         }
         this.misses.addAll(tempMisses); //add all new misses to all misses of the game
+        logger.info("Found {} misses last round.", tempMisses.size());
         tempMisses.clear(); //not necessary
+
 
     }
 
@@ -498,7 +504,7 @@ public class Ai {
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
         while (i < getShotCount()) {
-            logger.info("Trying to find  {}. shot", i+1);
+            logger.info("Trying to find  {}. shot", i + 1);
 
             Point2D aimPoint = getRandomPoint2D(); //aim is one of the random points as a candidate for a shot
             boolean alreadyChoosen = false;
@@ -514,8 +520,8 @@ public class Ai {
                     logger.info("Shot is already a hit " + h);
                 }
             }
-            for (Shot s : getMisses()){
-                if (s.getClientId() == shotClientId & s.getTargetField().getX() == aimPoint.getX() & s.getTargetField().getY() == aimPoint.getY()){
+            for (Shot s : getMisses()) {
+                if (s.getClientId() == shotClientId & s.getTargetField().getX() == aimPoint.getX() & s.getTargetField().getY() == aimPoint.getY()) {
                     alreadyChoosen = true;
                     logger.info("Shot is already a miss " + s);
                 }
@@ -538,96 +544,120 @@ public class Ai {
     /**
      * Places shots using the hunt and target algorithm.
      * Difficulty level 2.
+     *
      * @throws IOException Network error (see report)
      */
     public void placeShots_2() throws IOException {
         logger.info(MARKER.shot_placement, "Placing shots with difficulty level 2");
         Collection<Shot> myShots = new ArrayList<>();
         calcAndAddMisses();
-        int shotClientId;
+        int shotClientId = 222;
 
         int aiIndex = -1;
         for (Client c : clientArrayList) {
             if (c.getId() == aiClientId) {
                 aiIndex = clientArrayList.indexOf(c);
+                logger.info("Ai Index: {}.", aiIndex);
             }
         }
-
+        /*
         while (true) {
             int randomIndex = (int) (Math.random() * clientArrayList.size());
             if (randomIndex != aiIndex) {
                 shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
+                logger.info("Target Client is: {}", shotClientId);
                 break;
             }
         }
+
+         */
+
         Set<Point2D> pot = new HashSet<>();
         for (Shot s : getHits()) {
-            ArrayList<Point2D> temp = new ArrayList<>();
-            //west
-            temp.add(new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
-            //south
-            temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
-            //east
-            temp.add(new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
-            //north
-            temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
+            if (s.getClientId() == shotClientId) {
+                logger.info("Looking for all neighbours of Shot {}", s);
+                ArrayList<Point2D> temp = new ArrayList<>();
+                //west
+                temp.add(new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
+                //south
+                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
+                //east
+                temp.add(new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
+                //north
+                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
 
-            boolean isHitOrMiss = false;
-            for (Point2D p : temp) {
-                if (p.getX() >= 0 & p.getY() >= 0) {
-                    for (Shot h : getHits()) {
-                        if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
-                            isHitOrMiss = true;
-                            break;
+                boolean isHitOrMiss = false;
+                for (Point2D p : temp) {
+                    if (p.getX() >= 0 & p.getY() >= 0) {
+                        for (Shot h : getHits()) {
+                            if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
+                                isHitOrMiss = true;
+                                break;
+                            }
+
                         }
+                        if (isHitOrMiss) continue;
+                        for (Shot h : getMisses()) {
+                            if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
+                                isHitOrMiss = true;
+                                break;
+                            }
 
-                    }
-                    if (isHitOrMiss) continue;
-                    for (Shot h : getMisses()) {
-                        if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
-                            isHitOrMiss = true;
-                            break;
                         }
-
+                        if (isHitOrMiss) continue;
+                    } else {
+                        continue;
                     }
-                    if (isHitOrMiss) continue;
+                    pot.add(p);
+                    logger.info("Added {} to potential hits", p);
+                }
+                if (pot.size() < getShotCount()) {
+                    logger.info("There are less potential hits ({}) as possible shots ({})", pot.size(), getShotCount());
+                    for (Point2D p : pot) {
+                        myShots.add(new Shot(shotClientId, new Point2D(p.getX(), p.getY())));
+                        logger.info("Added {} to myShots", p);
+                    }
+                    while (true) {
+                        boolean invalid = false;
+                        Point2D point = getRandomPoint2D();
+
+                        for (Shot h : getHits()) {
+                            if (h.getTargetField().getX() ==point.getX() & h.getTargetField().getY() == point.getY() & h.getClientId() == shotClientId) {
+                                invalid = true;
+                                break;
+                            }
+
+                        }
+                        if (invalid) continue;
+                        for (Shot h : getMisses()) {
+                            if (h.getTargetField().getX() == point.getX() & h.getTargetField().getY() == point.getY() & h.getClientId() == shotClientId) {
+                                invalid = true;
+                                break;
+                            }
+
+                        }
+                        if (invalid) continue;
+                        else {
+                            myShots.add(new Shot(shotClientId, point));
+                            logger.info("Added random shot {} to myShots", point);
+                        }
+                        if (myShots.size() == getShotCount()) break;
+                    }
                 } else {
-                    continue;
-                }
-                pot.add(p);
-            }
-        }
-        if (pot.size() < getShotCount()) {
-            for (Point2D p : pot) {
-                myShots.add(new Shot(shotClientId, new Point2D(p.getX(), p.getY())));
-            }
-            boolean invalid = false;
-            while (true) {
-                Point2D point = getRandomPoint2D();
-                int xVal = point.getX();
-                int yVal = point.getY();
-                for (Point2D p : invalidPointsAll.get(shotClientId)) {
-                    if (p.getX() == xVal & p.getY() == yVal) {
-                        invalid = true;
-                        break;
+                    logger.info("There are more potential hits ({}) as possible shots ({})", pot.size(), getShotCount());
+                    for (Point2D p : pot) {
+                        myShots.add(new Shot(shotClientId, p));
+                        logger.info("Added {} to myShots", p);
+                        if (myShots.size() == getShotCount()) break;
                     }
                 }
-                if (invalid) continue;
-                else {
-                    myShots.add(new Shot(shotClientId, point));
-                }
-                if (myShots.size() == getShotCount()) break;
             }
-        } else {
-            for (Point2D p : pot) {
-                myShots.add(new Shot(shotClientId, p));
-                if (myShots.size() == getShotCount()) break;
-            }
+            if (myShots.size() == getShotCount()) break;
         }
         pot.clear();
         requestedShotsLastRound.clear();
         requestedShotsLastRound.addAll(myShots);
-        tcpConnector.sendMessageToServer(new ShotsRequest(myShots));
+        //tcpConnector.sendMessageToServer(new ShotsRequest(myShots));
 
 
     }
