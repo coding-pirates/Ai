@@ -1,7 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.logic.ClientType;
-import de.upb.codingpirates.battleships.network.Properties;
 import de.upb.codingpirates.battleships.network.message.request.*;
 
 import java.io.IOException;
@@ -17,7 +16,7 @@ import java.util.TimerTask;
 public class AiMain {
     static Timer timer = new Timer();
     static Ai ai = new Ai();
-    static AiMessageHandler aiMessageHandler = new AiMessageHandler();
+    //static AiMessageHandler aiMessageHandler = new AiMessageHandler();
 
     static String host = "";
     static int port = 0;
@@ -27,7 +26,7 @@ public class AiMain {
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
      *
      * @param args host (Ip Adress of the server) and port
-     * @throws IOException
+     * @throws IOException Network error
      */
     public static void main(String[] args) throws IOException {
         timer.schedule(new TimerTask() {
@@ -37,12 +36,11 @@ public class AiMain {
         }, 1L, 1L);
 
         //default port: 47345
-        //host = args[0];
-        //port = Integer.parseInt(args[1]);
-        //setDifficultyLevel(Integer.parseInt(args[2]));
-        setDifficultyLevel(3);
+        host = args[0]; // "localhost"
+        port = Integer.parseInt(args[1]); // 47345
+        setDifficultyLevel(Integer.parseInt(args[2])); // 3
 
-        createNewAiPlayer("192.168.0.143", 47345);
+        createNewAiPlayer(host, port);
     }
 
     /**
@@ -51,7 +49,7 @@ public class AiMain {
      *
      * @param host is the ip address of the server
      * @param port is the port number of the server
-     * @throws IOException
+     * @throws IOException Network error
      */
     protected static void createNewAiPlayer(String host, int port) throws IOException {
         ai.getTcpConnector().connect(host, port);

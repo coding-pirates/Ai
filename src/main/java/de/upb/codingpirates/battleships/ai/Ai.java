@@ -146,11 +146,10 @@ public class Ai {
     /**
      * Calls the {link {@link #randomShipGuesser(Map)}} and if it returns true send the {@link PlaceShipsRequest}
      *
-     * @throws IOException
+     * @throws IOException Network error
      */
     public void placeShips() throws IOException {
         while (!successful) {
-            System.out.println("ps successful false");
             logger.info("placing ships failed");
             randomShipGuesser(getShipConfig());
         }
@@ -159,7 +158,7 @@ public class Ai {
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(getPositions());
         //todo made PlaceShipsRequest public
 
-        //connector.sendMessageToServer(placeShipsRequestMessage);
+        tcpConnector.sendMessageToServer(placeShipsRequestMessage);
     }
 
 
@@ -182,8 +181,8 @@ public class Ai {
         logger.info("started random guesser");
 
         //for testing purpose
-        System.out.println("height: " + getHeight());
-        System.out.println("width: " + getWidth());
+        logger.info("height: {}", getHeight());
+        logger.info("width: {}", getWidth());
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
@@ -198,9 +197,7 @@ public class Ai {
 
             //for testing purpose
             for (Point2D j : shipPos) {
-                System.out.print("oldX: " + j.getX());
-                System.out.println(" oldY: " + j.getY());
-
+                logger.info("old point: {}", j);
             }
 
 
@@ -208,8 +205,7 @@ public class Ai {
             Point2D guessPoint = getRandomPoint2D();
 
             //for testing purpose
-            System.out.println("guessX: " + guessPoint.getX());
-            System.out.println("guessY: " + guessPoint.getY());
+            logger.info("Guess point: {}", guessPoint);
 
             //the the distance from zeropoint to random guessPoint
             int distanceX = guessPoint.getX();
@@ -229,8 +225,7 @@ public class Ai {
                 Point2D newPoint = new Point2D(newX, newY);
 
                 //for testing purpose
-                System.out.print("newX: " + newX);
-                System.out.println(" newY: " + newY);
+                logger.info("new point: {}", newPoint);
 
                 //check for each point in usePoints if the newPoint is already unavailable (is used)
                 for (Point2D p : usedPoints) {
@@ -239,7 +234,7 @@ public class Ai {
                     if ((p.getX() == newPoint.getX()) & (p.getY() == newPoint.getY())) {
                         usedPoints.clear();
                         positions.clear();
-                        logger.info("failed: newPoint already in usedPoints ");
+                        logger.info("failed: new guess point already in usedPoints ");
                         return;
 
                     }
@@ -253,7 +248,7 @@ public class Ai {
                     //-->starting the loop in placeShips again
                     usedPoints.clear();
                     positions.clear();
-                    logger.info("failed: newPoint coordinates do not fit the field ");
+                    logger.info("failed: new point coordinates do not fit the field ");
                     return;
                 } else {
                     // if the newPoint is valid...
@@ -309,6 +304,7 @@ public class Ai {
             temp.add(new Point2D(x, y + 1));
             temp.add(new Point2D(x, y - 1));
         }
+        temp.removeIf(p -> p.getX() < 0 | p.getY() < 0);
         return temp;
 
 
@@ -349,6 +345,7 @@ public class Ai {
      * @return The map with ordered shots (sunk)
      */
     public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
+        logger.info("Sorting the sunken ships by their clients...");
         HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
         for (Shot i : sunk) {
             int clientId = i.getClientId();
@@ -369,6 +366,7 @@ public class Ai {
                 sortedSunk.put(c.getId(), emptyList);
             }
         }
+        logger.info("Sorted the sunken ships by their clients.");
         return sortedSunk;
     }
 
@@ -382,7 +380,6 @@ public class Ai {
     private ArrayList<ArrayList<Point2D>> rotateShips(ArrayList<Point2D> ships) {
         RotationMatrix rotate = new RotationMatrix();
         ArrayList<ArrayList<Point2D>> allPossibleTurns = new ArrayList<>();
-        ArrayList<Point2D> temp = new ArrayList<>();
         //no turn
         allPossibleTurns.add(rotate.moveToZeroPoint(ships));
         //90 degree
@@ -393,19 +390,16 @@ public class Ai {
         temp180 = rotate.turn90(temp180);
         allPossibleTurns.add(temp180);
 
-        temp.clear();
         //270 degree
         ArrayList<Point2D> temp270;
         temp270 = rotate.turn90(ships);
         temp270 = rotate.turn90(temp270);
         temp270 = rotate.turn90(temp270);
         allPossibleTurns.add(temp270);
-        temp.clear();
         return allPossibleTurns;
 
 
     }
-    //todo requestedShotsLastRound wird jede runde neu geladen und dann wieder geleert
 
     /**
      * Computes all misses this Ai Player and adds them to all misses this round
@@ -553,24 +547,13 @@ public class Ai {
         calcAndAddMisses();
         int shotClientId = 222;
 
-        int aiIndex = -1;
+        int aiIndex;
         for (Client c : clientArrayList) {
             if (c.getId() == aiClientId) {
                 aiIndex = clientArrayList.indexOf(c);
                 logger.info("Ai Index: {}.", aiIndex);
             }
         }
-        /*
-        while (true) {
-            int randomIndex = (int) (Math.random() * clientArrayList.size());
-            if (randomIndex != aiIndex) {
-                shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
-                logger.info("Target Client is: {}", shotClientId);
-                break;
-            }
-        }
-
-         */
 
         Set<Point2D> pot = new HashSet<>();
         for (Shot s : getHits()) {
@@ -622,7 +605,7 @@ public class Ai {
                         Point2D point = getRandomPoint2D();
 
                         for (Shot h : getHits()) {
-                            if (h.getTargetField().getX() ==point.getX() & h.getTargetField().getY() == point.getY() & h.getClientId() == shotClientId) {
+                            if (h.getTargetField().getX() == point.getX() & h.getTargetField().getY() == point.getY() & h.getClientId() == shotClientId) {
                                 invalid = true;
                                 break;
                             }
@@ -657,7 +640,7 @@ public class Ai {
         pot.clear();
         requestedShotsLastRound.clear();
         requestedShotsLastRound.addAll(myShots);
-        //tcpConnector.sendMessageToServer(new ShotsRequest(myShots));
+        tcpConnector.sendMessageToServer(new ShotsRequest(myShots));
 
 
     }
@@ -675,65 +658,95 @@ public class Ai {
     public void placeShots_3() throws IOException {
         logger.info(MARKER.shot_placement, "Placing shots with difficulty level 3");
         createHeatmapAllClients();
+
+
+        Map<Integer, LinkedList<Integer>> validTargets = new HashMap<>();
+
+        for (Map.Entry<Integer, LinkedList<Integer>> entry : getAllSunkenShipIds().entrySet()) {
+            if (!(invalidPointsAll.get(entry.getKey()).size() == (getWidth() * getHeight())
+                    | entry.getValue().size() == shipConfig.size() | entry.getKey() == getAiClientId())) {
+                logger.info("A valid target is client: {}", entry.getKey());
+                validTargets.put(entry.getKey(), entry.getValue());
+            }
+        }
         Map<Integer, Integer> invalidPointsSize = new HashMap<>();
 
         for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : invalidPointsAll.entrySet()) {
-            invalidPointsSize.put(entry.getKey(), entry.getValue().size());
-        }
-
-        //get the client Id with the highest value of invalid Points
-        int targetClient = Collections.max(invalidPointsSize.entrySet(), Map.Entry.comparingByValue()).getKey();
-        //get the heatmap of this client
-        Integer[][] targetHeatmap = heatmapAllClients.get(targetClient);
-
-        Map<Point2D, Integer> pointsToValue = new LinkedHashMap<>();
-
-        for (int row = 0; row < targetHeatmap.length; row++) {
-            for (int col = 0; col < targetHeatmap[row].length; col++) {
-                pointsToValue.put(new Point2D(col, row), targetHeatmap[row][col]);
+            logger.info("Client {} has {} invalid fields", entry.getKey(), entry.getValue().size());
+            if (validTargets.containsKey(entry.getKey())) {
+                invalidPointsSize.put(entry.getKey(), entry.getValue().size());
             }
         }
-        Map<Point2D, Integer> pointsToValueOrdered = pointsToValue.entrySet()
+
+        LinkedHashMap<Integer, Integer> invalidPointsSizeOrdered = invalidPointsSize.entrySet()
                 .stream()
-                .sorted((Map.Entry.<Point2D, Integer>comparingByValue().reversed()))
+                .sorted((Map.Entry.<Integer, Integer>comparingByValue().reversed()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
         Collection<Shot> myShotsThisRound = new ArrayList<>();
-        boolean isHitOrShot;
+        int counter = 0;
+        while (counter < validTargets.keySet().size()) {
+            for (Map.Entry<Integer, Integer> entry : invalidPointsSizeOrdered.entrySet()) {
+                int countShotsOne = 0;
+                int targetClient = entry.getKey();
+                logger.info("Shooting now on client {} with {} invalid fields", targetClient, entry.getValue());
 
-        for (Map.Entry<Point2D, Integer> entry : pointsToValueOrdered.entrySet()) {
-            isHitOrShot = false;
-            //prüfe ob der Punkt schon genutzt wird
-            for (Shot s : getMisses()) {
-                if (entry.getKey().getX() == s.getTargetField().getX() & entry.getKey().getY() == s.getTargetField().getY()) {
-                    isHitOrShot = true;
-                    break;
+                //get the heatmap of this client
+                Integer[][] targetHeatmap = heatmapAllClients.get(targetClient);
+
+                Map<Point2D, Integer> pointsToValue = new LinkedHashMap<>();
+
+                for (int row = 0; row < targetHeatmap.length; row++) {
+                    for (int col = 0; col < targetHeatmap[row].length; col++) {
+                        pointsToValue.put(new Point2D(col, row), targetHeatmap[row][col]);
+                    }
                 }
-            }
-            if (isHitOrShot) {
-                break;
-            }
-            for (Shot s : getHits()) {
-                if (entry.getKey().getX() == s.getTargetField().getX() & entry.getKey().getY() == s.getTargetField().getY()) {
-                    isHitOrShot = true;
-                    break;
+                LinkedHashMap<Point2D, Integer> pointsToValueOrdered = pointsToValue.entrySet()
+                        .stream()
+                        .sorted((Map.Entry.<Point2D, Integer>comparingByValue().reversed()))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+
+                Map<Point2D, Integer> temp = new LinkedHashMap<>(pointsToValueOrdered);
+                for (Map.Entry<Point2D, Integer> entryy : temp.entrySet()) {
+                    if (entryy.getValue() <= 0) {
+                        pointsToValueOrdered.remove(entryy.getKey());
+                    }
                 }
-            }
-            if (isHitOrShot) {
-                continue;
-            }
-            myShotsThisRound.add(new Shot(targetClient, new Point2D(entry.getKey().getX(), entry.getKey().getY())));
-            if (myShotsThisRound.size() == getShotCount()) {
-                tcpConnector.sendMessageToServer(new ShotsRequest(myShotsThisRound));
-                requestedShotsLastRound.clear(); //leere die Liste von dieser Runde
-                requestedShotsLastRound.addAll(myShotsThisRound);
-                return;
+
+
+                for (Map.Entry<Point2D, Integer> entryy : pointsToValueOrdered.entrySet()) {
+
+                    Shot targetShot = (new Shot(targetClient, new Point2D(entryy.getKey().getX(), entryy.getKey().getY())));
+                    boolean isInvalid = false;
+                    for (Point2D p : invalidPointsAll.get(entry.getKey())) {
+                        if (entryy.getKey().getX() == p.getX() & entryy.getKey().getY() == p.getY()) {
+                            isInvalid = true;
+                            break;
+
+                        }
+                    }
+                    if (isInvalid) continue;
+                    myShotsThisRound.add(targetShot);
+                    logger.info("Added shot {} with value {} to myShots", targetShot, entryy.getValue());
+                    countShotsOne++;
+                    if (myShotsThisRound.size() == getShotCount()) {
+                        logger.info("{} shots on client {}", countShotsOne, entry.getKey());
+                        tcpConnector.sendMessageToServer(new ShotsRequest(myShotsThisRound));
+                        requestedShotsLastRound.clear(); //leere die Liste von dieser Runde
+                        requestedShotsLastRound.addAll(myShotsThisRound);
+                        return;
+
+                    }
+                }
+                counter++;
+                logger.info("{} shots on client {}", countShotsOne, entry.getKey());
+
             }
         }
     }
 
     /**
-     * Creates a heatmap for every client and calls {@link Ai#createHeatmapOneClient(int clientId)}.
+     * Creates a heatmap for each client and calls {@link Ai#createHeatmapOneClient(int clientId)}.
      * In this version, the heatmaps will be created completely new by clearing the old heatmaps first.
      *
      * @see <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
@@ -746,6 +759,8 @@ public class Ai {
         findAllSunkenShipIds(); //compute the sunken ship Ids for every client
         for (Client client : this.getClientArrayList()) {
             if (client.getId() == getAiClientId()) {
+                createAnsSetInvalidPointsOne(client.getId());
+                logger.info("Skipped creating heatmap for own field");
                 continue;
             }
             //create a heatmap for this client and put it into the heatmapAllClients map
@@ -925,7 +940,6 @@ public class Ai {
                         proofed = true;
                         break;
                     }
-                    if (proofed) break;
                 }
                 if (proofed) break;
             }
@@ -960,7 +974,6 @@ public class Ai {
                                 checked = true;
                                 break;
                             }
-                            if (checked) break;
                         }
                         if (checked) break;
                     }
@@ -1036,7 +1049,6 @@ public class Ai {
                                     findOne = true;
                                     break;
                                 }
-                                if (findOne) break;
                             }
                             if (findOne) break;
                         }
@@ -1138,7 +1150,9 @@ public class Ai {
     public Point2D getRandomPoint2D() {
         int x = (int) (Math.random() * getWidth());
         int y = (int) (Math.random() * getHeight());
-        return new Point2D(x, y);
+        Point2D randPoint = new Point2D(x, y);
+        logger.info("Getting a random Point2d : {}", randPoint);
+        return randPoint;
     }
 
     /**
@@ -1202,6 +1216,7 @@ public class Ai {
     }
 
     public void setWidth(int _width) {
+        logger.info("Field width is {}", _width);
         this.width = _width;
     }
 
@@ -1210,6 +1225,7 @@ public class Ai {
     }
 
     public void setHeight(int _height) {
+        logger.info("Field height is {}", _height);
         this.height = _height;
     }
 

@@ -46,7 +46,7 @@ public class AiShipPlacementRandTest {
         ShipType ship3 = new ShipType(shipPos3);
 
 
-        Map<Integer, ShipType> shipConfig = new HashMap<Integer, ShipType>();
+        Map<Integer, ShipType> shipConfig = new HashMap<>();
         shipConfig.put(1, ship1);
         shipConfig.put(2, ship2);
         shipConfig.put(3, ship3);
@@ -56,7 +56,7 @@ public class AiShipPlacementRandTest {
     }
 
     @Test
-    public void place_Ship_should_return_random_Map_Integer_PlacementInfo() {
+    public void place_Ship_test() {
 
         try{
             ai.placeShips();

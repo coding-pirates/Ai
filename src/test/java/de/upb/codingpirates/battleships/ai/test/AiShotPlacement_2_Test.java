@@ -31,16 +31,10 @@ public class AiShotPlacement_2_Test {
         ai.setAiClientId(999);
         //requested shots last round
         Shot s1 = new Shot(111, new Point2D(2, 1));
-        Shot s2 = new Shot(222, new Point2D(1, 3));
-        Shot s3= new Shot(222, new Point2D(2, 3));
-        Shot s4 = new Shot(111, new Point2D(0, 1));
         Shot s5 = new Shot(111, new Point2D(3, 3));
         Shot s6 = new Shot(333, new Point2D(2, 0));
 
         ai.requestedShotsLastRound.add(s1);
-        ai.requestedShotsLastRound.add(s2);
-        ai.requestedShotsLastRound.add(s3);
-        ai.requestedShotsLastRound.add(s4);
         ai.requestedShotsLastRound.add(s5);
         ai.requestedShotsLastRound.add(s6);
 
