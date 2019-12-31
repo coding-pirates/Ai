@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 
 
-
 /**
  * Handles incoming messages from the server.
  *
@@ -52,8 +51,6 @@ public class AiMessageHandler implements
     @Override
     public void onBattleshipException(BattleshipException error, int clientId) {
         logger.error("BattleshipException");
-        //error.printStackTrace();
-
     }
 
     @Override
@@ -62,15 +59,12 @@ public class AiMessageHandler implements
         logger.error("Errortype: " + message.getErrorType());
         logger.error("Error occurred in Message: " + message.getReferenceMessageId());
         logger.error("Reason: " + message.getReason());
-
-
     }
 
     @Override
     public void onFinishNotification(FinishNotification message, int clientId) {
         logger.info("FinishNotification");
         AiMain.close();
-
     }
 
     @Override
@@ -117,7 +111,6 @@ public class AiMessageHandler implements
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
         logger.info("PlayerUpdateNotification");
-
         AiMain.ai.updateNotification = message;
         AiMain.ai.setHits(message.getHits());
         AiMain.ai.setPoints(message.getPoints());
@@ -145,10 +138,8 @@ public class AiMessageHandler implements
 
     @Override
     public void onGameJoinPlayerResponse(GameJoinPlayerResponse message, int clientId) {
-        //set gameId from the message to the ai , so that the ai knows the gameid
-        logger.info("GameJoinPlayerResponse, GameId: " + message.getGameId());
+        logger.info("GameJoinPlayerResponse, GameId: {}", message.getGameId());
         int gameId = message.getGameId();
         AiMain.ai.setGameId(gameId);
-
     }
 }

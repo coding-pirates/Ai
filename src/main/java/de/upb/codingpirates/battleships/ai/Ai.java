@@ -12,8 +12,6 @@ import de.upb.codingpirates.battleships.network.message.request.PlaceShipsReques
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 
 import java.io.IOException;
 import java.util.*;
@@ -107,7 +105,7 @@ public class Ai {
         setWidth(config.getWidth());
         setShipConfig(config.getShips());
         setHitpoints(config.getHitPoints());
-        setSunkpoints(config.getSunkPoints());
+        setSunkPoints(config.getSunkPoints());
         setRoundTimer(config.getRoundTime());
         setVisualizationTime(config.getVisualizationTime());
         setShotCount(config.getShotCount());
@@ -138,7 +136,7 @@ public class Ai {
         }
     }
 
-    //falsch solange keine passende Platzierung der Schiffe gefunden wurde
+    //remains false until a valid ship placement is found
     boolean successful = false;
     //the requested argument for the PlaceShipsRequest
     Map<Integer, PlacementInfo> positions = new HashMap<>();
@@ -154,15 +152,12 @@ public class Ai {
             randomShipGuesser(getShipConfig());
         }
         logger.info("placing ships worked");
-
         PlaceShipsRequest placeShipsRequestMessage = new PlaceShipsRequest(getPositions());
-        //todo made PlaceShipsRequest public
-
         tcpConnector.sendMessageToServer(placeShipsRequestMessage);
     }
 
 
-    /**
+    /*
      * contains all the Points which can not be accessed anymore like the distance to a ship or the ship positions;
      * is used for checking if a point can be used for placing a ship
      */
@@ -171,35 +166,28 @@ public class Ai {
     /**
      * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
      *
-     * @param shipConfig map, which maps from the shipId to the ShipType (from the configuration)
+     * @param shipConfig A map, which maps from the shipId to the ShipType (from the configuration)
      */
     private void randomShipGuesser(Map<Integer, ShipType> shipConfig) {
         //clear all used values from the recent call for safety
         usedPoints.clear();
         positions.clear();
 
-        logger.info("started random guesser");
-
-        //for testing purpose
+        logger.info("Started random guesser");
         logger.info("height: {}", getHeight());
         logger.info("width: {}", getWidth());
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            //a logger
             logger.info("entry of shipConfig Map with shipID: " + entry.getKey());
-
-
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
             Collection<Point2D> shipPos = entry.getValue().getPositions();
 
-            //for testing purpose
             for (Point2D j : shipPos) {
                 logger.info("old point: {}", j);
             }
-
 
             //is the random point wich will be the point for the PlacementInfo
             Point2D guessPoint = getRandomPoint2D();
@@ -210,7 +198,6 @@ public class Ai {
             //the the distance from zeropoint to random guessPoint
             int distanceX = guessPoint.getX();
             int distanceY = guessPoint.getY();
-
 
             //the positions (points) of a ship well be stored here
             ArrayList<Point2D> tempShipPos = new ArrayList<>();
@@ -234,7 +221,7 @@ public class Ai {
                     if ((p.getX() == newPoint.getX()) & (p.getY() == newPoint.getY())) {
                         usedPoints.clear();
                         positions.clear();
-                        logger.info("failed: new guess point already in usedPoints ");
+                        logger.info("Failed: new guess point already in usedPoints ");
                         return;
 
                     }
@@ -243,12 +230,12 @@ public class Ai {
                 //if the newPoint is not unavailable, check if the coordinates fits to the field:
                 // No negative values, no greater values as the fields height and width
                 if (newPoint.getY() < 0 | newPoint.getX() < 0 |
-                        newPoint.getX() > (width - 1) | newPoint.getY() > (height - 1)) {
+                        newPoint.getX() > (getWidth() - 1) | newPoint.getY() > (getHeight() - 1)) {
                     //if the newPoint is unavailable: delete usedPoints, positions and return
                     //-->starting the loop in placeShips again
                     usedPoints.clear();
                     positions.clear();
-                    logger.info("failed: new point coordinates do not fit the field ");
+                    logger.info("Failed: new point coordinates do not fit the field ");
                     return;
                 } else {
                     // if the newPoint is valid...
@@ -265,10 +252,7 @@ public class Ai {
 
             //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
             //once they are in the usedPoints Array, they can not be used for placing ships anymore
-            //addSurroundingPointsToUsedPoints(tempShipPos);
             usedPoints.addAll(addSurroundingPointsToUsedPoints(tempShipPos));
-
-
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
         }
@@ -306,8 +290,6 @@ public class Ai {
         }
         temp.removeIf(p -> p.getX() < 0 | p.getY() < 0);
         return temp;
-
-
     }
 
     /**
@@ -468,12 +450,10 @@ public class Ai {
      * @throws IOException Network error (see report)
      */
     public void placeShots_1() throws IOException {
-
-        //update numberOfClients every time the method is called because the number of connected clients could have changed
         int numberOfClients = clientArrayList.size();
         int shotClientId;
-
         int aiIndex = -1;
+
         for (Client c : clientArrayList) {
             if (c.getId() == aiClientId) {
                 aiIndex = clientArrayList.indexOf(c);
@@ -481,7 +461,6 @@ public class Ai {
         }
 
         while (true) {
-
             int randomIndex = (int) (Math.random() * numberOfClients);
             if (randomIndex != aiIndex) {
                 shotClientId = clientArrayList.get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
@@ -1234,6 +1213,7 @@ public class Ai {
     }
 
     public void setHitpoints(int hitpoints) {
+        logger.info("Hitpoints: {}", hitpoints);
         this.HITPOINTS = hitpoints;
     }
 
@@ -1265,7 +1245,8 @@ public class Ai {
         this.ROUNDTIME = roundTime;
     }
 
-    private void setSunkpoints(int sunkPoints) {
+    private void setSunkPoints(int sunkPoints) {
+        logger.info("SunkPoints: {}", sunkPoints);
         this.SUNKPOINTS = sunkPoints;
     }
 

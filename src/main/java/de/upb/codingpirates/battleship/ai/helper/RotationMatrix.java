@@ -3,8 +3,6 @@ package de.upb.codingpirates.battleship.ai.helper;
 import de.upb.codingpirates.battleships.logic.Point2D;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 
 /**
@@ -38,8 +36,8 @@ public class RotationMatrix {
 
     /**
      * Moves the ship to the field (only positive values and near to the x and y axis)
-     * @param tp
-     * @return
+     * @param tp the shot collection which should be shifted
+     * @return the shifted collection
      */
     public ArrayList<Point2D> moveToZeroPoint(ArrayList<Point2D> tp) {
         ArrayList<Integer> xVal = new ArrayList<>();
@@ -50,7 +48,6 @@ public class RotationMatrix {
 
             Collections.sort(xVal);
             Collections.sort(yVal);
-
         }
 
         int minX = xVal.get(0);

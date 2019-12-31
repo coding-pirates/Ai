@@ -16,7 +16,7 @@ import java.util.TimerTask;
 public class AiMain {
     static Timer timer = new Timer();
     static Ai ai = new Ai();
-    //static AiMessageHandler aiMessageHandler = new AiMessageHandler();
+    static AiMessageHandler aiMessageHandler = new AiMessageHandler();
 
     static String host = "";
     static int port = 0;
@@ -53,7 +53,7 @@ public class AiMain {
      */
     protected static void createNewAiPlayer(String host, int port) throws IOException {
         ai.getTcpConnector().connect(host, port);
-        ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest("AI Player:" + ((int) (Math.random() * 10000)), ClientType.PLAYER));
+        ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest("EnginePlayer" + ((int) (Math.random() * 10000)), ClientType.PLAYER));
     }
 
     /**

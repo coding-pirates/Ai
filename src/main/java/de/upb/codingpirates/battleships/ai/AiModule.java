@@ -1,5 +1,5 @@
-package de.upb.codingpirates.battleships.ai;
 /*
+package de.upb.codingpirates.battleships.ai;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.network.AbstractClientModule;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
