@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai.test;
 
+import GamePlay.SunkenShipFinder;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
@@ -136,7 +137,8 @@ public class AiShotPlacement_3_Test {
         //Has to be set before creating heatmaps
         ai.setHeight(7);
         ai.setWidth(7);
-        ai.setSortedSunk(ai.sortTheSunk());
+        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
+        ai.setSortedSunk(sunkenShipFinder.sortTheSunk());
         ai.setShotCount(10);
     }
     @Test

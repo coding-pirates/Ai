@@ -51,7 +51,7 @@ public class AiShotPlacement_1_Test {
         temp2.add(miss1);
         temp2.add(miss2);
         temp2.add(miss3);
-        ai.misses = temp2; //todo getter für misses fehlt
+        ai.setMisses(temp2); //todo getter für misses fehlt
 
         //shotcount
         ai.setShotCount(3);

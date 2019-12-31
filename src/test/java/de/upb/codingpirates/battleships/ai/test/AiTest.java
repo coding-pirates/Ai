@@ -1,5 +1,8 @@
 package de.upb.codingpirates.battleships.ai.test;
 
+import de.upb.codingpirates.battleship.ai.util.HeatmapCreator;
+import GamePlay.SunkenShipFinder;
+import de.upb.codingpirates.battleship.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
@@ -8,13 +11,12 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AiTest {
     static Ai ai = new Ai();
-
 
     @BeforeAll
     public static void create() {
@@ -104,37 +106,45 @@ public class AiTest {
 
         ai.setAiClientId(999);
 
+        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
         //Has to be set before creating heatmaps
         ai.setHeight(7);
         ai.setWidth(7);
         ai.setShipConfig(shipconfig);
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
-        ai.setSortedSunk(ai.sortTheSunk());
+        ai.setSortedSunk(sunkenShipFinder.sortTheSunk());
+
     }
 
 
     @Test
     public void sort_The_Sunk_Test() {
-        HashMap<Integer, LinkedList<Shot>> sortedSunk = ai.sortTheSunk();
+        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
+        HashMap<Integer, LinkedList<Shot>> sortedSunk = sunkenShipFinder.sortTheSunk();
         assertEquals(sortedSunk.get(1).size(), 12);
         assertEquals(sortedSunk.get(2).size(), 5);
 
 
     }
+
     @Test
-    public void create_heatmap_all_clients_Test(){
-        ai.createHeatmapAllClients();
+    public void create_heatmap_all_clients_Test() {
+        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
+        ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients());
     }
+
     @Test
     public void create_Heatmap_one_Client_Test() {
-        ai.createHeatmapOneClient(3);
+        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
+        heatmapCreator.createHeatmapOneClient(3);
     }
 
     @Test
     public void get_Sunken_shipIds_all_Clients() {
+        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
         assertEquals(3, ai.getSortedSunk().size());
-        ai.findAllSunkenShipIds();
+        ai.setSunkenShipIdsAll(sunkenShipFinder.findSunkenShipIdsAll());
         Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
         assertNotNull(sunken);
         assertEquals(sunken.size(), 3);
@@ -144,7 +154,8 @@ public class AiTest {
 
     @Test
     public void getRandomPoint2D_Test() {
-        Point2D randP = ai.getRandomPoint2D();
+        RandomPointCreator randomPointCreator = new RandomPointCreator(ai);
+        Point2D randP = randomPointCreator.getRandomPoint2D();
         assertNotNull(randP);
         assertTrue(randP.getX() < ai.getWidth());
         assertTrue(randP.getY() < ai.getHeight());

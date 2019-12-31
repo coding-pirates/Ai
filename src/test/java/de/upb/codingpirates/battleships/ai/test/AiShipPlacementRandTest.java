@@ -20,8 +20,8 @@ public class AiShipPlacementRandTest {
     @BeforeAll
     public static void create(){
 
-        ai.setHeight(6);
-        ai.setWidth(6);
+        ai.setHeight(10);
+        ai.setWidth(10);
         Collection<Point2D> shipPos1 = new ArrayList<>();
         shipPos1.add(new Point2D(0, 0));
         shipPos1.add(new Point2D(1, 0));
