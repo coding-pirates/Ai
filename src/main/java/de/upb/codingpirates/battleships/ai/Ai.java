@@ -1,10 +1,10 @@
 package de.upb.codingpirates.battleships.ai;
 
-import GamePlay.ShipPlacer;
-import GamePlay.ShotPlacer;
-import GamePlay.SunkenShipFinder;
-import de.upb.codingpirates.battleship.ai.util.RotationMatrix;
-import de.upb.codingpirates.battleship.ai.util.ZeroPointMover;
+import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
+import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
+import de.upb.codingpirates.battleships.ai.util.MissesFinder;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipFinder;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -49,15 +49,10 @@ public class Ai implements
         ServerJoinResponseListener,
         LobbyResponseListener {
     //Logger
-    private static final Logger logger = LogManager.getLogger(Ai.class.getName());
+    private static final Logger logger = LogManager.getLogger();
 
+    int difficultyLevel;
 
-    //GameState gameState;
-    String host; //ip address
-    int port;
-
-    //convert the Collection clintList in a LinkedList for handling random shots is done in the
-    Collection<Client> clientList;
     LinkedList<Client> clientArrayList = new LinkedList<>();
     Collection<Shot> hits = new ArrayList<>();
 
@@ -70,7 +65,7 @@ public class Ai implements
     int aiClientId;
     int gameId;
     Configuration config;
-    Map<Integer, ShipType> shipConfig = new HashMap<>();
+    Map<Integer, ShipType> ships = new HashMap<>();
 
     long VISUALIZATIONTIME;
     long ROUNDTIME;
@@ -95,30 +90,15 @@ public class Ai implements
     public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
 
     private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
+    private int maxPlayerCount;
+    private int penaltyMinusPoints;
+    private PenaltyType penaltyType;
 
 
     public Ai() {
         ListenerHandler.registerListener(this);
     }
 
-
-    /**
-     * Is called by the {@link #onGameInitNotification(GameInitNotification, int)}
-     * for setting giving the ai access to the game configuration.
-     *
-     * @param config configuration from {@link GameInitNotification}
-     */
-    public void setConfig(Configuration config) {
-        setHeight(config.getHeight());
-        setWidth(config.getWidth());
-        setShipConfig(config.getShips());
-        setHitpoints(config.getHitPoints());
-        setSunkPoints(config.getSunkPoints());
-        setRoundTimer(config.getRoundTime());
-        setVisualizationTime(config.getVisualizationTime());
-        setShotCount(config.getShotCount());
-
-    }
 
     ShotPlacer shotPlacement = new ShotPlacer(this);
 
@@ -127,25 +107,25 @@ public class Ai implements
 
         switch (difficultyLevel) {
             case 1: {
-                logger.info("Difficulty Level 1 selected");
+                logger.info(MARKER.AI, "Difficulty Level 1 selected");
                 myShots = shotPlacement.placeShots_1();
                 sendMessage(new ShotsRequest(myShots));
                 break;
             }
             case 2: {
-                logger.info("Difficulty Level 2 selected");
+                logger.info(MARKER.AI, "Difficulty Level 2 selected");
                 myShots = shotPlacement.placeShots_2();
                 sendMessage(new ShotsRequest(myShots));
                 break;
             }
             case 3: {
-                logger.info("Difficulty level 3 selected");
+                logger.info(MARKER.AI, "Difficulty level 3 selected");
                 myShots = shotPlacement.placeShots_3();
                 sendMessage(new ShotsRequest(myShots));
                 break;
             }
             default: {
-                logger.error("Input is not valid: " + difficultyLevel);
+                logger.error(MARKER.AI, "Input is not valid: " + difficultyLevel);
             }
 
         }
@@ -162,38 +142,6 @@ public class Ai implements
 
 
     /**
-     * Adds the surrounding points of one points collection to the usedPoints based on the rules for the game:
-     * each ship must have a minimal distance of one point in each direction to other ships.
-     * Used by {@link ShipPlacer#guessRandomShipPositions(Map)}
-     *
-     * @param shipPos The positions of one ship
-     */
-    public LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(ArrayList<Point2D> shipPos) {
-        LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
-        for (Point2D point : shipPos) {
-            int x = point.getX();
-            int y = point.getY();
-
-            //add all left neighbours
-            temp.add(new Point2D(x - 1, y + 1));
-            temp.add(new Point2D(x - 1, y));
-            temp.add(new Point2D(x - 1, y - 1));
-
-            //add all right neighbours
-            temp.add(new Point2D(x + 1, y + 1));
-            temp.add(new Point2D(x + 1, y));
-            temp.add(new Point2D(x + 1, y - 1));
-
-            //add the direct neighbours under and over
-            temp.add(new Point2D(x, y + 1));
-            temp.add(new Point2D(x, y - 1));
-        }
-        temp.removeIf(p -> p.getX() < 0 | p.getY() < 0);
-        return temp;
-    }
-
-
-    /**
      * Creates a new ArrayList(Shot) with only one element
      *
      * @param i The Shot object which will be the only object in the list
@@ -205,65 +153,17 @@ public class Ai implements
         return list;
     }
 
-
-    //todo add to RotationMatrix Class
+    public void addMisses() {
+        MissesFinder missesFinder = new MissesFinder(getInstance());
+        this.misses.addAll(missesFinder.computeMisses());
+    }
 
     /**
-     * Creates a collection of collections of all possible ship rotations
+     * Can be used to send a message to the server.
      *
-     * @param ships Collection of points which represents a ship
-     * @return allPossibleTurns ArrayList of arraylists for each possible rotation
+     * @param message message to send
+     * @throws IOException server error
      */
-    public ArrayList<ArrayList<Point2D>> rotateShips(ArrayList<Point2D> ships) {
-        RotationMatrix rotate = new RotationMatrix();
-        ZeroPointMover mover = new ZeroPointMover();
-        ArrayList<ArrayList<Point2D>> allPossibleTurns = new ArrayList<>();
-        //no turn
-        allPossibleTurns.add(mover.moveToZeroPoint(ships));
-        //90 degree
-        allPossibleTurns.add(rotate.turn90(ships));
-        //180 degree
-        ArrayList<Point2D> temp180;
-        temp180 = rotate.turn90(ships);
-        temp180 = rotate.turn90(temp180);
-        allPossibleTurns.add(temp180);
-
-        //270 degree
-        ArrayList<Point2D> temp270;
-        temp270 = rotate.turn90(ships);
-        temp270 = rotate.turn90(temp270);
-        temp270 = rotate.turn90(temp270);
-        allPossibleTurns.add(temp270);
-        return allPossibleTurns;
-
-    }
-
-    /**
-     * Computes all misses this Ai Player and adds them to all misses this round
-     */
-    public void calcAndAddMisses() {
-        logger.info("Compute the misses of this round");
-        Collection<Shot> tempMisses = new ArrayList<>();
-        for (Shot s : requestedShotsLastRound) {
-            boolean miss = true; //assume the shot s is a miss
-            for (Shot i : getHits()) { //check if shot s is a miss
-                if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
-                    miss = false; //no miss, its a hit
-                    logger.info("A hit {}", s);
-                }
-            }
-            if (miss) {
-                tempMisses.add(s); // if its not hit, its a miss
-                logger.info("A miss {}", s);
-            }
-        }
-        this.misses.addAll(tempMisses); //add all new misses to all misses of the game
-        logger.info("Found {} misses last round.", tempMisses.size());
-        tempMisses.clear(); //not necessary
-
-
-    }
-
     public void sendMessage(Message message) throws IOException {
         tcpConnector.sendMessageToServer(message);
     }
@@ -277,10 +177,11 @@ public class Ai implements
         clientArrayList.removeIf(i -> i.getId() == leftPlayerID);
     }
 
+    //getter and setter -----------------------------------------------------------------------------------------------
+
     public void setSortedSunk(HashMap<Integer, LinkedList<Shot>> sortedSunk) {
         this.sortedSunk = sortedSunk;
     }
-
 
     public Collection<Shot> getMisses() {
         return this.misses;
@@ -302,12 +203,12 @@ public class Ai implements
         return this.aiClientId;
     }
 
-    public void setShipConfig(Map<Integer, ShipType> shipConfig) {
-        this.shipConfig = shipConfig;
+    public void setShips(Map<Integer, ShipType> ships) {
+        this.ships = ships;
     }
 
-    public Map<Integer, ShipType> getShipConfig() {
-        return this.shipConfig;
+    public Map<Integer, ShipType> getShips() {
+        return this.ships;
     }
 
     public ClientConnector getTcpConnector() {
@@ -331,7 +232,7 @@ public class Ai implements
     }
 
     public void setWidth(int _width) {
-        logger.info("Field width is {}", _width);
+        logger.info(MARKER.AI, "Field width is {}", _width);
         this.width = _width;
     }
 
@@ -340,7 +241,7 @@ public class Ai implements
     }
 
     public void setHeight(int _height) {
-        logger.info("Field height is {}", _height);
+        logger.info(MARKER.AI, "Field height is {}", _height);
         this.height = _height;
     }
 
@@ -349,7 +250,7 @@ public class Ai implements
     }
 
     public void setHitpoints(int hitpoints) {
-        logger.info("Hitpoints: {}", hitpoints);
+        logger.info(MARKER.AI, "Hitpoints: {}", hitpoints);
         this.HITPOINTS = hitpoints;
     }
 
@@ -386,7 +287,7 @@ public class Ai implements
     }
 
     private void setSunkPoints(int sunkPoints) {
-        logger.info("SunkPoints: {}", sunkPoints);
+        logger.info(MARKER.AI, "SunkPoints: {}", sunkPoints);
         this.SUNKPOINTS = sunkPoints;
     }
 
@@ -437,54 +338,79 @@ public class Ai implements
         return instance;
     }
 
+    public void setDifficultyLevel(int d) {
+        this.difficultyLevel = d;
+    }
+
+    public int getDifficultyLevel() {
+        return this.difficultyLevel;
+    }
+
 
     //Message listening-------------------------------------------------------------------------
 
 
     @Override
     public void onConnectionClosedReport(ConnectionClosedReport message, int clientId) {
-        logger.info("ConnectionClosedReport");
+        logger.info(MARKER.AI, "ConnectionClosedReport");
         AiMain.close();
     }
 
     @Override
     public void onBattleshipException(BattleshipException error, int clientId) {
-        logger.error("BattleshipException");
+        logger.error(MARKER.AI, "BattleshipException");
     }
 
     @Override
     public void onErrorNotification(ErrorNotification message, int clientId) {
-        logger.info("ErrorNotification");
-        logger.error("Errortype: " + message.getErrorType());
-        logger.error("Error occurred in Message: " + message.getReferenceMessageId());
-        logger.error("Reason: " + message.getReason());
+        logger.info(MARKER.AI, "ErrorNotification");
+        logger.error(MARKER.AI, "Errortype: " + message.getErrorType());
+        logger.error(MARKER.AI, "Error occurred in Message: " + message.getReferenceMessageId());
+        logger.error(MARKER.AI, "Reason: " + message.getReason());
     }
 
     @Override
     public void onFinishNotification(FinishNotification message, int clientId) {
-        logger.info("FinishNotification");
+        logger.info(MARKER.AI, "FinishNotification");
         AiMain.close();
     }
 
     @Override
     public void onGameInitNotification(GameInitNotification message, int clientId) {
-        logger.info("GameInitNotification");
+        logger.info(MARKER.AI, "GameInitNotification: got clients and configuration");
         Configuration config = message.getConfiguration();
-        AiMain.ai.setConfig(config);
-        AiMain.ai.setClientArrayList(message.getClientList());
+
+        this.setMaxPlayerCount(config.getMaxPlayerCount());
+        this.setHeight(config.getHeight());
+        this.setWidth(config.getWidth());
+        this.setShotCount(config.getShotCount());
+        this.setHitpoints(config.getHitPoints());
+        this.setSunkPoints(config.getSunkPoints());
+        this.setRoundTimer(config.getRoundTime());
+        this.setVisualizationTime(config.getVisualizationTime());
+        this.setPenaltyMinusPoints(config.getPenaltyMinusPoints());
+        this.setPenaltyType(config.getPenaltyKind());
+
+        this.setShips(config.getShips());
+
+        this.setClientArrayList(message.getClientList());
         try {
+            logger.info("Trying to place ships");
             AiMain.ai.placeShips();
         } catch (IOException e) {
+            logger.error("Ship placement failed");
             e.printStackTrace();
         }
     }
 
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
-        logger.info("GameStartNotification");
+        logger.info(MARKER.AI, "GameStartNotification: game started, first shot placement with difficulty level {}", this.getDifficultyLevel());
         try {
-            AiMain.ai.placeShots(AiMain.getDifficultyLevel());
+            logger.info("Trying to place shots");
+            AiMain.ai.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
+            logger.error("Shot placement failed");
             e.printStackTrace();
         }
 
@@ -492,60 +418,83 @@ public class Ai implements
 
     @Override
     public void onLeaveNotification(LeaveNotification message, int clientId) {
-        logger.info("LeaveNotification, left Player: " + message.getPlayerId());
-        int leftPlayerId = message.getPlayerId();
-        AiMain.ai.handleLeaveOfPlayer(leftPlayerId);
+        logger.info(MARKER.AI, "LeaveNotification: left player id is: " + message.getPlayerId());
+        this.handleLeaveOfPlayer(message.getPlayerId());
     }
 
     @Override
     public void onPauseNotification(PauseNotification message, int clientId) {
-        logger.info("PauseNotification");
+        logger.info(MARKER.AI, "PauseNotification");
     }
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
         SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(AiMain.ai.getInstance());
-        logger.info("PlayerUpdateNotification");
-        AiMain.ai.updateNotification = message;
-        AiMain.ai.setHits(message.getHits());
-        AiMain.ai.setPoints(message.getPoints());
-        AiMain.ai.setSunk(message.getSunk());
-        AiMain.ai.setSortedSunk(sunkenShipFinder.sortTheSunk()); //sortiere die sunks nach ihren Clients
-
+        logger.info(MARKER.AI, "PlayerUpdateNotification: getting updated hits, points and sunk");
+        this.setHits(message.getHits());
+        this.setPoints(message.getPoints());
+        this.setSunk(message.getSunk());
+        //sortiere die sunks nach ihren Clients
+        this.setSortedSunk(sunkenShipFinder.sortTheSunk());
     }
 
     @Override
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
-        logger.info("RoundStartNotification");
+        logger.info(MARKER.AI, "RoundStartNotification: placing shots");
         try {
-            AiMain.ai.placeShots(AiMain.getDifficultyLevel());
+            AiMain.ai.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
     public void onTournamentFinishNotification(TournamentFinishNotification message, int clientId) {
-        logger.info("TournamentFinishNotification");
-
+        logger.info(MARKER.AI, "TournamentFinishNotification: ");
     }
 
     @Override
     public void onGameJoinPlayerResponse(GameJoinPlayerResponse message, int clientId) {
-        logger.info("GameJoinPlayerResponse, GameId: {}", message.getGameId());
-        int gameId = message.getGameId();
-        AiMain.ai.setGameId(gameId);
+        logger.info(MARKER.AI, "GameJoinPlayerResponse: joined game with iId: {}", message.getGameId());
+        this.setGameId(message.getGameId());
     }
 
     @Override
-    public void onServerJoinResponse(ServerJoinResponse message, int clientId) throws IOException {
-        logger.info("ServerJoinResponse");
-        this.tcpConnector.sendMessageToServer(new LobbyRequest());
+    public void onServerJoinResponse(ServerJoinResponse message, int clientId) {
+        logger.info(MARKER.AI, "ServerJoinResponse, AiClientId is: {}", message.getClientId());
+        try {
+            this.tcpConnector.sendMessageToServer(new LobbyRequest());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
-        logger.info("LobbyResponse");
+        logger.info(MARKER.AI, "LobbyResponse");
+    }
+
+    public void setMaxPlayerCount(int maxPlayerCount) {
+        this.maxPlayerCount = maxPlayerCount;
+    }
+
+    public int getMaxPlayerCount() {
+        return maxPlayerCount;
+    }
+
+    public void setPenaltyMinusPoints(int penaltyMinusPoints) {
+        this.penaltyMinusPoints = penaltyMinusPoints;
+    }
+
+    public int getPenaltyMinusPoints() {
+        return penaltyMinusPoints;
+    }
+
+    public void setPenaltyType(PenaltyType penaltyType) {
+        this.penaltyType = penaltyType;
+    }
+
+    public PenaltyType getPenaltyType() {
+        return penaltyType;
     }
 }

@@ -1,8 +1,11 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.request.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -15,12 +18,15 @@ import java.util.TimerTask;
  * @author Benjamin Kasten
  */
 public class AiMain {
+    //Logger
+    private static final Logger logger = LogManager.getLogger();
+
     static Timer timer = new Timer();
     public static Ai ai = new Ai();
+    static String aiName;
 
     static String host;
     static int port;
-    static int difficultyLevel;
 
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
@@ -37,8 +43,7 @@ public class AiMain {
         //default: "192.168.0.234" 47345 3
         host = args[0]; // "localhost"
         port = Integer.parseInt(args[1]); // 47345
-        setDifficultyLevel(Integer.parseInt(args[2])); // 3
-
+        ai.setDifficultyLevel(Integer.parseInt(args[2])); // 3
         createNewAiPlayer(host, port);
     }
 
@@ -51,10 +56,12 @@ public class AiMain {
      * @throws IOException Network error
      */
     protected static void createNewAiPlayer(String host, int port) throws IOException {
+
+        aiName = "EnginePlayer" + ((int) (Math.random() * 10000));   //random ai name without any claim to be unique
+        logger.info(MARKER.AI, "Creating new Engine Player with name: {}", aiName);
         ai.setInstance(ai);
         ai.getTcpConnector().connect(host, port);
-        //random ai name without any claim to be unique
-        ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest("EnginePlayer" + ((int) (Math.random() * 10000)), ClientType.PLAYER));
+        ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest(aiName, ClientType.PLAYER));
     }
 
     /**
@@ -72,14 +79,5 @@ public class AiMain {
         timer.cancel();
         timer.purge();
     }
-
-    public static void setDifficultyLevel(int d) {
-        difficultyLevel = d;
-    }
-
-    public static int getDifficultyLevel() {
-        return difficultyLevel;
-    }
-
 
 }

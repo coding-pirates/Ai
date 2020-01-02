@@ -1,16 +1,17 @@
-package GamePlay;
+package de.upb.codingpirates.battleships.ai.gameplay;
 
-import de.upb.codingpirates.battleship.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
+import de.upb.codingpirates.battleships.ai.util.InvalidPointsCreator;
+import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
+import de.upb.codingpirates.battleships.ai.util.ZeroPointMover;
 import de.upb.codingpirates.battleships.logic.PlacementInfo;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Rotation;
 import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class ShipPlacer {
     Ai ai;
     //Logger
-    private static final Logger logger = LogManager.getLogger(Ai.class.getName());
+    private static final Logger logger = LogManager.getLogger();
 
 
     public ShipPlacer(Ai ai) {
@@ -35,17 +36,16 @@ public class ShipPlacer {
     Map<Integer, PlacementInfo> positions = new HashMap<>();
 
     /**
-     * Calls the {link {@link #guessRandomShipPositions(Map)} (Map)}} and if it returns true send the {@link PlaceShipsRequest}
+     * Calls the {link {@link #guessRandomShipPositions(Map)}} method.
      *
      * @return positions of placed ships
-     * @throws IOException Network error
      */
     public Map<Integer, PlacementInfo> placeShipsRandomly() {
         while (!successful) {
-            logger.info("placing ships failed");
-            guessRandomShipPositions(ai.getShipConfig());
+            logger.info(MARKER.AI, "Placing ships failed");
+            guessRandomShipPositions(ai.getShips());
         }
-        logger.info("placing ships worked");
+        logger.info(MARKER.AI, "Placing ships successful");
         return positions;
     }
 
@@ -59,38 +59,49 @@ public class ShipPlacer {
         usedPoints.clear();
         positions.clear();
 
-        logger.info("Started random guesser");
-        logger.info("height: {}", ai.getHeight());
-        logger.info("width: {}", ai.getWidth());
+        logger.info(MARKER.AI, "Started random guesser");
+        logger.info(MARKER.AI, "Field height: {}", ai.getHeight());
+        logger.info(MARKER.AI, "Field width: {}", ai.getWidth());
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            logger.info("entry of shipConfig Map with shipID: " + entry.getKey());
+            logger.info(MARKER.AI, "Entry of shipConfig Map with shipID: " + entry.getKey());
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
-            Collection<Point2D> shipPos = entry.getValue().getPositions();
+            Collection<Point2D> ship = entry.getValue().getPositions();
 
-            for (Point2D j : shipPos) {
-                logger.info("old point: {}", j);
+            for (Point2D j : ship) {
+                logger.info(MARKER.AI, "Old point: {}", j);
             }
+
+            //making all points positive using ZeroPointMover
+            ZeroPointMover zeroPointMover = new ZeroPointMover();
+            //new positive ship values
+            Collection<Point2D> shipPositive = new ArrayList<>(zeroPointMover.moveToZeroPoint((ArrayList<Point2D>) ship));
+
+            for (Point2D j : shipPositive) {
+                logger.info(MARKER.AI, "New positive point: {}", j);
+            }
+
+            //use a RandomPointCreator to get a random point
             RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
 
-            //is the random point wich will be the point for the PlacementInfo
+            //is the random point which will be the point for the PlacementInfo
             Point2D guessPoint = randomPointCreator.getRandomPoint2D();
 
             //for testing purpose
-            logger.info("Guess point: {}", guessPoint);
+            logger.info(MARKER.AI, "Guess point: {}", guessPoint);
 
             //the the distance from zeropoint to random guessPoint
             int distanceX = guessPoint.getX();
             int distanceY = guessPoint.getY();
 
-            //the positions (points) of a ship well be stored here
+            //the positions (points) of a ship will be stored here
             ArrayList<Point2D> tempShipPos = new ArrayList<>();
 
             //iterates through every point of the ship (all points in shipPos)
-            for (Point2D i : shipPos) {
+            for (Point2D i : shipPositive) {
                 //creating new coordinates by moving every point in x and y direction: The moving distance came from
                 //the guessPoint
                 int newX = i.getX() + distanceX;
@@ -99,7 +110,7 @@ public class ShipPlacer {
                 Point2D newPoint = new Point2D(newX, newY);
 
                 //for testing purpose
-                logger.info("new point: {}", newPoint);
+                logger.info(MARKER.AI, "New potential placement point: {}", newPoint);
 
                 //check for each point in usePoints if the newPoint is already unavailable (is used)
                 for (Point2D p : usedPoints) {
@@ -108,7 +119,7 @@ public class ShipPlacer {
                     if ((p.getX() == newPoint.getX()) & (p.getY() == newPoint.getY())) {
                         usedPoints.clear();
                         positions.clear();
-                        logger.info("Failed: new guess point already in usedPoints ");
+                        logger.info(MARKER.AI, "Failed: new guess point already is not accessible. ");
                         return;
 
                     }
@@ -122,7 +133,7 @@ public class ShipPlacer {
                     //-->starting the loop in placeShips again
                     usedPoints.clear();
                     positions.clear();
-                    logger.info("Failed: new point coordinates do not fit the field ");
+                    logger.info(MARKER.AI, "Failed: new point coordinates do not fit the field ");
                     return;
                 } else {
                     // if the newPoint is valid...
@@ -137,9 +148,10 @@ public class ShipPlacer {
                 }
             }
 
+            InvalidPointsCreator invalidPointsCreator = new InvalidPointsCreator(this.ai);
             //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
             //once they are in the usedPoints Array, they can not be used for placing ships anymore
-            usedPoints.addAll(ai.addSurroundingPointsToUsedPoints(tempShipPos));
+            usedPoints.addAll(invalidPointsCreator.addSurroundingPointsToUsedPoints(tempShipPos));
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
         }

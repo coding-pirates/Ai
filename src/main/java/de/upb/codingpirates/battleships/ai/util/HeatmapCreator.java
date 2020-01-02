@@ -1,6 +1,6 @@
-package de.upb.codingpirates.battleship.ai.util;
+package de.upb.codingpirates.battleships.ai.util;
 
-import GamePlay.SunkenShipFinder;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
@@ -12,7 +12,7 @@ import java.util.*;
 
 public class HeatmapCreator {
     //Logger
-    private static final Logger logger = LogManager.getLogger(Ai.class.getName());
+    private static final Logger logger = LogManager.getLogger();
 
     Ai ai;
 
@@ -34,12 +34,12 @@ public class HeatmapCreator {
 
         SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
         heatmapAllClients.clear(); //delete the heatmaps of the last round
-        ai.calcAndAddMisses(); // compute the new misses for this round
+        ai.addMisses(); // compute the new misses for this round
         ai.setSunkenShipIdsAll(sunkenShipFinder.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
         for (Client client : ai.getClientArrayList()) {
             if (client.getId() == ai.getAiClientId()) {
                 ai.getInvalidPointsAll().replace(client.getId(), invalidPointsCreator.createInvalidPointsOne(client.getId()));
-                logger.info("Skipped creating heatmap for own field");
+                logger.info(MARKER.AI, "Skipped creating heatmap for own field");
                 continue;
             }
             //create a heatmap for this client and put it into the heatmapAllClients map
@@ -60,7 +60,7 @@ public class HeatmapCreator {
      * @return a heatmap for the client
      */
     public Integer[][] createHeatmapOneClient(int clientId) {
-        logger.info("Create heatmap for client " + clientId);
+        logger.info(MARKER.AI, "Create heatmap for client " + clientId);
         InvalidPointsCreator invalidPointsCreator = new InvalidPointsCreator(this.ai);
         ai.getInvalidPointsAll().replace(clientId, invalidPointsCreator.createInvalidPointsOne(clientId));
         Integer[][] heatmap = new Integer[ai.getHeight()][ai.getWidth()]; //heatmap array
@@ -71,18 +71,19 @@ public class HeatmapCreator {
         LinkedHashSet<Point2D> invalidPointsThisClient = ai.getInvalidPointsAll().get(clientId);
         LinkedList<Integer> sunkenIdsThisClient = ai.getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
 
-        Map<Integer, ShipType> shipConfig = ai.getShipConfig();
+        Map<Integer, ShipType> shipConfig = ai.getShips();
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            logger.info("Ship Id of shipConfig: " + entry.getKey());
+            logger.info(MARKER.AI, "Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
-                logger.info("ship already sunk: " + entry.getKey());
+                logger.info(MARKER.AI, "ship already sunk: " + entry.getKey());
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
             int shipId = entry.getKey(); //Schiffs Id
             //Koordinaten des aktuellen Schiffs
             ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPositions();
             //Rotiere das aktuelle Schiff
-            ArrayList<ArrayList<Point2D>> rotated = ai.rotateShips(positions);
+            Rotator rotator = new Rotator(this.ai);
+            ArrayList<ArrayList<Point2D>> rotated = rotator.rotateShips(positions);
             //Betrachte erstes rotiertes Schiff
             for (ArrayList<Point2D> tShips : rotated) {
                 ArrayList<Point2D> cShip = new ArrayList<>(tShips); //kopiere erstes rotiertes Schiff
@@ -140,9 +141,9 @@ public class HeatmapCreator {
                     maxY++;
                 }
             }
-            logger.info("Finished field with rotated versions of ship " + shipId);
+            logger.info(MARKER.AI, "Finished field with rotated versions of ship " + shipId);
         }
-        logger.info("Created heatmap of client: " + clientId);
+        logger.info(MARKER.AI, "Created heatmap of client: " + clientId);
         return heatmap;
 
     }

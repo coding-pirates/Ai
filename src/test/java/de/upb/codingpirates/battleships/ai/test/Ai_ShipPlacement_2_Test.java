@@ -15,10 +15,11 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class AiShipPlacementRandTest {
+public class Ai_ShipPlacement_2_Test {
     static Ai ai = new Ai();
+
     @BeforeAll
-    public static void create(){
+    public static void create() {
 
         ai.setHeight(10);
         ai.setWidth(10);
@@ -51,7 +52,7 @@ public class AiShipPlacementRandTest {
         shipConfig.put(2, ship2);
         shipConfig.put(3, ship3);
 
-        ai.setShipConfig(shipConfig);
+        ai.setShips(shipConfig);
 
     }
 

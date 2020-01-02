@@ -1,6 +1,6 @@
 package de.upb.codingpirates.battleships.ai.test;
 
-import GamePlay.SunkenShipFinder;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipFinder;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
@@ -51,7 +51,7 @@ public class AiShotPlacement_3_Test {
         ShipType s4 = new ShipType(pos4);
 
         shipconfig.put(4, s4);
-        ai.setShipConfig(shipconfig);
+        ai.setShips(shipconfig);
 
 
         //Clients erstellen

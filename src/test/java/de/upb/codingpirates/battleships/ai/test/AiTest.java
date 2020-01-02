@@ -1,8 +1,8 @@
 package de.upb.codingpirates.battleships.ai.test;
 
-import de.upb.codingpirates.battleship.ai.util.HeatmapCreator;
-import GamePlay.SunkenShipFinder;
-import de.upb.codingpirates.battleship.ai.util.RandomPointCreator;
+import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipFinder;
+import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
@@ -110,7 +110,7 @@ public class AiTest {
         //Has to be set before creating heatmaps
         ai.setHeight(7);
         ai.setWidth(7);
-        ai.setShipConfig(shipconfig);
+        ai.setShips(shipconfig);
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipFinder.sortTheSunk());

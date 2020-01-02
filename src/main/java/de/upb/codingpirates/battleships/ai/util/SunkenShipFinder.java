@@ -1,6 +1,7 @@
-package GamePlay;
+package de.upb.codingpirates.battleships.ai.util;
 
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -12,7 +13,7 @@ import java.util.*;
 
 public class SunkenShipFinder {
     //Logger
-    private static final Logger logger = LogManager.getLogger(Ai.class.getName());
+    private static final Logger logger = LogManager.getLogger();
 
     Ai ai;
 
@@ -20,14 +21,13 @@ public class SunkenShipFinder {
         this.ai = ai;
     }
 
-
     /**
      * Creates a map which maps from the clientID on their sunken ships
      *
      * @return The map with ordered shots (sunk)
      */
     public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
-        logger.info("Sorting the sunken ships by their clients...");
+        logger.info(MARKER.AI, "Sorting the sunken ships by their clients...");
         HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
         for (Shot i : ai.getSunk()) {
             int clientId = i.getClientId();
@@ -48,7 +48,7 @@ public class SunkenShipFinder {
                 sortedSunk.put(c.getId(), emptyList);
             }
         }
-        logger.info("Sorted the sunken ships by their clients.");
+        logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
         return sortedSunk;
     }
 
@@ -60,7 +60,7 @@ public class SunkenShipFinder {
      * @return sunken ship ids of each client
      */
     public Map<Integer, LinkedList<Integer>> findSunkenShipIdsAll() {
-        logger.info("Try finding sunken ShipIds");
+        logger.info(MARKER.AI, "Try finding sunken ShipIds");
         Map<Integer, LinkedList<Shot>> sortedSunk = ai.getSortedSunk();
         Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //maps from client id on the sunken ship ids
         for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
@@ -68,11 +68,11 @@ public class SunkenShipFinder {
             LinkedList<Integer> a = findSunkenShipsIdsOne(entry.getValue());
             allSunkenShipIds.put(clientId, a);
             if (a.isEmpty()) {
-                logger.info("Found no sunken ships of Client " + clientId);
+                logger.info(MARKER.AI, "Found no sunken ships of Client " + clientId);
             } else {
-                logger.info("Found sunken ships of Client " + clientId);
+                logger.info(MARKER.AI, "Found sunken ships of Client " + clientId);
                 for (int i : a) {
-                    logger.info("ShipId: " + i);
+                    logger.info(MARKER.AI, "ShipId: " + i);
                 }
             }
         }
@@ -233,11 +233,12 @@ public class SunkenShipFinder {
         //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
         //   aufgenommen
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
-        Map<Integer, ShipType> shipConfig = ai.getShipConfig();
+        Map<Integer, ShipType> ships = ai.getShips();
 
-        for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+        for (Map.Entry<Integer, ShipType> entry : ships.entrySet()) {
             int shipId = entry.getKey();
-            ArrayList<ArrayList<Point2D>> t = ai.rotateShips((ArrayList<Point2D>) entry.getValue().getPositions()); //schiff aus der config wird gedreht
+            Rotator rotator = new Rotator(this.ai);
+            ArrayList<ArrayList<Point2D>> t = rotator.rotateShips((ArrayList<Point2D>) entry.getValue().getPositions()); //schiff aus der config wird gedreht
             for (LinkedList<Point2D> a : all) { //erster Eintrag in all (erstes gesunkens Schiff)
                 boolean find = false;
 

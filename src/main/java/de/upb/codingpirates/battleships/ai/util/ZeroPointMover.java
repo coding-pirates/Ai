@@ -1,6 +1,8 @@
-package de.upb.codingpirates.battleship.ai.util;
+package de.upb.codingpirates.battleships.ai.util;
 
 import de.upb.codingpirates.battleships.logic.Point2D;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +13,8 @@ import java.util.Collections;
  * @author Benjamin Kasten
  */
 public class ZeroPointMover {
+    private static final Logger logger = LogManager.getLogger();
+
     /**
      * Moves the ship to the field (only positive values and as near as possible  to the x and y axis)
      *
