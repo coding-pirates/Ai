@@ -155,12 +155,12 @@ public class SunkenShipsHandler {
                     }
                     if (checked) break;
                     temp.add(t);
-
                 }
             }
             all.add(new LinkedList<>(temp));
             temp.clear();
         }
+
         //2. Ausgehend von der initialen Verteilung der Schiffe werden die anderen zugehörigen
         //   Punkte gesucht und passenden, schon zusammenhängenden Punkteverteilungen hinzugefügt
         //   Aufgrund der Notwendigkeit des Ersetzens des Iterables wird mit einer Kopie gearbeitet.

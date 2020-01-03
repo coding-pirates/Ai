@@ -1,9 +1,7 @@
 package de.upb.codingpirates.battleships.ai.test;
 
-import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
-import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -53,7 +51,6 @@ public class AiTest {
         shipconfig.put(4, s4);
 
 
-
         //Clients erstellen
         Client c1 = new Client(1, "c1");
         Client c2 = new Client(2, "c2");
@@ -82,25 +79,22 @@ public class AiTest {
         sunk.add(new Shot(1, new Point2D(5, 4)));
         sunk.add(new Shot(1, new Point2D(6, 3)));
 
-
         sunk.add(new Shot(2, new Point2D(3, 2)));
         sunk.add(new Shot(2, new Point2D(3, 3)));
         sunk.add(new Shot(2, new Point2D(0, 1)));
         sunk.add(new Shot(2, new Point2D(1, 1)));
         sunk.add(new Shot(2, new Point2D(1, 0)));
 
-
-        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6,6)));
-        ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1,6)));
-        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3,3)));
-        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3,5)));
-        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(4,6)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6, 6)));
+        ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1, 6)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 3)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 5)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(4, 6)));
 
         Collection<Shot> hits = new ArrayList<>();
-        hits.add(new Shot(3, new Point2D(1,1)));
-        hits.add(new Shot(3, new Point2D(1,2)));
-        hits.add(new Shot(3, new Point2D(2,2)));
-
+        hits.add(new Shot(3, new Point2D(1, 1)));
+        hits.add(new Shot(3, new Point2D(1, 2)));
+        hits.add(new Shot(3, new Point2D(2, 2)));
 
         ai.setHits(hits);
 
@@ -119,53 +113,8 @@ public class AiTest {
 
 
     @Test
-    public void sort_The_Sunk_Test() {
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        HashMap<Integer, LinkedList<Shot>> sortedSunk = sunkenShipsHandler.sortTheSunk();
-        assertEquals(sortedSunk.get(1).size(), 12);
-        assertEquals(sortedSunk.get(2).size(), 5);
-
-
-    }
-
-    @Test
-    public void create_heatmap_all_clients_Test() {
-        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients());
-    }
-
-    @Test
-    public void create_Heatmap_one_Client_Test() {
-        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        heatmapCreator.createHeatmapOneClient(3);
-    }
-
-    @Test
-    public void get_Sunken_shipIds_all_Clients() {
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        assertEquals(3, ai.getSortedSunk().size());
-        ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll());
-        Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
-        assertNotNull(sunken);
-        assertEquals(sunken.size(), 3);
-        assertEquals(sunken.get(1).size(), 4);
-        assertEquals(sunken.get(2).size(), 2);
-    }
-
-    @Test
-    public void getRandomPoint2D_Test() {
-        RandomPointCreator randomPointCreator = new RandomPointCreator(ai);
-        Point2D randP = randomPointCreator.getRandomPoint2D();
-        assertNotNull(randP);
-        assertTrue(randP.getX() < ai.getWidth());
-        assertTrue(randP.getY() < ai.getHeight());
-        assertTrue(randP.getX() >= 0);
-        assertTrue(randP.getY() >= 0);
-    }
-
-    @Test
-    public void create_LinkedList_One_Element_Test(){
-        Shot shot = new Shot(111, new Point2D(12,4));
+    public void create_LinkedList_One_Element_Test() {
+        Shot shot = new Shot(111, new Point2D(12, 4));
         List<Shot> list = ai.createArrayListOneArgument(shot);
 
         assertNotNull(list);

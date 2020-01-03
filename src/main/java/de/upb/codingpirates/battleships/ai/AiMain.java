@@ -24,14 +24,14 @@ public class AiMain {
     public static Ai ai = new Ai();
     static String aiName;
 
-    static String host;
+    static String ipAddress;
     static int port;
 
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
      *
-     * @param args host (Ip Adress of the server) and port
-     * @throws IOException Network error
+     * @param args ipAddress (Ip address of the server), port and difficulty level
+     * @throws IOException Network connection error
      */
     public static void main(String[] args) throws IOException {
         timer.schedule(new TimerTask() {
@@ -41,26 +41,25 @@ public class AiMain {
         }, 1L, 1L);
         //default (reference server): "swtpra.cs.upb.de" 33101 3
         //default: "192.168.0.234" 47345 3
-        host = args[0]; // "localhost"
-        port = Integer.parseInt(args[1]); // 47345
-        ai.setDifficultyLevel(Integer.parseInt(args[2])); // 3
-        createNewAiPlayer(host, port);
+        ipAddress = args[0];
+        port = Integer.parseInt(args[1]);
+        ai.setDifficultyLevel(Integer.parseInt(args[2]));
+        createNewAiPlayer(ipAddress, port);
     }
 
     /**
      * Is called by the {@link AiMain#main(String[])}  for creating a new Ai object and connecting it to the server
      * Sends the ServerJoinRequest message.
      *
-     * @param host is the ip address of the server
-     * @param port is the port number of the server
+     * @param ipAddress The ip address of the server
+     * @param port      The port number of the server
      * @throws IOException Network error
      */
-    protected static void createNewAiPlayer(String host, int port) throws IOException {
-
-        aiName = "EnginePlayer" + ((int) (Math.random() * 10000));   //random ai name without any claim to be unique
+    public static void createNewAiPlayer(String ipAddress, int port) throws IOException {
+        aiName = "EnginePlayer" + ((int) (Math.random() * 1000000));   //random ai name without any claim to be unique
         logger.info(MARKER.AI, "Creating new Engine Player with name: {}", aiName);
         ai.setInstance(ai);
-        ai.getTcpConnector().connect(host, port);
+        ai.getTcpConnector().connect(ipAddress, port);
         ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest(aiName, ClientType.PLAYER));
     }
 
@@ -79,5 +78,4 @@ public class AiMain {
         timer.cancel();
         timer.purge();
     }
-
 }

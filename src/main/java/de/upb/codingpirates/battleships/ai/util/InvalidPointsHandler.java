@@ -66,7 +66,8 @@ public class InvalidPointsHandler {
      * each ship must have a minimal distance of one point in each direction to other ships.
      * Used by {@link ShipPlacer#guessRandomShipPositions(Map)}
      *
-     * @param shipPos The positions of one ship
+     * @param shipPos The positions of one ship.
+     * @return The set of invalid points around one ship.
      */
     public LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(ArrayList<Point2D> shipPos) {
         //todo prevent multiple insertion of the same point

@@ -26,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.*;
+
 //TODO some getter/setter are missing
 
 /**
@@ -76,39 +77,45 @@ public class Ai implements
     int gameId;
 
     Ai instance = this;
+    Map<Integer, ShipType> ships = new HashMap<>(); //all ships which have to be placed (shipConfig)
 
-
-    Map<Integer, ShipType> ships = new HashMap<>();
-
-
-    //updated values
-    Map<Integer, Integer> points = new HashMap<>();
-    Collection<Shot> sunk = new ArrayList<>();
-    //sunken Ships
+    Map<Integer, Integer> points = new HashMap<>(); //points of the clients
+    //sunken ships
+    Collection<Shot> sunk = new ArrayList<>(); //sunks which are updated every round
     Map<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>(); //
     Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>();
     //heatmap
     Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
-    //invalid points
-    //A map which maps the client id on a collection with all invalid Points of this client
+    //invalid points per client id
     Map<Integer, LinkedHashSet<Point2D>> invalidPointsAll = new HashMap<>();
 
-    public PlayerUpdateNotification updateNotification;
+    Collection<Shot> misses = new ArrayList<>(); //all misses of this player
 
-    Collection<Shot> misses = new ArrayList<>();
-    public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
+    public Collection<Shot> requestedShotsLastRound = new ArrayList<>(); //the latest requested shots
 
+    //the ClientConnector fot this ai instance
     private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
 
-
+    /**
+     * Constructor which is needed for register this ai instance as message listener.
+     */
     public Ai() {
         ListenerHandler.registerListener(this);
     }
 
 
-    ShotPlacer shotPlacement = new ShotPlacer(this);
-
+    /**
+     * Is called every round for placing shots. Using a {@link ShotPlacer} object and the difficulty level,
+     * the method calls the matching method for shot placement and sends the result (the
+     * calculated shots) to the server using the {@link #sendMessage} method.
+     *
+     * @param difficultyLevel The difficulty level of this ai instance.
+     * @throws IOException Server connection error
+     */
     public void placeShots(int difficultyLevel) throws IOException {
+
+        ShotPlacer shotPlacement = new ShotPlacer(this);
+
         Collection<Shot> myShots;
 
         switch (difficultyLevel) {
@@ -131,14 +138,13 @@ public class Ai implements
                 break;
             }
             default: {
-                logger.error(MARKER.AI, "Input is not valid: " + difficultyLevel);
+                logger.error(MARKER.AI, "The difficulty level ({}) is not valid, start again and use choose " +
+                        "between the level 1, 2 or 3", difficultyLevel);
             }
-
         }
     }
 
-    //ship positions of Ais field
-    Map<Integer, PlacementInfo> positions;
+    Map<Integer, PlacementInfo> positions; //ship positions of Ais field
 
     /**
      * Creates a {@link ShipPlacer} instance and calls {@link ShipPlacer#guessRandomShipPositions(Map)} method.
