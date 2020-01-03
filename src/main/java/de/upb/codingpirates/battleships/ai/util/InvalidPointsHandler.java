@@ -13,13 +13,19 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class InvalidPointsCreator {
+/**
+ * Handles the invalid Points which can not be accessed anymore. Is called by {@link ShipPlacer} and
+ * {@link HeatmapCreator}.
+ *
+ * @author Benjamin Kasten
+ */
+public class InvalidPointsHandler {
     //Logger
     private static final Logger logger = LogManager.getLogger();
 
     Ai ai;
 
-    public InvalidPointsCreator(Ai ai) {
+    public InvalidPointsHandler(Ai ai) {
         this.ai = ai;
     }
 

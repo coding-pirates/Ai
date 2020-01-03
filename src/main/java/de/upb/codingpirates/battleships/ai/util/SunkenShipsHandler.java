@@ -11,13 +11,22 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
-public class SunkenShipFinder {
-    //Logger
+/**
+ * The class for computing the sunken ships out of the sunk collection.
+ */
+public class SunkenShipsHandler {
     private static final Logger logger = LogManager.getLogger();
-
     Ai ai;
 
-    public SunkenShipFinder(Ai ai) {
+
+    /**
+     * Constructor for {@link MissesFinder}. Gets an instance of the ai object which creates the {@link MissesFinder}
+     * instance.
+     *
+     * @param ai The instance of the ai who called the constructor.
+     */
+
+    public SunkenShipsHandler(Ai ai) {
         this.ai = ai;
     }
 
@@ -39,7 +48,8 @@ public class SunkenShipFinder {
                 }
             }
             if (!success) {
-                sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
+                //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
+                sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i)));
             }
         }
         for (Client c : ai.getClientArrayList()) {

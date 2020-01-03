@@ -4,7 +4,7 @@ import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.ai.util.MissesFinder;
-import de.upb.codingpirates.battleships.ai.util.SunkenShipFinder;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -29,7 +29,10 @@ import java.util.*;
 //TODO some getter/setter are missing
 
 /**
- * Implements the logic of the Ai Player like placing ships and firing shots
+ * The model of the ai player. Stores the game configuration and values, handles the message sending,
+ * the ship and shot placement.
+ * <p>
+ * Implements also the message listener interfaces and therefore also the message handling functionality.
  *
  * @author Benjamin Kasten
  */
@@ -48,7 +51,7 @@ public class Ai implements
         GameJoinPlayerResponseListener,
         ServerJoinResponseListener,
         LobbyResponseListener {
-    //Logger
+
     private static final Logger logger = LogManager.getLogger();
 
     int difficultyLevel;
@@ -59,17 +62,23 @@ public class Ai implements
     //game field parameter
     int width;
     int height;
-    Ai instance = this;
-    int HITPOINTS;
-    int SUNKPOINTS;
+    int hitPoints;
+    int sunkPoints;
+    long visualizationTime;
+    long roundTime;
+    int shotCount;
+    int maxPlayerCount;
+    int penaltyMinusPoints;
+    PenaltyType penaltyType;
+
+
     int aiClientId;
     int gameId;
-    Configuration config;
-    Map<Integer, ShipType> ships = new HashMap<>();
 
-    long VISUALIZATIONTIME;
-    long ROUNDTIME;
-    int SHOTCOUNT;
+    Ai instance = this;
+
+
+    Map<Integer, ShipType> ships = new HashMap<>();
 
 
     //updated values
@@ -90,9 +99,6 @@ public class Ai implements
     public Collection<Shot> requestedShotsLastRound = new ArrayList<>();
 
     private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
-    private int maxPlayerCount;
-    private int penaltyMinusPoints;
-    private PenaltyType penaltyType;
 
 
     public Ai() {
@@ -131,21 +137,28 @@ public class Ai implements
         }
     }
 
-    //ship positions of ais field
+    //ship positions of Ais field
     Map<Integer, PlacementInfo> positions;
 
+    /**
+     * Creates a {@link ShipPlacer} instance and calls {@link ShipPlacer#guessRandomShipPositions(Map)} method.
+     * Sets the placement by calling {@link #setPositions(Map)} and calls {@link #sendMessage(Message)} for
+     * sending the {@link PlaceShipsRequest} to the server.
+     *
+     * @throws IOException Connection error.
+     */
     public void placeShips() throws IOException {
         ShipPlacer shipPlacer = new ShipPlacer(this);
         setPositions(shipPlacer.placeShipsRandomly());
         sendMessage(new PlaceShipsRequest(getPositions()));
     }
 
-
     /**
      * Creates a new ArrayList(Shot) with only one element
      *
      * @param i The Shot object which will be the only object in the list
      * @return The "one element" list
+     * @deprecated replaced by {@code new LinkedList<>(Collections.singletonList(i))}
      */
     public LinkedList<Shot> createArrayListOneArgument(Shot i) {
         LinkedList<Shot> list = new LinkedList<>();
@@ -153,19 +166,12 @@ public class Ai implements
         return list;
     }
 
+    /**
+     * Calculates the misses of last round and adds them to the misses collcection
+     */
     public void addMisses() {
         MissesFinder missesFinder = new MissesFinder(getInstance());
         this.misses.addAll(missesFinder.computeMisses());
-    }
-
-    /**
-     * Can be used to send a message to the server.
-     *
-     * @param message message to send
-     * @throws IOException server error
-     */
-    public void sendMessage(Message message) throws IOException {
-        tcpConnector.sendMessageToServer(message);
     }
 
     /**
@@ -177,22 +183,50 @@ public class Ai implements
         clientArrayList.removeIf(i -> i.getId() == leftPlayerID);
     }
 
+
+    /**
+     * Can be used to send a message to the server.
+     *
+     * @param message message to send
+     * @throws IOException server error
+     */
+    public void sendMessage(Message message) throws IOException {
+        tcpConnector.sendMessageToServer(message);
+    }
+
+
     //getter and setter -----------------------------------------------------------------------------------------------
+
+
+    /**
+     * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have more
+     * functions.
+     * Called by {@link #onGameInitNotification(GameInitNotification, int)}
+     *
+     * @param clientList from the configuration
+     */
+    public void setClientArrayList(Collection<Client> clientList) {
+        clientArrayList.addAll(clientList);
+    }
+
+    public LinkedList<Client> getClientArrayList() {
+        return this.clientArrayList;
+    }
 
     public void setSortedSunk(HashMap<Integer, LinkedList<Shot>> sortedSunk) {
         this.sortedSunk = sortedSunk;
     }
 
-    public Collection<Shot> getMisses() {
-        return this.misses;
+    public Map<Integer, LinkedList<Shot>> getSortedSunk() {
+        return this.sortedSunk;
     }
 
     public void setMisses(Collection<Shot> misses) {
         this.misses = misses;
     }
 
-    public Map<Integer, LinkedList<Shot>> getSortedSunk() {
-        return this.sortedSunk;
+    public Collection<Shot> getMisses() {
+        return this.misses;
     }
 
     public void setAiClientId(int aiClientId) {
@@ -216,7 +250,11 @@ public class Ai implements
     }
 
     public void setShotCount(int shotCount) {
-        this.SHOTCOUNT = shotCount;
+        this.shotCount = shotCount;
+    }
+
+    public int getShotCount() {
+        return this.shotCount;
     }
 
     public void setGameId(int gameId) {
@@ -227,12 +265,7 @@ public class Ai implements
         return this.gameId;
     }
 
-    public int getShotCount() {
-        return this.SHOTCOUNT;
-    }
-
     public void setWidth(int _width) {
-        logger.info(MARKER.AI, "Field width is {}", _width);
         this.width = _width;
     }
 
@@ -241,17 +274,11 @@ public class Ai implements
     }
 
     public void setHeight(int _height) {
-        logger.info(MARKER.AI, "Field height is {}", _height);
         this.height = _height;
     }
 
     public int getHeight() {
         return this.height;
-    }
-
-    public void setHitpoints(int hitpoints) {
-        logger.info(MARKER.AI, "Hitpoints: {}", hitpoints);
-        this.HITPOINTS = hitpoints;
     }
 
     public void setHits(Collection<Shot> hits) {
@@ -260,6 +287,10 @@ public class Ai implements
 
     public Collection<Shot> getHits() {
         return this.hits;
+    }
+
+    public void setSunk(Collection<Shot> sunk) {
+        this.sunk = sunk;
     }
 
     public Collection<Shot> getSunk() {
@@ -274,52 +305,21 @@ public class Ai implements
         this.points = points;
     }
 
-    public void setSunk(Collection<Shot> sunk) {
-        this.sunk = sunk;
-    }
 
-    private void setVisualizationTime(long visualizationTime) {
-        this.VISUALIZATIONTIME = visualizationTime;
-    }
-
-    private void setRoundTimer(long roundTime) {
-        this.ROUNDTIME = roundTime;
-    }
-
-    private void setSunkPoints(int sunkPoints) {
-        logger.info(MARKER.AI, "SunkPoints: {}", sunkPoints);
-        this.SUNKPOINTS = sunkPoints;
+    public void setPositions(Map<Integer, PlacementInfo> positions) {
+        this.positions = positions;
     }
 
     public Map<Integer, PlacementInfo> getPositions() {
         return this.positions;
     }
 
-    public void setPositions(Map<Integer, PlacementInfo> positions) {
-        this.positions = positions;
-    }
-
-    public Map<Integer, Integer[][]> getHeatmapAllClients() {
-        return this.heatmapAllClients;
-    }
-
     public void setHeatmapAllClients(Map<Integer, Integer[][]> heatmap) {
         this.heatmapAllClients = heatmap;
     }
 
-    /**
-     * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have more
-     * functions.
-     * Called by {@link #onGameInitNotification(GameInitNotification, int)}
-     *
-     * @param clientList from the configuration
-     */
-    public void setClientArrayList(Collection<Client> clientList) {
-        clientArrayList.addAll(clientList);
-    }
-
-    public LinkedList<Client> getClientArrayList() {
-        return this.clientArrayList;
+    public Map<Integer, Integer[][]> getHeatmapAllClients() {
+        return this.heatmapAllClients;
     }
 
     public void setSunkenShipIdsAll(Map<Integer, LinkedList<Integer>> sunkenIds) {
@@ -344,6 +344,72 @@ public class Ai implements
 
     public int getDifficultyLevel() {
         return this.difficultyLevel;
+    }
+
+    public void setHitPoints(int hitPoints) {
+        this.hitPoints = hitPoints;
+    }
+
+    public int getHitPoints() {
+        return this.hitPoints;
+    }
+
+    private void setSunkPoints(int sunkPoints) {
+        this.sunkPoints = sunkPoints;
+    }
+
+    public int getSunkPoints() {
+        return this.sunkPoints;
+    }
+
+    private void setRoundTimer(long roundTime) {
+        this.roundTime = roundTime;
+    }
+
+    public long getRoundTime() {
+        return this.roundTime;
+    }
+
+    private void setVisualizationTime(long visualizationTime) {
+        this.visualizationTime = visualizationTime;
+    }
+
+    public long getVisualizationTime() {
+        return this.visualizationTime;
+    }
+
+    /**
+     * Sets the configuration values.
+     *
+     * @param config The game configuration.
+     */
+    public void setConfig(Configuration config) {
+        logger.info("Setting configuration...");
+
+        this.setMaxPlayerCount(config.getMaxPlayerCount());
+        logger.info("Maximum player count: {}", getMaxPlayerCount());
+        this.setHeight(config.getHeight());
+        logger.info("Height: {}", getHeight());
+        this.setWidth(config.getWidth());
+        logger.info("Width: {}", getWidth());
+        this.setShotCount(config.getShotCount());
+        logger.info("Shots per round: {}", getShotCount());
+        this.setHitPoints(config.getHitPoints());
+        logger.info("Points for a hit: {}", getHitPoints());
+        this.setSunkPoints(config.getSunkPoints());
+        logger.info("Points for a sunk: {}", getSunkPoints());
+        this.setRoundTimer(config.getRoundTime());
+        logger.info("RoundTime: {}", getRoundTime());
+        this.setVisualizationTime(config.getVisualizationTime());
+        logger.info("Visualization time: {}", getVisualizationTime());
+        this.setPenaltyMinusPoints(config.getPenaltyMinusPoints());
+        logger.info("PenaltyMinusPoints: {}", getPenaltyMinusPoints());
+        this.setPenaltyType(config.getPenaltyKind());
+        logger.info("PenaltyType: {}", getPenaltyType());
+        this.setShips(config.getShips());
+        logger.info("Number of ships: {}", getShips().size());
+
+        logger.info("Setting configuration successful.");
     }
 
 
@@ -375,24 +441,16 @@ public class Ai implements
         AiMain.close();
     }
 
+
     @Override
     public void onGameInitNotification(GameInitNotification message, int clientId) {
         logger.info(MARKER.AI, "GameInitNotification: got clients and configuration");
-        Configuration config = message.getConfiguration();
-
-        this.setMaxPlayerCount(config.getMaxPlayerCount());
-        this.setHeight(config.getHeight());
-        this.setWidth(config.getWidth());
-        this.setShotCount(config.getShotCount());
-        this.setHitpoints(config.getHitPoints());
-        this.setSunkPoints(config.getSunkPoints());
-        this.setRoundTimer(config.getRoundTime());
-        this.setVisualizationTime(config.getVisualizationTime());
-        this.setPenaltyMinusPoints(config.getPenaltyMinusPoints());
-        this.setPenaltyType(config.getPenaltyKind());
-
-        this.setShips(config.getShips());
-
+        logger.info("Got message: {}", message.getMessageId());
+        logger.info("Connected clients size: {}", message.getClientList().size());
+        if (message.getConfiguration() == null) {
+            logger.error("Configuration is empty, execution will fail.");
+        }
+        setConfig(message.getConfiguration());
         this.setClientArrayList(message.getClientList());
         try {
             logger.info("Trying to place ships");
@@ -429,13 +487,14 @@ public class Ai implements
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
-        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(AiMain.ai.getInstance());
+
         logger.info(MARKER.AI, "PlayerUpdateNotification: getting updated hits, points and sunk");
         this.setHits(message.getHits());
         this.setPoints(message.getPoints());
         this.setSunk(message.getSunk());
-        //sortiere die sunks nach ihren Clients
-        this.setSortedSunk(sunkenShipFinder.sortTheSunk());
+        //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(AiMain.ai.getInstance());
+        this.setSortedSunk(sunkenShipsHandler.sortTheSunk());
     }
 
     @Override

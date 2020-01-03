@@ -13,12 +13,11 @@ import java.util.TimerTask;
 
 /**
  * Creates the ai Player Object and holds it alive while playing.
- * {@link Ai}. Is associated with only one Ai object int this version.
+ * Is associated with only one  {@link Ai} instance int this version.
  *
  * @author Benjamin Kasten
  */
 public class AiMain {
-    //Logger
     private static final Logger logger = LogManager.getLogger();
 
     static Timer timer = new Timer();
@@ -40,6 +39,7 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
+        //default (reference server): "swtpra.cs.upb.de" 33101 3
         //default: "192.168.0.234" 47345 3
         host = args[0]; // "localhost"
         port = Integer.parseInt(args[1]); // 47345

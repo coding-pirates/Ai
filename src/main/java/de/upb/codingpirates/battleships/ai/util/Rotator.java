@@ -9,18 +9,25 @@ import java.util.ArrayList;
 
 /**
  * Helper Class for rotating ships and making all their coordinates positive
- * Uses a rotation matrix: rotating the ship object around the zero point
- * Used for getting all possible rotations of a ship
+ * Uses a rotation matrix: rotating the ship object around the zero point.
+ * Moves them also in the positive area of the coordinate system using a {@link ZeroPointMover}.
+ * <p>
+ * Used for getting all possible rotations of one ship.
  *
  * @author Benjamin Kasten
  */
 public class Rotator {
     private static final Logger logger = LogManager.getLogger();
-
     ZeroPointMover mover = new ZeroPointMover();
-
     Ai ai;
 
+
+    /**
+     * Constructor for {@link Rotator}. Gets an instance of the ai object which creates the {@link Rotator}
+     * instance. Not necessary in this version.
+     *
+     * @param ai The instance of the ai who called the constructor.
+     */
     public Rotator(Ai ai) {
         this.ai = ai;
     }

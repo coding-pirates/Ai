@@ -9,16 +9,31 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * Class for calculating new misses of one player. Is called by {@link Ai}.
+ *
+ * @author Benjamin Kasten
+ */
 public class MissesFinder {
-    //Logger
     private static final Logger logger = LogManager.getLogger();
 
     Ai ai;
 
+    /**
+     * Constructor for {@link MissesFinder}. Gets an instance of the ai object which creates the {@link MissesFinder}
+     * instance.
+     *
+     * @param ai The instance of the ai who called the constructor.
+     */
     public MissesFinder(Ai ai) {
         this.ai = ai;
     }
 
+    /**
+     * Computes the misses of the last round by getting the requested shots of the last round.
+     *
+     * @return The misses of the last round of the ai player.
+     */
     public Collection<Shot> computeMisses() {
         logger.info(MARKER.AI, "Compute the misses of last round");
         Collection<Shot> tempMisses = new ArrayList<>();

@@ -1,7 +1,7 @@
 package de.upb.codingpirates.battleships.ai.test;
 
 import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
-import de.upb.codingpirates.battleships.ai.util.SunkenShipFinder;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
@@ -106,22 +106,22 @@ public class AiTest {
 
         ai.setAiClientId(999);
 
-        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         //Has to be set before creating heatmaps
         ai.setHeight(7);
         ai.setWidth(7);
         ai.setShips(shipconfig);
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
-        ai.setSortedSunk(sunkenShipFinder.sortTheSunk());
+        ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
 
     }
 
 
     @Test
     public void sort_The_Sunk_Test() {
-        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
-        HashMap<Integer, LinkedList<Shot>> sortedSunk = sunkenShipFinder.sortTheSunk();
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
+        HashMap<Integer, LinkedList<Shot>> sortedSunk = sunkenShipsHandler.sortTheSunk();
         assertEquals(sortedSunk.get(1).size(), 12);
         assertEquals(sortedSunk.get(2).size(), 5);
 
@@ -142,9 +142,9 @@ public class AiTest {
 
     @Test
     public void get_Sunken_shipIds_all_Clients() {
-        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         assertEquals(3, ai.getSortedSunk().size());
-        ai.setSunkenShipIdsAll(sunkenShipFinder.findSunkenShipIdsAll());
+        ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll());
         Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
         assertNotNull(sunken);
         assertEquals(sunken.size(), 3);

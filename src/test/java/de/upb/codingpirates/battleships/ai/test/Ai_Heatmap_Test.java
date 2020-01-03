@@ -1,25 +1,24 @@
 package de.upb.codingpirates.battleships.ai.test;
 
-import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
 import de.upb.codingpirates.battleships.logic.Shot;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AiShotPlacement_3_Test {
+public class Ai_Heatmap_Test {
     static Ai ai = new Ai();
 
     @BeforeAll
     public static void create() {
+
 
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
@@ -49,26 +48,18 @@ public class AiShotPlacement_3_Test {
         pos4.add(new Point2D(0, 1));
         pos4.add(new Point2D(0, 2));
         ShipType s4 = new ShipType(pos4);
-
         shipconfig.put(4, s4);
-        ai.setShips(shipconfig);
 
 
         //Clients erstellen
         Client c1 = new Client(1, "c1");
         Client c2 = new Client(2, "c2");
         Client c3 = new Client(3, "c3");
-        Client c4 = new Client(4, "c4");
-        Client cAi = new Client(5, "AiPlayer");
         Collection<Client> clientList = new ArrayList<>();
 
         clientList.add(c1);
         clientList.add(c2);
         clientList.add(c3);
-        clientList.add(c4);
-        clientList.add(cAi);
-
-        ai.setClientArrayList(clientList);
 
 
         //sunk erstellen
@@ -88,62 +79,39 @@ public class AiShotPlacement_3_Test {
         sunk.add(new Shot(1, new Point2D(5, 4)));
         sunk.add(new Shot(1, new Point2D(6, 3)));
 
-        //Client 2
-        //ship 3
+
         sunk.add(new Shot(2, new Point2D(3, 2)));
         sunk.add(new Shot(2, new Point2D(3, 3)));
-        //ship 2
         sunk.add(new Shot(2, new Point2D(0, 1)));
         sunk.add(new Shot(2, new Point2D(1, 1)));
         sunk.add(new Shot(2, new Point2D(1, 0)));
 
-        //Client 3
-        //no sunk
-
-        //Client 4
-        //no sunk
-
-        //Client 5 (Ai)
-        //ship 3
-        sunk.add(new Shot(5, new Point2D(5, 3)));
-        sunk.add(new Shot(5, new Point2D(5, 4)));
-
-        ai.setSunk(sunk);
 
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6, 6)));
         ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1, 6)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 3)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 5)));
+        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(4, 6)));
 
         Collection<Shot> hits = new ArrayList<>();
         hits.add(new Shot(3, new Point2D(1, 1)));
         hits.add(new Shot(3, new Point2D(1, 2)));
         hits.add(new Shot(3, new Point2D(2, 2)));
-        //hits.add(new Shot(4, new Point2D(1,1)));
-        //hits.add(new Shot(4, new Point2D(4,4)));
-        hits.add(new Shot(2, new Point2D(4,4)));
-        hits.add(new Shot(3, new Point2D(4,4)));
-        hits.add(new Shot(5, new Point2D(2,1))); //Ai
 
-        //ai.misses.add(new Shot(2, new Point2D(5,0)));
-
-
-        //alle in sunk sind auch in hits
-        hits.addAll(sunk);
 
         ai.setHits(hits);
 
-        ai.setAiClientId(5);
+        ai.setAiClientId(999);
 
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         //Has to be set before creating heatmaps
         ai.setHeight(7);
         ai.setWidth(7);
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
+        ai.setShips(shipconfig);
+        ai.setClientArrayList(clientList);
+        ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
-        ai.setShotCount(10);
-    }
-    @Test
-    public void place_shots_3_test() throws IOException {
-        ai.placeShots(3);
+
     }
 
 

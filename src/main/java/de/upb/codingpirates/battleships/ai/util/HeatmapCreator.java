@@ -10,12 +10,22 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 
+/**
+ * Creates a heatmaps for clients.
+ *
+ * @author Benjamin Kasten
+ */
 public class HeatmapCreator {
-    //Logger
     private static final Logger logger = LogManager.getLogger();
-
     Ai ai;
 
+    /**
+     * /**
+     * Constructor for {@link HeatmapCreator}. Gets an instance of the ai object which creates the {@link HeatmapCreator}
+     * instance.
+     *
+     * @param ai The instance of the ai who called the constructor.
+     */
     public HeatmapCreator(Ai ai) {
         this.ai = ai;
     }
@@ -30,15 +40,14 @@ public class HeatmapCreator {
 
     public Map<Integer, Integer[][]> createHeatmapAllClients() {
         Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
-        InvalidPointsCreator invalidPointsCreator = new InvalidPointsCreator(this.ai);
+        InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
 
-        SunkenShipFinder sunkenShipFinder = new SunkenShipFinder(ai);
-        heatmapAllClients.clear(); //delete the heatmaps of the last round
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         ai.addMisses(); // compute the new misses for this round
-        ai.setSunkenShipIdsAll(sunkenShipFinder.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
+        ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
         for (Client client : ai.getClientArrayList()) {
             if (client.getId() == ai.getAiClientId()) {
-                ai.getInvalidPointsAll().replace(client.getId(), invalidPointsCreator.createInvalidPointsOne(client.getId()));
+                ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
                 logger.info(MARKER.AI, "Skipped creating heatmap for own field");
                 continue;
             }
@@ -53,7 +62,6 @@ public class HeatmapCreator {
     /**
      * Creates a Heatmap for one Client: assigns each Point its maximum occupancy by (not yet sunken) ships
      * <p>
-     * <p>
      * The algorithm is based on <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
      *
      * @param clientId The clientId for whom the heatmap is to be created
@@ -61,8 +69,8 @@ public class HeatmapCreator {
      */
     public Integer[][] createHeatmapOneClient(int clientId) {
         logger.info(MARKER.AI, "Create heatmap for client " + clientId);
-        InvalidPointsCreator invalidPointsCreator = new InvalidPointsCreator(this.ai);
-        ai.getInvalidPointsAll().replace(clientId, invalidPointsCreator.createInvalidPointsOne(clientId));
+        InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
+        ai.getInvalidPointsAll().replace(clientId, invalidPointsHandler.createInvalidPointsOne(clientId));
         Integer[][] heatmap = new Integer[ai.getHeight()][ai.getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
@@ -75,7 +83,7 @@ public class HeatmapCreator {
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             logger.info(MARKER.AI, "Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
-                logger.info(MARKER.AI, "ship already sunk: " + entry.getKey());
+                logger.info(MARKER.AI, "Ship already sunk: " + entry.getKey());
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
             int shipId = entry.getKey(); //Schiffs Id

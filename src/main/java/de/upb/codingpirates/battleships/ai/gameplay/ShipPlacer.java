@@ -2,7 +2,7 @@ package de.upb.codingpirates.battleships.ai.gameplay;
 
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
-import de.upb.codingpirates.battleships.ai.util.InvalidPointsCreator;
+import de.upb.codingpirates.battleships.ai.util.InvalidPointsHandler;
 import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.util.ZeroPointMover;
 import de.upb.codingpirates.battleships.logic.PlacementInfo;
@@ -22,7 +22,12 @@ public class ShipPlacer {
     //Logger
     private static final Logger logger = LogManager.getLogger();
 
-
+    /**
+     * Constructor for {@link ShipPlacer}. Gets an instance of the ai object which creates the {@link ShipPlacer}
+     * instance.
+     *
+     * @param ai The instance of the ai who called the constructor.
+     */
     public ShipPlacer(Ai ai) {
         this.ai = ai;
     }
@@ -148,10 +153,10 @@ public class ShipPlacer {
                 }
             }
 
-            InvalidPointsCreator invalidPointsCreator = new InvalidPointsCreator(this.ai);
+            InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
             //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
             //once they are in the usedPoints Array, they can not be used for placing ships anymore
-            usedPoints.addAll(invalidPointsCreator.addSurroundingPointsToUsedPoints(tempShipPos));
+            usedPoints.addAll(invalidPointsHandler.addSurroundingPointsToUsedPoints(tempShipPos));
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
         }

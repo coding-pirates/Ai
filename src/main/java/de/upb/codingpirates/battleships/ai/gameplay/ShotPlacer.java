@@ -220,13 +220,11 @@ public class ShotPlacer {
 
     /**
      * The approach in this version is to shoot a the field with the maximum of invalid points.
-     * Sends the {@link ShotsRequest} message tho the server.
      * <p>
      * Difficulty level 3.
      *
-     *
      * <p>
-     * The approach explained more detailed:
+     * The approach explained more detailed: n.a.
      *
      * @return shots
      */
@@ -264,7 +262,7 @@ public class ShotPlacer {
             for (Map.Entry<Integer, Integer> entry : invalidPointsSizeOrdered.entrySet()) {
                 int countShotsOne = 0;
                 int targetClient = entry.getKey();
-                logger.info(MARKER.AI, "Shooting now on client {} with {} invalid fields", targetClient, entry.getValue());
+                logger.info(MARKER.AI, "Now shooting on client {} with {} invalid fields", targetClient, entry.getValue());
 
                 //get the heatmap of this client
                 Integer[][] targetHeatmap = ai.getHeatmapAllClients().get(targetClient);
