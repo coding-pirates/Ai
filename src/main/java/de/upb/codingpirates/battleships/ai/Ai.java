@@ -537,6 +537,14 @@ public class Ai implements
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
         logger.info(MARKER.AI, "LobbyResponse");
+        /*
+        try {
+            sendMessage(new GameJoinPlayerRequest(AiMain.gameToJoin));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+         */
     }
 
     public void setMaxPlayerCount(int maxPlayerCount) {

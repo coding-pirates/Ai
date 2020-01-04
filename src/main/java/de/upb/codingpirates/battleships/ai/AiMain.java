@@ -27,6 +27,9 @@ public class AiMain {
     static String ipAddress;
     static int port;
 
+    //for testing
+    static int gameToJoin;
+
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
      *
@@ -40,10 +43,11 @@ public class AiMain {
             }
         }, 1L, 1L);
         //default (reference server): "swtpra.cs.upb.de" 33101 3
-        //default: "192.168.0.234" 47345 3
+        //default: "192.168.0.234" 47345 3 1
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
+        gameToJoin = Integer.parseInt(args[3]); //for testing
         createNewAiPlayer(ipAddress, port);
     }
 

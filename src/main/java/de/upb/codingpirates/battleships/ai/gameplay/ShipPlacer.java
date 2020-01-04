@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 //todo überprüfe die richtige Platzierung durch die PLacement Info
 public class ShipPlacer {
     Ai ai;
@@ -92,10 +93,9 @@ public class ShipPlacer {
             //use a RandomPointCreator to get a random point
             RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
 
-            //is the random point which will be the point for the PlacementInfo
+            //the random point for positioning the ship
             Point2D guessPoint = randomPointCreator.getRandomPoint2D();
 
-            //for testing purpose
             logger.info(MARKER.AI, "Guess point: {}", guessPoint);
 
             //the the distance from zeropoint to random guessPoint
@@ -114,7 +114,6 @@ public class ShipPlacer {
                 //create a new point for the new coordinates
                 Point2D newPoint = new Point2D(newX, newY);
 
-                //for testing purpose
                 logger.info(MARKER.AI, "New potential placement point: {}", newPoint);
 
                 //check for each point in usePoints if the newPoint is already unavailable (is used)
@@ -146,10 +145,14 @@ public class ShipPlacer {
                     tempShipPos.add(newPoint);
                     //...add the point to the usedPoints ArrayList
                     usedPoints.add(newPoint);
+                    /*
                     //create a new PlacementInfo with the guessPoint (the guessPoint is valid)
                     PlacementInfo pInfo = new PlacementInfo(guessPoint, Rotation.NONE);
                     //add the shipId and the pInfo to positions Map
+                    logger.debug("Put guess point {} to shipId {}}", guessPoint, shipId);
                     positions.put(shipId, pInfo);
+
+                     */
                 }
             }
 
@@ -157,12 +160,31 @@ public class ShipPlacer {
             //after placing a ship, we have to add all surrounding points of the ship to the usedPoints Array
             //once they are in the usedPoints Array, they can not be used for placing ships anymore
             usedPoints.addAll(invalidPointsHandler.addSurroundingPointsToUsedPoints(tempShipPos));
+
+            //find the placment info point position (the bottom left point)
+            int minX = ai.getWidth() + 1;
+            int minY = ai.getHeight() + 1;
+
+            for (Point2D p : tempShipPos) {
+                if (p.getY() < minY) {
+                    minY = p.getY();
+                }
+            }
+            for (Point2D p : tempShipPos) {
+                if (p.getX() < minX & p.getY() == minY) {
+                    minX = p.getX();
+                }
+            }
+            logger.debug(MARKER.AI, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
+            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX, minY), Rotation.NONE);
+            positions.put(shipId, pInfo);
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
         }
         //is called only if the placing of the ships in the positions Map worked for all ships
         //responsible for leaving the while loop in placeShips()
         successful = true;
+
     }
 
 
