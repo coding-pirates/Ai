@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
+//todo überprüfe die richtige Platzierung durch die PLacement Info
 public class ShipPlacer {
     Ai ai;
     //Logger
