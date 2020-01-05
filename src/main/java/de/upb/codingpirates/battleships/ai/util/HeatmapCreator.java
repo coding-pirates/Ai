@@ -75,10 +75,10 @@ public class HeatmapCreator {
                 StringJoiner sj = new StringJoiner(" | ");
                 for (int col : row) {
                     if (col == 0) {
-                        sj.add(String.format("--"));
+                        sj.add(String.format("---"));
 
                     } else {
-                        sj.add(String.format("%02d", col));
+                        sj.add(String.format("%03d", col));
                     }
                 }
                 System.out.println(sj.toString());

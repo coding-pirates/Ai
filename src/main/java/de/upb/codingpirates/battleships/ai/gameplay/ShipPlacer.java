@@ -12,10 +12,7 @@ import de.upb.codingpirates.battleships.logic.ShipType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Creates a random ship placement.
@@ -43,6 +40,8 @@ public class ShipPlacer {
     //the requested argument for the PlaceShipsRequest
     Map<Integer, PlacementInfo> positions = new HashMap<>();
 
+    Map<Integer, ArrayList<Point2D>> placedShipMap = new HashMap<>();
+
     /**
      * Calls the {link {@link #guessRandomShipPositions(Map)}} method.
      *
@@ -54,8 +53,58 @@ public class ShipPlacer {
             guessRandomShipPositions(ai.getShips());
         }
         logger.info(MARKER.AI, "Placing ships successful");
+        shipPrinter();
         return positions;
     }
+
+    public void shipPrinter() {
+        ArrayList<Point2D> placedShipsPos = new ArrayList<>();
+
+        logger.debug("Placed ships are:");
+        for (Map.Entry<Integer, ArrayList<Point2D>> entry : placedShipMap.entrySet()) {
+            placedShipsPos.addAll(entry.getValue());
+            logger.debug("Ship positions of ship : " + entry.getKey());
+            for (Point2D p : entry.getValue()) {
+                logger.debug(p);
+            }
+        }
+        String[][] field = new String[ai.getHeight()][ai.getWidth()];
+        for (String[] i : field) {
+            Arrays.fill(i, "-");
+        }
+        for (int i = 0; i < field.length; i++) {
+            for (int j = 0; j < field[i].length; j++) {
+                boolean ship = false;
+                for (Point2D p : placedShipsPos) {
+                    if (p.getY() == i & p.getX() == j) {
+                        field[i][j] = "-";
+                        ship = true;
+                    }
+                    if (ship) break;
+                }
+                if (!ship) {
+                    field[i][j] = "X";
+                }
+            }
+        }
+        List<String[]> list = Arrays.asList(field);
+        Collections.reverse(list);
+
+        logger.info("Printing ship placement map");
+        for (String[] row : list) {
+            StringJoiner sj = new StringJoiner(" | ");
+            for (String col : row) {
+                if (col.equals("-")) {
+                    sj.add("X");
+
+                } else {
+                    sj.add("-");
+                }
+            }
+            System.out.println(sj.toString());
+        }
+    }
+
 
     /**
      * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
@@ -73,32 +122,23 @@ public class ShipPlacer {
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            logger.info(MARKER.AI, "Entry of shipConfig Map with shipID: " + entry.getKey());
+            logger.info(MARKER.AI, "Try placing ship: " + entry.getKey());
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
             Collection<Point2D> ship = entry.getValue().getPositions();
 
-            for (Point2D j : ship) {
-                logger.info(MARKER.AI, "Old point: {}", j);
-            }
 
             //making all points positive using ZeroPointMover
             ZeroPointMover zeroPointMover = new ZeroPointMover();
             //new positive ship values
             Collection<Point2D> shipPositive = new ArrayList<>(zeroPointMover.moveToZeroPoint((ArrayList<Point2D>) ship));
 
-            for (Point2D j : shipPositive) {
-                logger.info(MARKER.AI, "New positive point: {}", j);
-            }
-
             //use a RandomPointCreator to get a random point
             RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
 
             //the random point for positioning the ship
             Point2D guessPoint = randomPointCreator.getRandomPoint2D();
-
-            logger.info(MARKER.AI, "Guess point: {}", guessPoint);
 
             //the the distance from zeropoint to random guessPoint
             int distanceX = guessPoint.getX();
@@ -116,7 +156,7 @@ public class ShipPlacer {
                 //create a new point for the new coordinates
                 Point2D newPoint = new Point2D(newX, newY);
 
-                logger.info(MARKER.AI, "New potential placement point: {}", newPoint);
+                //logger.info(MARKER.AI, "New potential placement point: {}", newPoint);
 
                 //check for each point in usePoints if the newPoint is already unavailable (is used)
                 for (Point2D p : usedPoints) {
@@ -125,7 +165,8 @@ public class ShipPlacer {
                     if ((p.getX() == newPoint.getX()) & (p.getY() == newPoint.getY())) {
                         usedPoints.clear();
                         positions.clear();
-                        logger.info(MARKER.AI, "Failed: new guess point already is not accessible.");
+                        placedShipMap.clear();
+                        logger.info(MARKER.AI, "Failed: new point already is not accessible.");
                         return;
 
                     }
@@ -139,6 +180,7 @@ public class ShipPlacer {
                     //-->starting the loop in placeShips again
                     usedPoints.clear();
                     positions.clear();
+                    placedShipMap.clear();
                     logger.info(MARKER.AI, "Failed: new point coordinates do not fit the field ");
                     return;
                 } else {
@@ -174,6 +216,8 @@ public class ShipPlacer {
             logger.debug(MARKER.AI, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
             PlacementInfo pInfo = new PlacementInfo(new Point2D(minX, minY), Rotation.NONE);
             positions.put(shipId, pInfo);
+            placedShipMap.put(shipId, new ArrayList<>(tempShipPos));
+
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
         }
