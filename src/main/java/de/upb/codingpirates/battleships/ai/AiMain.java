@@ -27,9 +27,6 @@ public class AiMain {
     static String ipAddress;
     static int port;
 
-    //for testing
-    static int gameToJoin;
-
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#connect(String, int)}
      *
@@ -43,11 +40,10 @@ public class AiMain {
             }
         }, 1L, 1L);
         //default (reference server): "swtpra.cs.upb.de" 33101 3
-        //default: "192.168.0.234" 47345 3 1
+        //default: "192.168.0.234" 47345 3
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
-        //gameToJoin = Integer.parseInt(args[3]); //for testing
         connect(ipAddress, port);
     }
 
@@ -71,7 +67,6 @@ public class AiMain {
     /**
      * Is called by the {@link Ai#onConnectionClosedReport(ConnectionClosedReport, int)}
      * when the game is finished or the connection failed.
-     * (Closes the Ai because there is no sense for keeping it alive in these cases)
      */
     public static void close() {
         try {
