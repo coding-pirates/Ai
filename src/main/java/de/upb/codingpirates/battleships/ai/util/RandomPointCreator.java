@@ -8,6 +8,8 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Creates a random {@link Point2D} object.
+ *
+ * @author Benjamin Kasten
  */
 public class RandomPointCreator {
     private static final Logger logger = LogManager.getLogger();

@@ -16,7 +16,6 @@ import java.util.Collection;
  */
 public class MissesFinder {
     private static final Logger logger = LogManager.getLogger();
-
     Ai ai;
 
     /**

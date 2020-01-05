@@ -31,7 +31,7 @@ public class AiMain {
     static int gameToJoin;
 
     /**
-     * Is called by the command line and creates an new Ai by calling {@link AiMain#createNewAiPlayer(String, int)}
+     * Is called by the command line and creates an new Ai by calling {@link AiMain#connect(String, int)}
      *
      * @param args ipAddress (Ip address of the server), port and difficulty level
      * @throws IOException Network connection error
@@ -47,24 +47,25 @@ public class AiMain {
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
-        gameToJoin = Integer.parseInt(args[3]); //for testing
-        createNewAiPlayer(ipAddress, port);
+        //gameToJoin = Integer.parseInt(args[3]); //for testing
+        connect(ipAddress, port);
     }
 
     /**
-     * Is called by the {@link AiMain#main(String[])}  for creating a new Ai object and connecting it to the server
+     * Is called by the {@link AiMain#main(String[])}  for connecting the ai instance with the server
      * Sends the ServerJoinRequest message.
      *
      * @param ipAddress The ip address of the server
      * @param port      The port number of the server
      * @throws IOException Network error
      */
-    public static void createNewAiPlayer(String ipAddress, int port) throws IOException {
+    public static void connect(String ipAddress, int port) throws IOException {
         aiName = "EnginePlayer" + ((int) (Math.random() * 1000000));   //random ai name without any claim to be unique
-        logger.info(MARKER.AI, "Creating new Engine Player with name: {}", aiName);
         ai.setInstance(ai);
+        logger.info(MARKER.AI, "Connect new Engine Player with name: {}", aiName);
         ai.getTcpConnector().connect(ipAddress, port);
-        ai.getTcpConnector().sendMessageToServer(new ServerJoinRequest(aiName, ClientType.PLAYER));
+        logger.info(MARKER.AI);
+        ai.sendMessage(new ServerJoinRequest(aiName, ClientType.PLAYER));
     }
 
     /**

@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai.util;
 
+import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
@@ -11,7 +12,9 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 
 /**
- * Creates a heatmaps for clients.
+ * Creates heatmaps for clients.
+ *
+ * @see ShotPlacer#placeShots_3()
  *
  * @author Benjamin Kasten
  */

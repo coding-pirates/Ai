@@ -13,6 +13,8 @@ import java.util.*;
 
 /**
  * The class for computing the sunken ships out of the sunk collection.
+ *
+ * @author Benjamin Kasten
  */
 public class SunkenShipsHandler {
     private static final Logger logger = LogManager.getLogger();

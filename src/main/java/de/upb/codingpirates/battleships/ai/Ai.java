@@ -194,7 +194,7 @@ public class Ai implements
      * Can be used to send a message to the server.
      *
      * @param message message to send
-     * @throws IOException server error
+     * @throws IOException server connection error
      */
     public void sendMessage(Message message) throws IOException {
         tcpConnector.sendMessageToServer(message);
