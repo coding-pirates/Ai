@@ -1,8 +1,8 @@
 package de.upb.codingpirates.battleships.ai.util;
 
+import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
-import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -37,7 +37,7 @@ public class HeatmapCreator {
      * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int clientId)}.
      * In this version, the heatmaps will be created completely new by clearing the old heatmaps first.
      *
-     * @return the
+     * @return the created heatmaps of all clients
      * @see <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
      */
 
@@ -57,9 +57,33 @@ public class HeatmapCreator {
             //create a heatmap for this client and put it into the heatmapAllClients map
             heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId()));
         }
+        printHeatmapsAll(heatmapAllClients);
         return heatmapAllClients;
 
 
+    }
+
+
+    public void printHeatmapsAll(Map<Integer, Integer[][]> heatmaps) {
+        logger.info("Print the heatmaps:");
+        for (Map.Entry<Integer, Integer[][]> entry : heatmaps.entrySet()) {
+            int clientId = entry.getKey();
+            List<Integer[]> list = Arrays.asList(entry.getValue());
+            Collections.reverse(list);
+            System.out.println("Heatmap of client " + clientId);
+            for (Integer[] row : entry.getValue()) {
+                StringJoiner sj = new StringJoiner(" | ");
+                for (int col : row) {
+                    if (col == 0) {
+                        sj.add(String.format("--"));
+
+                    } else {
+                        sj.add(String.format("%02d", col));
+                    }
+                }
+                System.out.println(sj.toString());
+            }
+        }
     }
 
     /**
