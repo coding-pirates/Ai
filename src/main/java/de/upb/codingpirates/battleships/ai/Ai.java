@@ -15,10 +15,12 @@ import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
+import de.upb.codingpirates.battleships.network.message.request.GameJoinPlayerRequest;
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
+import de.upb.codingpirates.battleships.network.message.response.GameJoinSpectatorResponse;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
 import org.apache.logging.log4j.LogManager;
@@ -51,7 +53,8 @@ public class Ai implements
         TournamentFinishNotificationListener,
         GameJoinPlayerResponseListener,
         ServerJoinResponseListener,
-        LobbyResponseListener {
+        LobbyResponseListener
+         {
 
     private static final Logger logger = LogManager.getLogger();
 
@@ -537,14 +540,12 @@ public class Ai implements
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
         logger.info(MARKER.AI, "LobbyResponse");
-        /*
         try {
-            sendMessage(new GameJoinPlayerRequest(AiMain.gameToJoin));
+            sendMessage(new GameJoinPlayerRequest(0));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-         */
     }
 
     public void setMaxPlayerCount(int maxPlayerCount) {
