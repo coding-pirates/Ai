@@ -454,16 +454,17 @@ public class Ai implements
     @Override
     public void onGameInitNotification(GameInitNotification message, int clientId) {
         logger.info(MARKER.AI, "GameInitNotification: got clients and configuration");
-        logger.info("Got message: {}", message.getMessageId());
-        logger.info("Connected clients size: {}", message.getClientList().size());
-        if (message.getConfiguration() == null) {
-            logger.error("Configuration is empty, execution will fail.");
+        logger.info(MARKER.AI,"Connected clients size: {}", message.getClientList().size());
+        logger.info(MARKER.AI,"Connected clients are: ");
+        for (Client c : message.getClientList()){
+            logger.info("Client name {}, client id {}", c.getName(), c.getId());
         }
+        logger.debug("Own id is {}", getAiClientId());
         setConfig(message.getConfiguration());
         this.setClientArrayList(message.getClientList());
         try {
             logger.info("Trying to place ships");
-            AiMain.ai.placeShips();
+            placeShips();
         } catch (IOException e) {
             logger.error("Ship placement failed");
             e.printStackTrace();
@@ -498,9 +499,27 @@ public class Ai implements
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
 
         logger.info(MARKER.AI, "PlayerUpdateNotification: getting updated hits, points and sunk");
+        logger.debug("All Hits: "); if (message.getHits().isEmpty()){
+            logger.debug("no hits");
+        } else {
+            for (Shot s : message.getHits()) {
+                logger.debug(s);
+            }
+        }
         this.setHits(message.getHits());
-        this.setPoints(message.getPoints());
+
+        logger.debug("All Sunk: ");
+        if (message.getSunk().isEmpty()){
+            logger.debug("no sunk");
+        } else{
+            for (Shot s : message.getSunk()){
+                logger.debug(s);
+            }
+        }
         this.setSunk(message.getSunk());
+
+        this.setPoints(message.getPoints());
+
         //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(AiMain.ai.getInstance());
         this.setSortedSunk(sunkenShipsHandler.sortTheSunk());
@@ -530,6 +549,7 @@ public class Ai implements
     @Override
     public void onServerJoinResponse(ServerJoinResponse message, int clientId) {
         logger.info(MARKER.AI, "ServerJoinResponse, AiClientId is: {}", message.getClientId());
+        this.setAiClientId(message.getClientId());
         try {
             this.tcpConnector.sendMessageToServer(new LobbyRequest());
         } catch (IOException e) {

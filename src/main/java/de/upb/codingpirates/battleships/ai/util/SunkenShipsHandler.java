@@ -38,6 +38,7 @@ public class SunkenShipsHandler {
      * @return The map with ordered shots (sunk)
      */
     public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
+        logger.info("Number of sunken points: {}", ai.getSunk().size());
         logger.info(MARKER.AI, "Sorting the sunken ships by their clients...");
         HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
         for (Shot i : ai.getSunk()) {
@@ -61,6 +62,16 @@ public class SunkenShipsHandler {
             }
         }
         logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
+        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()){
+            if (entry.getValue().isEmpty()){
+                logger.info("No sunk points of client {}", entry.getKey());
+                continue;
+            }
+            logger.info("Sunk points client: {}", entry.getKey());
+            for (Shot s : entry.getValue()){
+                logger.info(s);
+            }
+        }
         return sortedSunk;
     }
 

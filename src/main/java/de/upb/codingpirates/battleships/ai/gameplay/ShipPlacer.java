@@ -116,13 +116,11 @@ public class ShipPlacer {
         usedPoints.clear();
         positions.clear();
 
-        logger.info(MARKER.AI, "Started random guesser");
-        logger.info(MARKER.AI, "Field height: {}", ai.getHeight());
-        logger.info(MARKER.AI, "Field width: {}", ai.getWidth());
+        //logger.info(MARKER.AI, "Started random guesser");
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            logger.info(MARKER.AI, "Try placing ship: " + entry.getKey());
+            //logger.info(MARKER.AI, "Try placing ship: " + entry.getKey());
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
@@ -166,7 +164,7 @@ public class ShipPlacer {
                         usedPoints.clear();
                         positions.clear();
                         placedShipMap.clear();
-                        logger.info(MARKER.AI, "Failed: new point already is not accessible.");
+                        //logger.info(MARKER.AI, "Failed: new point already is not accessible.");
                         return;
 
                     }
@@ -181,7 +179,7 @@ public class ShipPlacer {
                     usedPoints.clear();
                     positions.clear();
                     placedShipMap.clear();
-                    logger.info(MARKER.AI, "Failed: new point coordinates do not fit the field ");
+                    //logger.info(MARKER.AI, "Failed: new point coordinates do not fit the field ");
                     return;
                 } else {
                     // if the newPoint is valid...
@@ -213,7 +211,7 @@ public class ShipPlacer {
                     minX = p.getX();
                 }
             }
-            logger.debug(MARKER.AI, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
+            //logger.debug(MARKER.AI, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
             PlacementInfo pInfo = new PlacementInfo(new Point2D(minX, minY), Rotation.NONE);
             positions.put(shipId, pInfo);
             placedShipMap.put(shipId, new ArrayList<>(tempShipPos));

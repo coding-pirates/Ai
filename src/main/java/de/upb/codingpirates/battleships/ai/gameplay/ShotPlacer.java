@@ -267,24 +267,44 @@ public class ShotPlacer {
                 //get the heatmap of this client
                 Integer[][] targetHeatmap = ai.getHeatmapAllClients().get(targetClient);
 
-                Map<Point2D, Integer> pointsToValue = new LinkedHashMap<>();
+                Map<Point2D, Integer> pointsToValue = new LinkedHashMap<>(); //ordnet jedem Punkt seinen Wert zu
 
                 for (int row = 0; row < targetHeatmap.length; row++) {
                     for (int col = 0; col < targetHeatmap[row].length; col++) {
                         pointsToValue.put(new Point2D(col, row), targetHeatmap[row][col]);
                     }
                 }
+                //sortiere die pointsToValuenach ihrem value
                 LinkedHashMap<Point2D, Integer> pointsToValueOrdered = pointsToValue.entrySet()
                         .stream()
                         .sorted((Map.Entry.<Point2D, Integer>comparingByValue().reversed()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
 
                 Map<Point2D, Integer> temp = new LinkedHashMap<>(pointsToValueOrdered);
+                //entferne die Punkte aus den pointsToValueOrdered die kleiner gleich 0 sind
                 for (Map.Entry<Point2D, Integer> entryy : temp.entrySet()) {
                     if (entryy.getValue() <= 0) {
                         pointsToValueOrdered.remove(entryy.getKey());
                     }
                 }
+                //------------------------------------------------------------
+                //todo
+                Map<Integer, ArrayList<Point2D>> valueToPoints = new HashMap<>();
+
+                for (Map.Entry<Point2D, Integer> entryyy : pointsToValueOrdered.entrySet()){
+                    if (!valueToPoints.containsKey(entryyy.getValue())){
+                        valueToPoints.put(entryyy.getValue(),new ArrayList<>(Collections.singletonList(entryyy.getKey())));
+                    }
+                    else {
+                        valueToPoints.get(entryyy.getValue()).add(entryyy.getKey());
+                    }
+                }
+
+                Map<Integer, ArrayList<Point2D>> treeMap = new TreeMap<>(valueToPoints);
+
+
+
+                //----------------------------------------------------------------------------------------
                 for (Map.Entry<Point2D, Integer> entryy : pointsToValueOrdered.entrySet()) {
                     Shot targetShot = (new Shot(targetClient, new Point2D(entryy.getKey().getX(), entryy.getKey().getY())));
                     boolean isInvalid = false;
@@ -296,12 +316,13 @@ public class ShotPlacer {
                     }
                     if (isInvalid) continue;
                     myShotsThisRound.add(targetShot);
-                    logger.info(MARKER.AI, "Added shot {} with value {} to myShots", targetShot, entryy.getValue());
+                    logger.info(MARKER.Ai_SHOTPLACER, "Added shot {} with value {} to myShots", targetShot, entryy.getValue());
                     countShotsOne++;
                     if (myShotsThisRound.size() == ai.getShotCount()) {
-                        logger.info(MARKER.AI, "{} shots on client {}", countShotsOne, entry.getKey());
+                        logger.info(MARKER.Ai_SHOTPLACER, "{} shots on client {}", countShotsOne, entry.getKey());
                         ai.requestedShotsLastRound.clear(); //leere die Liste von dieser Runde
                         ai.requestedShotsLastRound.addAll(myShotsThisRound);
+                        ai.getInvalidPointsAll().get(targetClient).add(targetShot.getTargetField());
                         return myShotsThisRound;
 
                     }
