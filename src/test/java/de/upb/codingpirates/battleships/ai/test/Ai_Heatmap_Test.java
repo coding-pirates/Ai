@@ -119,13 +119,13 @@ public class Ai_Heatmap_Test {
     @Test
     public void create_heatmap_all_clients_Test() {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients());
+        ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(1));
     }
 
     @Test
     public void create_Heatmap_one_Client_Test() {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        heatmapCreator.createHeatmapOneClient(3);
+        heatmapCreator.createHeatmapOneClient(3, 2);
     }
 
 

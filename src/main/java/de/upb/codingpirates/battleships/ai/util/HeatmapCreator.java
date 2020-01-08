@@ -15,8 +15,7 @@ import java.util.*;
  * Creates heatmaps for clients.
  *
  * @author Benjamin Kasten
- * @see ShotPlacer#placeShots_3()
- */
+ * */
 public class HeatmapCreator {
     private static final Logger logger = LogManager.getLogger();
     Ai ai;
@@ -33,15 +32,15 @@ public class HeatmapCreator {
     }
 
     /**
-     * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int clientId)}.
+     * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int, int)}.
      * In this version, the heatmaps will be created completely new by clearing the old heatmaps first.
      *
      * @return the created heatmaps of all clients
      * @see <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
      */
 
-    public Map<Integer, Integer[][]> createHeatmapAllClients() {
-        Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
+    public Map<Integer, Double[][]> createHeatmapAllClients(int k) {
+        Map<Integer, Double[][]> heatmapAllClients = new HashMap<>();
         InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
@@ -50,27 +49,31 @@ public class HeatmapCreator {
         for (Client client : ai.getClientArrayList()) {
             if (client.getId() == ai.getAiClientId()) {
                 ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
-                logger.info(MARKER.AI, "Skipped creating heatmap for own field");
+                logger.info(MARKER.AI, "Creating own heatmap");
                 continue;
             }
             //create a heatmap for this client and put it into the heatmapAllClients map
-            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId()));
+            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
         }
-        printHeatmapsAll(heatmapAllClients);
+        //printHeatmapsAll(heatmapAllClients);
         return heatmapAllClients;
 
 
     }
 
 
-    public void printHeatmapsAll(Map<Integer, Integer[][]> heatmaps) {
+    /**
+     * @deprecated
+     * @param heatmaps
+     */
+    public void printHeatmapsAll(Map<Integer, Double[][]> heatmaps) {
         logger.info("Print the heatmaps:");
-        for (Map.Entry<Integer, Integer[][]> entry : heatmaps.entrySet()) {
+        for (Map.Entry<Integer, Double[][]> entry : heatmaps.entrySet()) {
             int clientId = entry.getKey();
             System.out.println("Heatmap of client" + clientId);
 
             for (int i = entry.getValue().length - 1; i >= 0; i--) {
-                for (int j : entry.getValue()[i]) {
+                for (Double j : entry.getValue()[i]) {
                     if (j == 0) {
                         System.out.print("---  ");
                     } else {
@@ -91,7 +94,7 @@ public class HeatmapCreator {
      * @param clientId The clientId for whom the heatmap is to be created
      * @return a heatmap for the client
      */
-    public Integer[][] createHeatmapOneClient(int clientId) {
+    public Double[][] createHeatmapOneClient(int clientId, int k) {
         logger.info(MARKER.AI, "Create heatmap for client " + clientId);
         InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
         ai.getInvalidPointsAll().replace(clientId, invalidPointsHandler.createInvalidPointsOne(clientId));
@@ -173,15 +176,39 @@ public class HeatmapCreator {
                     maxY++;
                 }
             }
-            logger.info(MARKER.AI, "Finished field with rotated versions of ship " + shipId);
+            //logger.info(MARKER.AI, "Finished field with rotated versions of ship " + shipId);
+        }
+        if (ai.getAllSunkenShipIds().get(clientId).size() == ai.getShips().size()) {
+            for (Integer[] i : heatmap) {
+                Arrays.fill(i, 0);
+            }
+        }
+
+        Double[][] dHeatmap = new Double[ai.getHeight()][ai.getWidth()];
+
+        for (int i = 0; i < heatmap.length; i++) {
+            for (int j = 0; j < heatmap[i].length; j++) {
+                dHeatmap[i][j] = (double) heatmap[i][j];
+            }
         }
         logger.info(MARKER.AI, "Created heatmap of client: " + clientId);
-        //createProbHeatmap(heatmap);
-        return heatmap;
-
+        if (k == 2) {
+            Double[][] probHeatmap = createProbHeatmap(heatmap);
+            printHeatmap(probHeatmap);
+            return probHeatmap;
+        }
+        printHeatmap(dHeatmap);
+        return dHeatmap;
     }
-/*
-    public void createProbHeatmap(Integer[][] heatmap) {
+
+    /**
+     * Creates a relative heatmap based on all possible placement positions. Useful for comparing heatmaps of multiple
+     * clients.
+     *
+     * @param heatmap the absolute heatmap
+     * @return teh relative heatmap
+     */
+    public Double[][] createProbHeatmap(Integer[][] heatmap) {
         int counter = 0;
 
         for (Integer[] i : heatmap) {
@@ -193,27 +220,40 @@ public class HeatmapCreator {
         Double[][] probHeat = new Double[ai.getHeight()][ai.getWidth()];
 
         for (Double[] i : probHeat) {
-            Arrays.fill(i, 0);
+            Arrays.fill(i, (double) 0);
         }
 
-        for (int i = 0; i < probHeat.length; i++) {
-            for (double j : probHeat[i]) {
-                probHeat[i][(int) j] = (double) (heatmap[i][(int) j] / counter);
+        for (int i = 0; i < heatmap.length; i++) {
+            for (int j = 0; j < heatmap[i].length; j++) {
+                if (counter == 0) {
+                    probHeat[i][j] = (double) 0;
+                } else {
+                    probHeat[i][j] = (double) heatmap[i][j] / (double) counter;
+                }
             }
 
         }
+        return probHeat;
+    }
 
+    /**
+     * Prints a heatmap.
+     *
+     * @param probHeat the heatmap to print
+     */
+    public void printHeatmap(Double[][] probHeat) {
         for (int i = probHeat.length - 1; i >= 0; i--) {
             for (double j : probHeat[i]) {
-                if (j == 0) {
-                    System.out.print("---  ");
+                if (j == 0.0000) {
+                    System.out.print("------  ");
                 } else {
-                    System.out.print(String.format("%.2f", j) + "  ");
+                    System.out.print(String.format("%.4f", j) + "  ");
                 }
             }
             System.out.println();
         }
-    }
 
- */
+    }
 }
+
+

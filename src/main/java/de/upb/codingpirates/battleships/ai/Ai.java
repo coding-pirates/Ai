@@ -87,7 +87,7 @@ public class Ai implements
     Map<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>(); //
     Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>();
     //heatmap
-    Map<Integer, Integer[][]> heatmapAllClients = new HashMap<>();
+    Map<Integer, Double[][]> heatmapAllClients = new HashMap<>();
     //invalid points per client id
     Map<Integer, LinkedHashSet<Point2D>> invalidPointsAll = new HashMap<>();
 
@@ -135,7 +135,7 @@ public class Ai implements
             }
             case 3: {
                 logger.info(MARKER.AI, "Difficulty level 3 selected");
-                myShots = shotPlacement.placeShots_3();
+                myShots = shotPlacement.placeShots_3_2();
                 sendMessage(new ShotsRequest(myShots));
                 break;
             }
@@ -340,11 +340,11 @@ public class Ai implements
         return this.positions;
     }
 
-    public void setHeatmapAllClients(Map<Integer, Integer[][]> heatmap) {
+    public void setHeatmapAllClients(Map<Integer, Double[][]> heatmap) {
         this.heatmapAllClients = heatmap;
     }
 
-    public Map<Integer, Integer[][]> getHeatmapAllClients() {
+    public Map<Integer, Double[][]> getHeatmapAllClients() {
         return this.heatmapAllClients;
     }
 
