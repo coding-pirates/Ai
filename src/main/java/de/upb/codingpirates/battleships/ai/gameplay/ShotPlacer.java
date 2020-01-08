@@ -268,6 +268,7 @@ public class ShotPlacer {
         Collection<Shot> myShotsThisRound = new ArrayList<>();
         int counter = 0;
         while (counter < validTargets.keySet().size()) {
+            ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(1));
             for (Map.Entry<Integer, Integer> entry : invalidPointsSizeOrdered.entrySet()) {
                 int countShotsOne = 0;
                 int targetClient = entry.getKey();

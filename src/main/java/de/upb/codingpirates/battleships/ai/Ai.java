@@ -15,12 +15,10 @@ import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
-import de.upb.codingpirates.battleships.network.message.request.GameJoinPlayerRequest;
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
-import de.upb.codingpirates.battleships.network.message.response.GameJoinSpectatorResponse;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
 import org.apache.logging.log4j.LogManager;
@@ -578,11 +576,13 @@ public class Ai implements
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
         logger.info(MARKER.AI, "LobbyResponse");
-        try {
+        /*try {
             sendMessage(new GameJoinPlayerRequest(0));
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+         */
 
     }
 
