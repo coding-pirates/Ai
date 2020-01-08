@@ -53,8 +53,7 @@ public class Ai implements
         TournamentFinishNotificationListener,
         GameJoinPlayerResponseListener,
         ServerJoinResponseListener,
-        LobbyResponseListener
-         {
+        LobbyResponseListener {
 
     private static final Logger logger = LogManager.getLogger();
 
@@ -201,6 +200,24 @@ public class Ai implements
      */
     public void sendMessage(Message message) throws IOException {
         tcpConnector.sendMessageToServer(message);
+    }
+
+    public void addPointsToInvalid(Shot s) {
+        invalidPointsAll.putIfAbsent(s.getClientId(), new LinkedHashSet<>());
+        LinkedHashSet<Point2D> temp = new LinkedHashSet<>(this.invalidPointsAll.get(s.getClientId()));
+        temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
+
+        invalidPointsAll.replace(s.getClientId(), temp);
+
+    }
+
+    public void addPointsToInvalid(Collection<Shot> shots) {
+        for (Shot s : shots) {
+            invalidPointsAll.putIfAbsent(s.getClientId(), new LinkedHashSet<>());
+            LinkedHashSet<Point2D> temp = new LinkedHashSet<>(this.invalidPointsAll.get(s.getClientId()));
+            temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
+            invalidPointsAll.replace(s.getClientId(), temp);
+        }
     }
 
 
@@ -454,9 +471,9 @@ public class Ai implements
     @Override
     public void onGameInitNotification(GameInitNotification message, int clientId) {
         logger.info(MARKER.AI, "GameInitNotification: got clients and configuration");
-        logger.info(MARKER.AI,"Connected clients size: {}", message.getClientList().size());
-        logger.info(MARKER.AI,"Connected clients are: ");
-        for (Client c : message.getClientList()){
+        logger.info(MARKER.AI, "Connected clients size: {}", message.getClientList().size());
+        logger.info(MARKER.AI, "Connected clients are: ");
+        for (Client c : message.getClientList()) {
             logger.info("Client name {}, client id {}", c.getName(), c.getId());
         }
         logger.debug("Own id is {}", getAiClientId());
@@ -499,7 +516,8 @@ public class Ai implements
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
 
         logger.info(MARKER.AI, "PlayerUpdateNotification: getting updated hits, points and sunk");
-        logger.debug("All Hits: "); if (message.getHits().isEmpty()){
+        logger.debug("All Hits: ");
+        if (message.getHits().isEmpty()) {
             logger.debug("no hits");
         } else {
             for (Shot s : message.getHits()) {
@@ -509,10 +527,10 @@ public class Ai implements
         this.setHits(message.getHits());
 
         logger.debug("All Sunk: ");
-        if (message.getSunk().isEmpty()){
+        if (message.getSunk().isEmpty()) {
             logger.debug("no sunk");
-        } else{
-            for (Shot s : message.getSunk()){
+        } else {
+            for (Shot s : message.getSunk()) {
                 logger.debug(s);
             }
         }

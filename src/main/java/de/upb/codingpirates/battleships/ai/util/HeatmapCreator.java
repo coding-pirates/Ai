@@ -14,9 +14,8 @@ import java.util.*;
 /**
  * Creates heatmaps for clients.
  *
- * @see ShotPlacer#placeShots_3()
- *
  * @author Benjamin Kasten
+ * @see ShotPlacer#placeShots_3()
  */
 public class HeatmapCreator {
     private static final Logger logger = LogManager.getLogger();
@@ -68,20 +67,18 @@ public class HeatmapCreator {
         logger.info("Print the heatmaps:");
         for (Map.Entry<Integer, Integer[][]> entry : heatmaps.entrySet()) {
             int clientId = entry.getKey();
-            List<Integer[]> list = Arrays.asList(entry.getValue());
-            Collections.reverse(list);
-            System.out.println("Heatmap of client " + clientId);
-            for (Integer[] row : entry.getValue()) {
-                StringJoiner sj = new StringJoiner(" | ");
-                for (int col : row) {
-                    if (col == 0) {
-                        sj.add(String.format("---"));
+            System.out.println("Heatmap of client" + clientId);
 
+            for (int i = entry.getValue().length - 1; i >= 0; i--) {
+                for (int j : entry.getValue()[i]) {
+                    if (j == 0) {
+                        System.out.print("---  ");
                     } else {
-                        sj.add(String.format("%03d", col));
+                        System.out.print(String.format("%03d", j) + "  ");
                     }
                 }
-                System.out.println(sj.toString());
+                System.out.println();
+                //System.out.println(Arrays.toString(entry.getValue()[i]) + " ");
             }
         }
     }
@@ -179,7 +176,44 @@ public class HeatmapCreator {
             logger.info(MARKER.AI, "Finished field with rotated versions of ship " + shipId);
         }
         logger.info(MARKER.AI, "Created heatmap of client: " + clientId);
+        //createProbHeatmap(heatmap);
         return heatmap;
 
     }
+/*
+    public void createProbHeatmap(Integer[][] heatmap) {
+        int counter = 0;
+
+        for (Integer[] i : heatmap) {
+            for (int j : i) {
+                counter = counter + j;
+            }
+        }
+
+        Double[][] probHeat = new Double[ai.getHeight()][ai.getWidth()];
+
+        for (Double[] i : probHeat) {
+            Arrays.fill(i, 0);
+        }
+
+        for (int i = 0; i < probHeat.length; i++) {
+            for (double j : probHeat[i]) {
+                probHeat[i][(int) j] = (double) (heatmap[i][(int) j] / counter);
+            }
+
+        }
+
+        for (int i = probHeat.length - 1; i >= 0; i--) {
+            for (double j : probHeat[i]) {
+                if (j == 0) {
+                    System.out.print("---  ");
+                } else {
+                    System.out.print(String.format("%.2f", j) + "  ");
+                }
+            }
+            System.out.println();
+        }
+    }
+
+ */
 }
