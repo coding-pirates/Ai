@@ -67,7 +67,7 @@ public class SunkenShipsHandler {
                 logger.info("No sunk points of client {}", entry.getKey());
                 continue;
             }
-            logger.info("Sunk points client: {}", entry.getKey());
+            logger.info("Sunk points of client {} are", entry.getKey());
             for (Shot s : entry.getValue()){
                 logger.info(s);
             }

@@ -173,10 +173,10 @@ public class Ai implements
     }
 
     /**
-     * Calculates the misses of last round and adds them to the misses collcection
+     * Calculates the misses of last round and adds them to the misses collection
      */
     public void addMisses() {
-        MissesFinder missesFinder = new MissesFinder(getInstance());
+        MissesFinder missesFinder = new MissesFinder(this);
         this.misses.addAll(missesFinder.computeMisses());
     }
 
@@ -491,7 +491,7 @@ public class Ai implements
         logger.info(MARKER.AI, "GameStartNotification: game started, first shot placement with difficulty level {}", this.getDifficultyLevel());
         try {
             logger.info("Trying to place shots");
-            AiMain.ai.placeShots(this.getDifficultyLevel());
+            this.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             logger.error("Shot placement failed");
             e.printStackTrace();

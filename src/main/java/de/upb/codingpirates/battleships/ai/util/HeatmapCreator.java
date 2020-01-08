@@ -15,7 +15,7 @@ import java.util.*;
  * Creates heatmaps for clients.
  *
  * @author Benjamin Kasten
- * */
+ */
 public class HeatmapCreator {
     private static final Logger logger = LogManager.getLogger();
     Ai ai;
@@ -41,11 +41,15 @@ public class HeatmapCreator {
 
     public Map<Integer, Double[][]> createHeatmapAllClients(int k) {
         Map<Integer, Double[][]> heatmapAllClients = new HashMap<>();
+
         InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
+
         ai.addMisses(); // compute the new misses for this round
+
         ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
+
         for (Client client : ai.getClientArrayList()) {
             if (client.getId() == ai.getAiClientId()) {
                 ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
@@ -54,6 +58,7 @@ public class HeatmapCreator {
                 continue;
             }
             //create a heatmap for this client and put it into the heatmapAllClients map
+            ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
             heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
         }
         //printHeatmapsAll(heatmapAllClients);
@@ -62,30 +67,6 @@ public class HeatmapCreator {
 
     }
 
-
-    /**
-     * @deprecated
-     * @param heatmaps
-     */
-    public void printHeatmapsAll(Map<Integer, Double[][]> heatmaps) {
-        logger.info("Print the heatmaps:");
-        for (Map.Entry<Integer, Double[][]> entry : heatmaps.entrySet()) {
-            int clientId = entry.getKey();
-            System.out.println("Heatmap of client " + clientId);
-
-            for (int i = entry.getValue().length - 1; i >= 0; i--) {
-                for (Double j : entry.getValue()[i]) {
-                    if (j == 0) {
-                        System.out.print("---  ");
-                    } else {
-                        System.out.print(String.format("%03d", j) + "  ");
-                    }
-                }
-                System.out.println();
-                //System.out.println(Arrays.toString(entry.getValue()[i]) + " ");
-            }
-        }
-    }
 
     /**
      * Creates a Heatmap for one Client: assigns each Point its maximum occupancy by (not yet sunken) ships
@@ -97,8 +78,7 @@ public class HeatmapCreator {
      */
     public Double[][] createHeatmapOneClient(int clientId, int k) {
         logger.info(MARKER.AI, "Create heatmap for client " + clientId);
-        InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
-        ai.getInvalidPointsAll().replace(clientId, invalidPointsHandler.createInvalidPointsOne(clientId));
+
         Integer[][] heatmap = new Integer[ai.getHeight()][ai.getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
@@ -185,6 +165,7 @@ public class HeatmapCreator {
             }
         }
 
+        //die heatmap mit absoluten Werten
         Double[][] dHeatmap = new Double[ai.getHeight()][ai.getWidth()];
 
         for (int i = 0; i < heatmap.length; i++) {
@@ -255,6 +236,32 @@ public class HeatmapCreator {
         }
 
     }
+
+
+    /**
+     * @param heatmaps
+     * @deprecated
+     */
+    public void printHeatmapsAll(Map<Integer, Double[][]> heatmaps) {
+        logger.info("Print the heatmaps:");
+        for (Map.Entry<Integer, Double[][]> entry : heatmaps.entrySet()) {
+            int clientId = entry.getKey();
+            System.out.println("Heatmap of client " + clientId);
+
+            for (int i = entry.getValue().length - 1; i >= 0; i--) {
+                for (Double j : entry.getValue()[i]) {
+                    if (j == 0) {
+                        System.out.print("---  ");
+                    } else {
+                        System.out.print(String.format("%03d", j) + "  ");
+                    }
+                }
+                System.out.println();
+                //System.out.println(Arrays.toString(entry.getValue()[i]) + " ");
+            }
+        }
+    }
+
 }
 
 
