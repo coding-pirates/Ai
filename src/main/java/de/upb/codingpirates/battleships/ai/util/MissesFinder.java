@@ -49,7 +49,7 @@ public class MissesFinder {
                 logger.info(MARKER.AI, "A miss {}", s);
             }
         }
-        logger.info(MARKER.AI, "Found {} misses last round.", tempMisses.size());
+        //logger.info(MARKER.AI, "Found {} misses last round.", tempMisses.size());
         return tempMisses;
     }
 

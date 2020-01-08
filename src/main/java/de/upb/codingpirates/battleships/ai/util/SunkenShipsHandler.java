@@ -61,7 +61,7 @@ public class SunkenShipsHandler {
                 sortedSunk.put(c.getId(), emptyList);
             }
         }
-        logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
+        //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
         for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()){
             if (entry.getValue().isEmpty()){
                 logger.info("No sunk points of client {}", entry.getKey());

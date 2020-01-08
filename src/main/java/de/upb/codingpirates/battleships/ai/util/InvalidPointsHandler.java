@@ -39,7 +39,7 @@ public class InvalidPointsHandler {
      */
 
     public LinkedHashSet<Point2D> createInvalidPointsOne(int clientId) {
-        logger.info(MARKER.AI, "Computing the invalid points of client : " + clientId);
+        logger.info(MARKER.AI, "Computing the invalid points of client " + clientId);
         ai.getInvalidPointsAll().putIfAbsent(clientId, null);
         LinkedList<Shot> sortedSunkShotsTC = ai.getSortedSunk().get(clientId);
         ArrayList<Point2D> sortedSunkPointsTC = new ArrayList<>();

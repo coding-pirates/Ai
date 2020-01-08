@@ -50,6 +50,7 @@ public class HeatmapCreator {
             if (client.getId() == ai.getAiClientId()) {
                 ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
                 logger.info(MARKER.AI, "Creating own heatmap");
+                heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
                 continue;
             }
             //create a heatmap for this client and put it into the heatmapAllClients map
@@ -70,7 +71,7 @@ public class HeatmapCreator {
         logger.info("Print the heatmaps:");
         for (Map.Entry<Integer, Double[][]> entry : heatmaps.entrySet()) {
             int clientId = entry.getKey();
-            System.out.println("Heatmap of client" + clientId);
+            System.out.println("Heatmap of client " + clientId);
 
             for (int i = entry.getValue().length - 1; i >= 0; i--) {
                 for (Double j : entry.getValue()[i]) {
@@ -108,9 +109,9 @@ public class HeatmapCreator {
 
         Map<Integer, ShipType> shipConfig = ai.getShips();
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            logger.info(MARKER.AI, "Ship Id of shipConfig: " + entry.getKey());
+            //logger.info(MARKER.AI, "Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
-                logger.info(MARKER.AI, "Ship already sunk: " + entry.getKey());
+                //logger.info(MARKER.AI, "Ship already sunk: " + entry.getKey());
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
             int shipId = entry.getKey(); //Schiffs Id
@@ -191,7 +192,7 @@ public class HeatmapCreator {
                 dHeatmap[i][j] = (double) heatmap[i][j];
             }
         }
-        logger.info(MARKER.AI, "Created heatmap of client: " + clientId);
+        logger.info(MARKER.AI, "Created heatmap of client " + clientId);
         if (k == 2) {
             Double[][] probHeatmap = createProbHeatmap(heatmap);
             printHeatmap(probHeatmap);
