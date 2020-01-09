@@ -1,6 +1,8 @@
 apply plugin: "java"
 apply plugin: "application"
 
+apply from: "${rootProject.rootDir}/gradle/javadoc.gradle"
+
 dependencies {
     implementation project(":network")
     implementation project(":logic")
@@ -43,4 +45,13 @@ test {
     testLogging {
         events "passed", "skipped", "failed"
     }
+}
+
+jar{
+    manifest {
+        attributes 'Implementation-Title': 'Battleships Server',
+                'Implementation-Version': "${project.ai_version}",
+                'Main-Class': 'de.upb.codingpirates.battleships.ai.AiMain'
+    }
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
