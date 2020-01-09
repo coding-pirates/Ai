@@ -39,12 +39,15 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        //default (reference server): "swtpra.cs.upb.de" 33101 3
-        //default: "192.168.0.234" 47345 3
+        //default (reference server): swtpra.cs.upb.de 33101 3 <Name>
+        //default: 192.168.0.234 47345 3 <Name>
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
+        aiName = args[3];
         connect(ipAddress, port);
+
+        //Todo Eingabe der Parameter (Ip , Ports etc.) über Scanner implementieren
     }
 
     /**
@@ -56,7 +59,7 @@ public class AiMain {
      * @throws IOException Network error
      */
     public static void connect(String ipAddress, int port) throws IOException {
-        aiName = "EnginePlayer" + ((int) (Math.random() * 1000000));   //random ai name without any claim to be unique
+        //aiName = "EnginePlayer" + ((int) (Math.random() * 1000000));   //random ai name without any claim to be unique
         ai.setInstance(ai);
         logger.info(MARKER.AI, "Connect new Engine Player with name: {}", aiName);
         ai.getTcpConnector().connect(ipAddress, port);

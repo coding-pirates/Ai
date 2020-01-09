@@ -322,7 +322,6 @@ public class ShotPlacer {
 
                         ai.getInvalidPointsAll().get(targetClient).add(targetShot.getTargetField());
                         return myShotsThisRound;
-
                     }
                 }
                 counter++;
@@ -332,6 +331,9 @@ public class ShotPlacer {
         return myShotsThisRound;
     }
 
+
+    //Todo Wenn nur noch ein Schiffsfeld nicht versenkt ist, schieße in die richrung des letzten Treffers
+    //Todo zum Teil wird auf Punkte geschossen die einen heat value von 0 haben müssten
 
     /**
      * Placing shots based on the relative value. Heatmaps will be created with relative values.
@@ -346,6 +348,8 @@ public class ShotPlacer {
             LinkedList<Point2D> inv = invalidPointsHandler.createInvalidPointsOne(c.getId());
             ai.addPointsToInvalid(inv, c.getId());
         }
+
+
 
         HeatmapCreator heatmapCreator = new HeatmapCreator(this.ai);
         ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(2)); //Value 2 is the signal for the heatmap creator to create a relative heatmap.
@@ -395,12 +399,14 @@ public class ShotPlacer {
 
         System.out.println(allHeatVal.size());
 
-        //using the TripleComparator class we can sort the the triple objects by their heat value
-        allHeatVal.sort(new TripleComparator().reversed());
+
 
         //remove all zero values of the heat points collection
         allHeatVal.removeIf((Triple t) -> (double) t.getVal3() == (double) 0);
         logger.debug("Size allHeatVal {}", allHeatVal.size());
+
+        //using the TripleComparator class we can sort the the triple objects by their heat value
+        allHeatVal.sort(new TripleComparator().reversed());
 
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = new ArrayList<>();
