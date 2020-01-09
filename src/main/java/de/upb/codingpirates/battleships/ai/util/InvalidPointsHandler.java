@@ -55,16 +55,20 @@ public class InvalidPointsHandler {
         LinkedHashSet<Point2D> temp = new LinkedHashSet<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
 
         for (Shot s : ai.getMisses()) {
+            logger.debug(ai.getMisses().size());
             if (s.getClientId() == clientId) {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
 
-        for (Shot s : ai.getHits()) {
+        /*
+        for (Shot s : ai.getHits()) {logger.debug(ai.getHits().size());
             if (s.getClientId() == clientId) {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
+
+         */
 
         return temp;
     }

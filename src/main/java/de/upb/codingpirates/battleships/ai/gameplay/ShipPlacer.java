@@ -108,7 +108,7 @@ public class ShipPlacer {
         }
     }
 
-
+/*
     public void placeShipDEBUG() throws IOException {
         for (Map.Entry<Integer, ShipType> entry : ai.getShips().entrySet()) {
             logger.debug("Ship {}", entry.getKey());
@@ -116,6 +116,8 @@ public class ShipPlacer {
         }
         ai.sendMessage(RequestBuilder.placeShipsRequest(positions));
     }
+
+ */
 
     /**
      * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.

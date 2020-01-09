@@ -51,14 +51,14 @@ public class HeatmapCreator {
         ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
 
         for (Client client : ai.getClientArrayList()) {
+            ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
             if (client.getId() == ai.getAiClientId()) {
-                ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
                 logger.info(MARKER.AI, "Creating own heatmap");
                 heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
                 continue;
             }
             //create a heatmap for this client and put it into the heatmapAllClients map
-            ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
+
             heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
         }
         //printHeatmapsAll(heatmapAllClients);
@@ -85,6 +85,10 @@ public class HeatmapCreator {
         }
 
         LinkedHashSet<Point2D> invalidPointsThisClient = ai.getInvalidPointsAll().get(clientId);
+        logger.debug("All inv this client: {} in heatmapCreator", clientId);
+        for (Point2D p : invalidPointsThisClient){
+            System.out.println(p);
+        }
         LinkedList<Integer> sunkenIdsThisClient = ai.getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
 
         Map<Integer, ShipType> shipConfig = ai.getShips();
@@ -121,6 +125,9 @@ public class HeatmapCreator {
                         boolean valid = true;
                         //check if cShip fits on the field
                         for (Point2D p : cShip) { //jeder Punkt in cShip
+                            for (Point2D z : invalidPointsThisClient){
+                                System.out.println(z);
+                            }
                             for (Point2D s : invalidPointsThisClient) { //jeder invalid Point für diesen Client
                                 if (p.getX() == s.getX() & p.getY() == s.getY()) {
                                     //wenn ein Punkt dem Shot Punkt gleich ist, mache nichts und schiebe Schiff einen weiter

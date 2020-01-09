@@ -387,6 +387,10 @@ public class ShotPlacer {
         }
         boolean valid;
 
+        for (Triple t : allHeatVal){
+            System.out.println(t);
+        }
+
         for (Triple t : allHeatVal) {
             valid = true;
             int clientId = (int) t.getVal1(); //client id
@@ -395,6 +399,13 @@ public class ShotPlacer {
             for (Point2D g : ai.getInvalidPointsAll().get(clientId)) {
                 if (g.getX() == p.getX() & g.getY() == p.getY()) {
                     logger.debug("{} is invalid", t);
+                    valid = false;
+                    break;
+                }
+            }
+            for (Shot k : ai.getHits()){
+                if (k.getTargetField().getX() == p.getX() & k.getTargetField().getY() == p.getY()){
+                    logger.debug("{} is already a hit", p);
                     valid = false;
                     break;
                 }

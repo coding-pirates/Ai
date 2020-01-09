@@ -156,10 +156,10 @@ public class Ai implements
      */
     public void placeShips() throws IOException {
         ShipPlacer shipPlacer = new ShipPlacer(this);
-        shipPlacer.placeShipDEBUG();
-        //setPositions(shipPlacer.placeShipsRandomly());
 
-        //sendMessage(new PlaceShipsRequest(getPositions()));
+        setPositions(shipPlacer.placeShipsRandomly());
+
+        sendMessage(new PlaceShipsRequest(getPositions()));
     }
 
     /**
@@ -213,14 +213,27 @@ public class Ai implements
     }
 
     public void addPointsToInvalid(Collection<Shot> shots) {
-        logger.info("Added following points to invalid points: ");
-
+        logger.info("All invalids before adding new");
+        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : this.invalidPointsAll.entrySet()){
+            System.out.println("Client " + entry.getKey());
+            for (Point2D p : entry.getValue()){
+                System.out.println(p);
+            }
+        }
         for (Shot s : shots) {
             invalidPointsAll.putIfAbsent(s.getClientId(), new LinkedHashSet<>());
+
             LinkedHashSet<Point2D> temp = new LinkedHashSet<>(this.invalidPointsAll.get(s.getClientId()));
             temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             invalidPointsAll.replace(s.getClientId(), temp);
             logger.info(s);
+        }
+        logger.info("All inv after adding");
+        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : this.invalidPointsAll.entrySet()){
+            System.out.println("Client " + entry.getKey());
+            for (Point2D p : entry.getValue()){
+                System.out.println(p);
+            }
         }
     }
 
