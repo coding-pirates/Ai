@@ -46,7 +46,7 @@ public class HeatmapCreator {
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
 
-        ai.addMisses(); // compute the new misses for this round
+        //ai.addMisses(); // compute the new misses for this round
 
         ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
 

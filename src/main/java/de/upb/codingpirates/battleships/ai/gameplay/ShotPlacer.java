@@ -378,6 +378,13 @@ public class ShotPlacer {
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = new ArrayList<>();
 
+        logger.debug("Invalid Points");
+        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : ai.getInvalidPointsAll().entrySet()){
+            System.out.println("inv client " + entry.getKey());
+            for (Point2D p : entry.getValue()){
+                System.out.println(p);
+            }
+        }
         boolean valid;
 
         for (Triple t : allHeatVal) {
@@ -393,6 +400,7 @@ public class ShotPlacer {
                 }
             }
             if (!valid) continue;
+
             Shot targetShot = new Shot(clientId, p);
             myShotsThisRound.add(targetShot);
             logger.info("Added shot {} with value {} to myShots", targetShot, fieldVal);
@@ -400,7 +408,10 @@ public class ShotPlacer {
                 break;
             }
         }
-        logger.info("Placed shots this round.");
+        logger.info("Placed this shots this round:");
+        for (Shot s : myShotsThisRound){
+            logger.info(s);
+        }
         ai.requestedShotsLastRound.clear();
         ai.requestedShotsLastRound.addAll(myShotsThisRound);
         ai.addPointsToInvalid(ai.requestedShotsLastRound);

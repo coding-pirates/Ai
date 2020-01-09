@@ -9,13 +9,16 @@ import de.upb.codingpirates.battleships.logic.PlacementInfo;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Rotation;
 import de.upb.codingpirates.battleships.logic.ShipType;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
  * Creates a random ship placement.
+ *
  * @author Benjamin Kasten
  */
 public class ShipPlacer {
@@ -105,6 +108,14 @@ public class ShipPlacer {
         }
     }
 
+
+    public void placeShipDEBUG() throws IOException {
+        for (Map.Entry<Integer, ShipType> entry : ai.getShips().entrySet()) {
+            logger.debug("Ship {}", entry.getKey());
+            positions.put(entry.getKey(), new PlacementInfo(new Point2D(5, 5), Rotation.NONE));
+        }
+        ai.sendMessage(RequestBuilder.placeShipsRequest(positions));
+    }
 
     /**
      * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
@@ -211,7 +222,7 @@ public class ShipPlacer {
                     minX = p.getX();
                 }
             }
-            //logger.debug(MARKER.AI, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
+            logger.debug(MARKER.AI, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
             PlacementInfo pInfo = new PlacementInfo(new Point2D(minX, minY), Rotation.NONE);
             positions.put(shipId, pInfo);
             placedShipMap.put(shipId, new ArrayList<>(tempShipPos));

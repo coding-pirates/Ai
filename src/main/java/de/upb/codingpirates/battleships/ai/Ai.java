@@ -17,6 +17,7 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
@@ -155,8 +156,10 @@ public class Ai implements
      */
     public void placeShips() throws IOException {
         ShipPlacer shipPlacer = new ShipPlacer(this);
-        setPositions(shipPlacer.placeShipsRandomly());
-        sendMessage(new PlaceShipsRequest(getPositions()));
+        shipPlacer.placeShipDEBUG();
+        //setPositions(shipPlacer.placeShipsRandomly());
+
+        //sendMessage(new PlaceShipsRequest(getPositions()));
     }
 
     /**
@@ -210,11 +213,14 @@ public class Ai implements
     }
 
     public void addPointsToInvalid(Collection<Shot> shots) {
+        logger.info("Added following points to invalid points: ");
+
         for (Shot s : shots) {
             invalidPointsAll.putIfAbsent(s.getClientId(), new LinkedHashSet<>());
             LinkedHashSet<Point2D> temp = new LinkedHashSet<>(this.invalidPointsAll.get(s.getClientId()));
             temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             invalidPointsAll.replace(s.getClientId(), temp);
+            logger.info(s);
         }
     }
 
@@ -402,6 +408,7 @@ public class Ai implements
         return this.visualizationTime;
     }
 
+
     /**
      * Sets the configuration values.
      *
@@ -431,6 +438,7 @@ public class Ai implements
         this.setPenaltyType(config.getPenaltyKind());
         logger.info("PenaltyType: {}", getPenaltyType());
         this.setShips(config.getShips());
+
         logger.info("Number of ships: {}", getShips().size());
 
         logger.info("Setting configuration successful.");
@@ -536,6 +544,16 @@ public class Ai implements
 
         this.setPoints(message.getPoints());
 
+        MissesFinder missesFinder = new MissesFinder(this);
+
+        Collection<Shot> missesLastRound = missesFinder.computeMisses();
+
+        this.misses.addAll(missesLastRound);
+        logger.debug("Added these misses to misses");
+        for (Shot s : missesLastRound){
+            System.out.println(s);
+        }
+
         //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(AiMain.ai.getInstance());
         this.setSortedSunk(sunkenShipsHandler.sortTheSunk());
@@ -576,13 +594,12 @@ public class Ai implements
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
         logger.info(MARKER.AI, "LobbyResponse");
-        /*try {
-            sendMessage(new GameJoinPlayerRequest(0));
+        try {
+            sendMessage(RequestBuilder.gameJoinPlayerRequest(0));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-         */
 
     }
 
