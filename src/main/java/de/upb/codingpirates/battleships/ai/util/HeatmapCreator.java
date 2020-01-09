@@ -1,5 +1,7 @@
 package de.upb.codingpirates.battleships.ai.util;
 
+import com.google.common.collect.Lists;
+import com.sun.java.accessibility.util.AccessibilityListenerList;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
@@ -42,8 +44,6 @@ public class HeatmapCreator {
     public Map<Integer, Double[][]> createHeatmapAllClients(int k) {
         Map<Integer, Double[][]> heatmapAllClients = new HashMap<>();
 
-        InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
-
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
 
         //ai.addMisses(); // compute the new misses for this round
@@ -51,14 +51,6 @@ public class HeatmapCreator {
         ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
 
         for (Client client : ai.getClientArrayList()) {
-            ai.getInvalidPointsAll().replace(client.getId(), invalidPointsHandler.createInvalidPointsOne(client.getId()));
-            if (client.getId() == ai.getAiClientId()) {
-                logger.info(MARKER.AI, "Creating own heatmap");
-                heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
-                continue;
-            }
-            //create a heatmap for this client and put it into the heatmapAllClients map
-
             heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
         }
         //printHeatmapsAll(heatmapAllClients);
@@ -84,18 +76,19 @@ public class HeatmapCreator {
             Arrays.fill(integers, 0);
         }
 
-        LinkedHashSet<Point2D> invalidPointsThisClient = ai.getInvalidPointsAll().get(clientId);
-        logger.debug("All inv this client: {} in heatmapCreator", clientId);
-        for (Point2D p : invalidPointsThisClient){
-            System.out.println(p);
+        LinkedList<Point2D> invalidPointsThisClient = ai.getInvalidPointsAll().get(clientId);
+        /*
+        logger.debug("Inv points of client: {}", clientId);
+        for (Point2D p :invalidPointsThisClient){
+            logger.debug(p);
         }
+        */
+
         LinkedList<Integer> sunkenIdsThisClient = ai.getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
 
         Map<Integer, ShipType> shipConfig = ai.getShips();
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-            //logger.info(MARKER.AI, "Ship Id of shipConfig: " + entry.getKey());
             if (sunkenIdsThisClient.contains(entry.getKey())) {
-                //logger.info(MARKER.AI, "Ship already sunk: " + entry.getKey());
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
             }
             int shipId = entry.getKey(); //Schiffs Id
@@ -125,9 +118,6 @@ public class HeatmapCreator {
                         boolean valid = true;
                         //check if cShip fits on the field
                         for (Point2D p : cShip) { //jeder Punkt in cShip
-                            for (Point2D z : invalidPointsThisClient){
-                                System.out.println(z);
-                            }
                             for (Point2D s : invalidPointsThisClient) { //jeder invalid Point für diesen Client
                                 if (p.getX() == s.getX() & p.getY() == s.getY()) {
                                     //wenn ein Punkt dem Shot Punkt gleich ist, mache nichts und schiebe Schiff einen weiter

@@ -39,7 +39,7 @@ public class MissesFinder {
         for (Shot s : ai.requestedShotsLastRound) {
             boolean miss = true; //assume the shot s is a miss
             for (Shot i : ai.getHits()) { //check if shot s is a miss
-                if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
+                if (PointShotComperator.compareShots(i, s) & s.getClientId() == i.getClientId()) {
                     miss = false; //no miss, its a hit
                     logger.info(MARKER.AI, "A hit {}", s);
                 }
@@ -53,5 +53,26 @@ public class MissesFinder {
         return tempMisses;
     }
 
+    public Collection<Shot> computeMissesAll(){
+        logger.info(MARKER.AI, "Compute the misses of last round");
+        Collection<Shot> tempMisses = new ArrayList<>();
+        for (Shot s : ai.requestedShots) {
+            boolean miss = true; //assume the shot s is a miss
+            for (Shot i : ai.getHits()) { //check if shot s is a miss
+                if (PointShotComperator.compareShots(i, s) & s.getClientId() == i.getClientId()) {
+                    miss = false; //no miss, its a hit
+                    logger.info(MARKER.AI, "A hit {}", s);
+                    break;
+                }
+            }
+            if (miss) {
+                tempMisses.add(s); // if its not hit, its a miss
+                logger.info(MARKER.AI, "A miss {}", s);
+            }
+        }
+        //logger.info(MARKER.AI, "Found {} misses last round.", tempMisses.size());
+        return tempMisses;
+
+    }
 
 }

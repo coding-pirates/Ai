@@ -8,10 +8,7 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Handles the invalid Points which can not be accessed anymore. Is called by {@link ShipPlacer} and
@@ -38,7 +35,7 @@ public class InvalidPointsHandler {
      * @return the updated collection of invalid points of this client
      */
 
-    public LinkedHashSet<Point2D> createInvalidPointsOne(int clientId) {
+    public LinkedList<Point2D> createInvalidPointsOne(int clientId) {
 
         logger.info(MARKER.AI, "Computing the invalid points of client " + clientId);
 
@@ -52,11 +49,12 @@ public class InvalidPointsHandler {
             sortedSunkPointsTC.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
         }
 
-        LinkedHashSet<Point2D> temp = new LinkedHashSet<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
+        LinkedList<Point2D> temp = new LinkedList<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
 
+        logger.debug("Misses to invalid:");
         for (Shot s : ai.getMisses()) {
-            logger.debug(ai.getMisses().size());
             if (s.getClientId() == clientId) {
+                logger.debug(s);
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
@@ -69,7 +67,8 @@ public class InvalidPointsHandler {
         }
 
          */
-
+        logger.info("The invalid");
+        System.out.println(temp);
         return temp;
     }
 

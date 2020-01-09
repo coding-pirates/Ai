@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
@@ -88,11 +89,12 @@ public class Ai implements
     //heatmap
     Map<Integer, Double[][]> heatmapAllClients = new HashMap<>();
     //invalid points per client id
-    Map<Integer, LinkedHashSet<Point2D>> invalidPointsAll = new HashMap<>();
+    Map<Integer, LinkedList<Point2D>> invalidPointsAll = new HashMap<>();
 
     Collection<Shot> misses = new ArrayList<>(); //all misses of this player
 
     public Collection<Shot> requestedShotsLastRound = new ArrayList<>(); //the latest requested shots
+    public ArrayList<Shot> requestedShots = new ArrayList<>(); //all requested shots
 
     //the ClientConnector fot this ai instance
     private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
@@ -203,39 +205,27 @@ public class Ai implements
         tcpConnector.sendMessageToServer(message);
     }
 
-    public void addPointsToInvalid(Shot s) {
-        invalidPointsAll.putIfAbsent(s.getClientId(), new LinkedHashSet<>());
-        LinkedHashSet<Point2D> temp = new LinkedHashSet<>(this.invalidPointsAll.get(s.getClientId()));
-        temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
+    public void addPointsToInvalid(Point2D point, int clientId) {
+        invalidPointsAll.putIfAbsent(clientId, new LinkedList<>(Collections.emptyList()));
+        LinkedList<Point2D> temp = new LinkedList<>(this.invalidPointsAll.get(clientId));
+        temp.add(new Point2D(point.getX(), point.getY()));
 
-        invalidPointsAll.replace(s.getClientId(), temp);
+        invalidPointsAll.replace(clientId, temp);
 
     }
 
-    public void addPointsToInvalid(Collection<Shot> shots) {
-        logger.info("All invalids before adding new");
-        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : this.invalidPointsAll.entrySet()){
-            System.out.println("Client " + entry.getKey());
-            for (Point2D p : entry.getValue()){
-                System.out.println(p);
-            }
+    public void  addPointsToInvalid(Collection<Point2D> points, int clientId) {
+        if (points == null | Objects.requireNonNull(points).isEmpty()){
+            invalidPointsAll.put(clientId, new LinkedList<>(Collections.emptyList()));
         }
-        for (Shot s : shots) {
-            invalidPointsAll.putIfAbsent(s.getClientId(), new LinkedHashSet<>());
-
-            LinkedHashSet<Point2D> temp = new LinkedHashSet<>(this.invalidPointsAll.get(s.getClientId()));
-            temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
-            invalidPointsAll.replace(s.getClientId(), temp);
-            logger.info(s);
-        }
-        logger.info("All inv after adding");
-        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : this.invalidPointsAll.entrySet()){
-            System.out.println("Client " + entry.getKey());
-            for (Point2D p : entry.getValue()){
-                System.out.println(p);
-            }
+        for (Point2D point : points) {
+            invalidPointsAll.putIfAbsent(clientId, new LinkedList<>(Collections.emptyList()));
+            LinkedList<Point2D> temp = new LinkedList<>(this.invalidPointsAll.get(clientId));
+            temp.add(point);
+            invalidPointsAll.replace(clientId, temp);
         }
     }
+
 
 
     //getter and setter -----------------------------------------------------------------------------------------------
@@ -264,7 +254,7 @@ public class Ai implements
         return this.sortedSunk;
     }
 
-    public void setMisses(Collection<Shot> misses) {
+    public synchronized void setMisses(Collection<Shot> misses) {
         this.misses = misses;
     }
 
@@ -324,7 +314,7 @@ public class Ai implements
         return this.height;
     }
 
-    public void setHits(Collection<Shot> hits) {
+    public synchronized void setHits(Collection<Shot> hits) {
         this.hits = hits;
     }
 
@@ -332,7 +322,7 @@ public class Ai implements
         return this.hits;
     }
 
-    public void setSunk(Collection<Shot> sunk) {
+    public synchronized void setSunk(Collection<Shot> sunk) {
         this.sunk = sunk;
     }
 
@@ -340,7 +330,7 @@ public class Ai implements
         return this.sunk;
     }
 
-    public Map<Integer, LinkedHashSet<Point2D>> getInvalidPointsAll() {
+    public Map<Integer, LinkedList<Point2D>> getInvalidPointsAll() {
         return this.invalidPointsAll;
     }
 
@@ -532,9 +522,10 @@ public class Ai implements
     }
 
     @Override
-    public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
+    public synchronized void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
 
         logger.info(MARKER.AI, "PlayerUpdateNotification: getting updated hits, points and sunk");
+
         logger.debug("All Hits: ");
         if (message.getHits().isEmpty()) {
             logger.debug("no hits");
@@ -555,19 +546,17 @@ public class Ai implements
         }
         this.setSunk(message.getSunk());
 
-        this.setPoints(message.getPoints());
-
         MissesFinder missesFinder = new MissesFinder(this);
+        this.setMisses(missesFinder.computeMissesAll());
 
-        Collection<Shot> missesLastRound = missesFinder.computeMisses();
-
-        this.misses.addAll(missesLastRound);
-        logger.debug("Added these misses to misses");
-        for (Shot s : missesLastRound){
-            System.out.println(s);
+        logger.debug("All misses: ");
+        if(getMisses().isEmpty()){
+            logger.debug("no misses");
+        }
+        for (Shot s : getMisses()){
+            logger.debug(s);
         }
 
-        //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(AiMain.ai.getInstance());
         this.setSortedSunk(sunkenShipsHandler.sortTheSunk());
     }
@@ -576,7 +565,12 @@ public class Ai implements
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
         logger.info(MARKER.AI, "RoundStartNotification: placing shots");
         try {
-            AiMain.ai.placeShots(this.getDifficultyLevel());
+            Thread.sleep(200);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        try {
+            placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -1,14 +1,13 @@
 package de.upb.codingpirates.battleships.ai.gameplay;
 
+import com.google.inject.internal.cglib.proxy.$Enhancer;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
-import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
-import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
-import de.upb.codingpirates.battleships.ai.util.Triple;
-import de.upb.codingpirates.battleships.ai.util.TripleComparator;
+import de.upb.codingpirates.battleships.ai.util.*;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -238,7 +237,9 @@ public class ShotPlacer {
 
         //We have to add the shots of the last round directly to the invalidPointsAll before we create new heatmaps
 
-        ai.addPointsToInvalid(ai.requestedShotsLastRound);
+        for (Shot s : ai.requestedShotsLastRound) {
+            ai.addPointsToInvalid(s.getTargetField(), s.getClientId());
+        }
         HeatmapCreator heatmapCreator = new HeatmapCreator(this.ai);
         ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(1));
 
@@ -253,7 +254,7 @@ public class ShotPlacer {
         }
         Map<Integer, Integer> invalidPointsSize = new HashMap<>();
 
-        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : ai.getInvalidPointsAll().entrySet()) {
+        for (Map.Entry<Integer, LinkedList<Point2D>> entry : ai.getInvalidPointsAll().entrySet()) {
             logger.info(MARKER.AI, "Client {} has {} invalid fields", entry.getKey(), entry.getValue().size());
             if (validTargets.containsKey(entry.getKey())) {
                 invalidPointsSize.put(entry.getKey(), entry.getValue().size());
@@ -331,12 +332,21 @@ public class ShotPlacer {
         return myShotsThisRound;
     }
 
+
     /**
      * Placing shots based on the relative value. Heatmaps will be created with relative values.
      *
      * @return
      */
     public Collection<Shot> placeShots_3_2() {
+        logger.info(MARKER.AI, "Placing shots with difficulty level 3");
+
+        for (Client c : ai.getClientArrayList()){
+            InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
+            LinkedList<Point2D> inv = invalidPointsHandler.createInvalidPointsOne(c.getId());
+            ai.addPointsToInvalid(inv, c.getId());
+        }
+
         HeatmapCreator heatmapCreator = new HeatmapCreator(this.ai);
         ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(2)); //Value 2 is the signal for the heatmap creator to create a relative heatmap.
 
@@ -353,7 +363,7 @@ public class ShotPlacer {
 
 
         //allHeatVal is the collection of all valid points of all clients and those heat value
-        ArrayList<Triple> allHeatVal = new ArrayList<>();
+        ArrayList<Triple<Integer, Point2D, Integer>> allHeatVal = new ArrayList<>();
 
         //using the class Triple store the triple in allHeatVal if the target is valid
         //for use of class Triple see the nested for loops
@@ -363,10 +373,27 @@ public class ShotPlacer {
             for (int i = 0; i < entry.getValue().length; i++) {
                 for (int j = 0; j < entry.getValue()[i].length; j++) {
                     //Triple is used like that to order and store the values of each heat point
-                    allHeatVal.add(new Triple(clientId, new Point2D(i, j), entry.getValue()[i][j]));
+                    Triple t = new Triple(clientId, new Point2D(j, i), entry.getValue()[i][j]);
+                    allHeatVal.add(t);
+                    System.out.println(t);
                 }
             }
         }
+        System.out.println(allHeatVal.size());
+
+        ListIterator<Triple<Integer, Point2D, Integer>> iter = allHeatVal.listIterator();
+        for (Shot s : ai.getHits()) {
+            while (iter.hasNext()) {
+                Triple<Integer, Point2D, Integer> t = iter.next();
+                if (t.getVal1() == s.getClientId() & t.getVal2().getX() == s.getTargetField().getX() & t.getVal2().getY() == s.getTargetField().getY()) {
+                    iter.remove();
+                    System.out.println("removed " + t);
+                }
+            }
+
+        }
+
+        System.out.println(allHeatVal.size());
 
         //using the TripleComparator class we can sort the the triple objects by their heat value
         allHeatVal.sort(new TripleComparator().reversed());
@@ -378,24 +405,31 @@ public class ShotPlacer {
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = new ArrayList<>();
 
-        logger.debug("Invalid Points");
-        for (Map.Entry<Integer, LinkedHashSet<Point2D>> entry : ai.getInvalidPointsAll().entrySet()){
-            System.out.println("inv client " + entry.getKey());
-            for (Point2D p : entry.getValue()){
-                System.out.println(p);
-            }
-        }
+
         boolean valid;
 
-        for (Triple t : allHeatVal){
-            System.out.println(t);
-        }
-
         for (Triple t : allHeatVal) {
+            boolean isHit;
+            for (Shot s : ai.requestedShots) {
+                isHit = false;
+                for (Shot r : ai.getHits()) {
+                    if (PointShotComperator.compareShots(s, r)) {
+                        isHit = true;
+                        break;
+                    }
+                }
+                if (!isHit) {
+                    ai.addPointsToInvalid(s.getTargetField(), s.getClientId());
+                    ai.getMisses().add(s);
+                }
+            }
+
             valid = true;
+
             int clientId = (int) t.getVal1(); //client id
             Point2D p = (Point2D) t.getVal2(); //heat point
             double fieldVal = (double) t.getVal3(); //heat value
+
             for (Point2D g : ai.getInvalidPointsAll().get(clientId)) {
                 if (g.getX() == p.getX() & g.getY() == p.getY()) {
                     logger.debug("{} is invalid", t);
@@ -403,8 +437,8 @@ public class ShotPlacer {
                     break;
                 }
             }
-            for (Shot k : ai.getHits()){
-                if (k.getTargetField().getX() == p.getX() & k.getTargetField().getY() == p.getY()){
+            for (Shot k : ai.getHits()) {
+                if (k.getTargetField().getX() == p.getX() & k.getTargetField().getY() == p.getY()) {
                     logger.debug("{} is already a hit", p);
                     valid = false;
                     break;
@@ -420,12 +454,11 @@ public class ShotPlacer {
             }
         }
         logger.info("Placed this shots this round:");
-        for (Shot s : myShotsThisRound){
+        for (Shot s : myShotsThisRound) {
             logger.info(s);
         }
-        ai.requestedShotsLastRound.clear();
-        ai.requestedShotsLastRound.addAll(myShotsThisRound);
-        ai.addPointsToInvalid(ai.requestedShotsLastRound);
+        ai.requestedShots.addAll(myShotsThisRound);
+
         return myShotsThisRound;
 
 
