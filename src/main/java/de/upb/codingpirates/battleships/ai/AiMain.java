@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -23,6 +24,7 @@ public class AiMain {
     static Timer timer = new Timer();
     public static Ai ai = new Ai();
     static String aiName;
+    static String gameToJoin;
 
     static String ipAddress;
     static int port;
@@ -39,12 +41,16 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        //default (reference server): "swtpra.cs.upb.de" 33101 3
-        //default: "192.168.0.234" 47345 3
+        //default (reference server): "swtpra.cs.upb.de" 33101 3 <Name>
+        //default: "192.168.0.234" 47345 3 <Name>
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
+        System.out.println("ID des Spiels: ");
+        gameToJoin = "0"; //new Scanner(System.in).next();
         connect(ipAddress, port);
+
+        //Todo Eingabe der Parameter über Scanner implementieren
     }
 
     /**
@@ -56,7 +62,9 @@ public class AiMain {
      * @throws IOException Network error
      */
     public static void connect(String ipAddress, int port) throws IOException {
-        aiName = "EnginePlayer" + ((int) (Math.random() * 1000000));   //random ai name without any claim to be unique
+        Random random = new Random();
+
+        //aiName = "EnginePlayer" + random.nextInt(10000000);   //random ai name without any claim to be unique
         ai.setInstance(ai);
         logger.info(MARKER.AI, "Connect new Engine Player with name: {}", aiName);
         ai.getTcpConnector().connect(ipAddress, port);

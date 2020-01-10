@@ -2,7 +2,6 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
-import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
@@ -38,9 +37,9 @@ public class InvalidPointsHandler {
      * @return the updated collection of invalid points of this client
      */
 
-    public LinkedHashSet<Point2D> createInvalidPointsOne(int clientId) {
+    public LinkedList<Point2D> createInvalidPointsOne(int clientId) {
 
-        logger.info(MARKER.AI, "Computing the invalid points of client " + clientId);
+        logger.info("Computing the invalid points of client " + clientId);
 
         ai.getInvalidPointsAll().putIfAbsent(clientId, null);
 
@@ -52,24 +51,16 @@ public class InvalidPointsHandler {
             sortedSunkPointsTC.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
         }
 
-        LinkedHashSet<Point2D> temp = new LinkedHashSet<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
+        LinkedList<Point2D> temp = new LinkedList<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
 
         for (Shot s : ai.getMisses()) {
-            logger.debug(ai.getMisses().size());
             if (s.getClientId() == clientId) {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
 
-        /*
-        for (Shot s : ai.getHits()) {logger.debug(ai.getHits().size());
-            if (s.getClientId() == clientId) {
-                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
-            }
-        }
-
-         */
-
+        logger.info("The invalid points: ");
+        System.out.println(temp);
         return temp;
     }
 
@@ -106,18 +97,4 @@ public class InvalidPointsHandler {
         temp.removeIf(p -> p.getX() < 0 | p.getY() < 0);
         return temp;
     }
-
-    /*
-    public boolean contains(LinkedHashSet<Point2D> set, Point2D k) {
-        for (Point2D p : set) {
-            if (p.getX() == k.getX() & p.getY() == k.getY()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-     */
-
-
 }

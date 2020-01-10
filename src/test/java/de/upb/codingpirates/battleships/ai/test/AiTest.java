@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai.test;
 
+import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.Client;
@@ -115,8 +116,7 @@ public class AiTest {
     @Test
     public void create_LinkedList_One_Element_Test() {
         Shot shot = new Shot(111, new Point2D(12, 4));
-        List<Shot> list = ai.createArrayListOneArgument(shot);
-
+        List<Shot> list = new ArrayList<>(Lists.newArrayList(shot));
         assertNotNull(list);
         assertEquals(list.size(), 1);
         assertSame(list.get(0).getClass(), Shot.class);

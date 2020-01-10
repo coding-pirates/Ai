@@ -1,5 +1,7 @@
 package de.upb.codingpirates.battleships.ai.util;
 
+import de.upb.codingpirates.battleships.logic.Point2D;
+
 import java.util.Comparator;
 
 /**
@@ -7,13 +9,14 @@ import java.util.Comparator;
  *
  * @author Benjamin Kasten
  */
-public class TripleComparator implements Comparator<Triple> {
+public class TripleComparator implements Comparator<Triple<Integer, Point2D, Double>> {
 
     /**
      * Inherited method which is used by a sort method.
-     * @param t1
-     * @param t2
-     * @return a negative, positive or zero value which tells the comperator how to compare two objects.
+     *
+     * @param t1 first Triple
+     * @param t2 second Triple
+     * @return a negative, positive or zero value which tells the comparator how to compare two objects.
      */
     @Override
     public int compare(Triple t1, Triple t2) {

@@ -1,7 +1,7 @@
 package de.upb.codingpirates.battleships.ai.util;
 
 
-public class Triple<T, Z, K>  {
+public class Triple<T, Z, K> {
 
     private T val1;
     private Z val2;
@@ -30,9 +30,10 @@ public class Triple<T, Z, K>  {
     public K getVal3() {
         return val3;
     }
+
     @Override
-    public String toString(){
-        return String.format("[Point %s with value %s of client %s ]", getVal2(), getVal3(), getVal1());
+    public String toString() {
+        return String.format("[Point %s with value %.4s of client %s ]", getVal2(), getVal3(), getVal1());
     }
 
 }
