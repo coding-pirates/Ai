@@ -105,7 +105,7 @@ public class Ai_SunkenShipsHandler_Test {
     @Test
     public void sort_The_Sunk_Test() {
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        HashMap<Integer, LinkedList<Shot>> sortedSunk = sunkenShipsHandler.sortTheSunk();
+        HashMap<Integer, LinkedList<Point2D>> sortedSunk = sunkenShipsHandler.sortTheSunk();
         assertEquals(sortedSunk.get(1).size(), 12);
         assertEquals(sortedSunk.get(2).size(), 5);
     }

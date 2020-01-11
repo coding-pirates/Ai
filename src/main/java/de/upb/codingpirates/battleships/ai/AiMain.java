@@ -29,6 +29,7 @@ public class AiMain {
     static String ipAddress;
     static int port;
 
+
     /**
      * Is called by the command line and creates an new Ai by calling {@link AiMain#connect(String, int)}
      *

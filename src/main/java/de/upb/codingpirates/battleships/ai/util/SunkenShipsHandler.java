@@ -41,19 +41,23 @@ public class SunkenShipsHandler {
      * @return sunken ship ids of each client
      */
     public Map<Integer, LinkedList<Integer>> findSunkenShipIdsAll() {
-        //logger.info(MARKER.AI, "Try finding sunken ShipIds");
-        Map<Integer, LinkedList<Shot>> sortedSunk = ai.getSortedSunk();
+        HitsHandler hitsHandler = new HitsHandler(this.ai);
+
+        Map<Integer, LinkedList<Shot>> sortedHits = hitsHandler.sortTheHits();
+
+
         Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //maps from client id on the sunken ship ids
-        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
+        for (Map.Entry<Integer, LinkedList<Point2D>> entry : ai.getSortedSunk().entrySet()) {
             int clientId = entry.getKey();
-            LinkedList<LinkedList<Point2D>> a_ = findConnectedPoints(entry.getValue(), clientId);
-            LinkedList<Integer> a = findIds(a_, clientId);
-            allSunkenShipIds.put(clientId, a);
-            if (a.isEmpty()) {
+            LinkedList<LinkedList<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue(), clientId);
+            LinkedList<LinkedList<Point2D>> sortedSunkByPosition = getSunksOfHits(sortedHitsByPosition, clientId);
+            LinkedList<Integer> sunkenShipIds = findIds(sortedSunkByPosition, clientId);
+            allSunkenShipIds.put(clientId, sunkenShipIds);
+            if (sunkenShipIds.isEmpty()) {
                 logger.info(MARKER.AI, "Found no sunken ships of Client " + clientId);
             } else {
                 logger.info(MARKER.AI, "Found sunken ships of Client " + clientId);
-                for (int i : a) {
+                for (int i : sunkenShipIds) {
                     logger.info(MARKER.AI, "ShipId: " + i);
                 }
             }
@@ -61,27 +65,46 @@ public class SunkenShipsHandler {
         return allSunkenShipIds;
     }
 
+    public HashMap<Integer, LinkedList<Point2D>> createSortedSunk() {
+        HashMap<Integer, LinkedList<Point2D>> sortedSunkAll = new HashMap<>();
+        for (Client c : ai.getClientArrayList()) {
+            LinkedList<Point2D> sortedSunkOne = new LinkedList<>();
+            LinkedList<Point2D> hitsTC = Lists.newLinkedList();
+
+            for (Shot s : ai.getHits()) {
+                if (s.getClientId() == c.getId()) {
+                    hitsTC.add(s.getTargetField());
+                }
+            }
+
+            LinkedList<LinkedList<Point2D>> connectedHits = findConnectedPoints(hitsTC, c.getId());
+            LinkedList<LinkedList<Point2D>> connectedSunks = getSunksOfHits(connectedHits, c.getId());
+            for (LinkedList<Point2D> l : connectedSunks) {
+                sortedSunkOne.addAll(l);
+            }
+            sortedSunkAll.put(c.getId(), sortedSunkOne);
+
+        }
+        return sortedSunkAll;
+    }
+
     /**
      * Finds the points for each sunken ship for one client.
      *
      * @param hitsThisClient All shots on one client
-     * @return sunken ship ids of this client
+     * @return connected Points
      */
-    public LinkedList<LinkedList<Point2D>> findConnectedPoints(LinkedList<Shot> hitsThisClient, int clientId) {
-        LinkedList<Point2D> sunk = new LinkedList<>(); // enthält alle shots als punkte
-        LinkedList<LinkedList<Point2D>> all = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird
+    public LinkedList<LinkedList<Point2D>> findConnectedPoints(LinkedList<Point2D> hitsThisClient, int clientId) {
+        LinkedList<LinkedList<Point2D>> sunkPositions = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird
         LinkedList<LinkedList<Point2D>> p; //die temporäre linkedlist zum bearbeiten
 
-        for (Shot i : hitsThisClient) { //shots liste in punkte liste umwandeln
-            sunk.add(new Point2D(i.getTargetField().getX(), i.getTargetField().getY()));
-        }
 
         //Algorithmus zum Finden von zusammenhängenden Punkten (Schiffe finden)
         //1. Bilden einer initialen Verteilung der Schiffe
-        for (Point2D z : sunk) {
+        for (Point2D z : hitsThisClient) {
             boolean proofed = false;
 
-            for (LinkedList<Point2D> h : all) {
+            for (LinkedList<Point2D> h : sunkPositions) {
                 for (Point2D j : h) {
                     if (z.getX() == j.getX() & z.getY() == j.getY()) {
                         proofed = true;
@@ -93,10 +116,11 @@ public class SunkenShipsHandler {
             if (proofed) continue;
             LinkedList<Point2D> temp = new LinkedList<>();
             temp.add(z);
-            for (Point2D t : sunk) {
+
+            for (Point2D t : hitsThisClient) {
                 boolean used = false;
-                for (Point2D x : sunk) {
-                    for (LinkedList<Point2D> h : all) {
+                for (Point2D x : hitsThisClient) {
+                    for (LinkedList<Point2D> h : sunkPositions) {
                         for (Point2D j : h) {
                             if (z.getX() == j.getX() & z.getY() == j.getY()) {
                                 used = true;
@@ -115,7 +139,7 @@ public class SunkenShipsHandler {
                         | (z.getX() - 1 == t.getX() & z.getY() == t.getY())
                         | (z.getX() == t.getX() & z.getY() + 1 == t.getY())
                         | (z.getX() == t.getX() & z.getY() - 1 == t.getY())) {
-                    for (LinkedList<Point2D> k : all) {
+                    for (LinkedList<Point2D> k : sunkPositions) {
                         for (Point2D u : k) {
                             if (u.getX() == t.getX() & u.getY() == t.getY()) {
                                 checked = true;
@@ -128,7 +152,7 @@ public class SunkenShipsHandler {
                     temp.add(t);
                 }
             }
-            all.add(new LinkedList<>(temp));
+            sunkPositions.add(new LinkedList<>(temp));
             temp.clear();
         }
 
@@ -137,12 +161,15 @@ public class SunkenShipsHandler {
         //   Aufgrund der Notwendigkeit des Ersetzens des Iterables wird mit einer Kopie gearbeitet.
         //   Dann wird über die Kopie iteriert und die "haupt" Liste wird bearbeitet. Zwischen den Loops
         //   werden die Listen synchronisiert
-        p = new LinkedList<>(all);
+
+        p = new LinkedList<>(sunkPositions);
+
         boolean success = true;
         boolean findOne = false;
+
         while (success) {
-            for (LinkedList<Point2D> a : all) {
-                for (LinkedList<Point2D> b : all) {
+            for (LinkedList<Point2D> a : sunkPositions) {
+                for (LinkedList<Point2D> b : sunkPositions) {
                     if (a == b) {
                         continue;
                     }
@@ -152,12 +179,11 @@ public class SunkenShipsHandler {
                                     | (c.getX() - 1 == d.getX() & c.getY() == d.getY())
                                     | (c.getX() == d.getX() & c.getY() + 1 == d.getY())
                                     | (c.getX() == d.getX() & c.getY() - 1 == d.getY())) {
-                                int inB = all.indexOf(b);
-                                int inA = all.indexOf(a);
+                                int inB = sunkPositions.indexOf(b);
+                                int inA = sunkPositions.indexOf(a);
                                 LinkedList<Point2D> valueA = p.get(inA);
                                 LinkedList<Point2D> valueB = p.get(inB);
                                 valueA.addAll(valueB);
-                                //p.set(inA, valueA);
                                 p.remove(inB);
                                 findOne = true;
                                 break;
@@ -170,11 +196,11 @@ public class SunkenShipsHandler {
                 }
                 if (findOne) break;
             }
-            all = p;
+
+            sunkPositions = p;
 
             if (findOne) {
                 findOne = false;
-
                 for (LinkedList<Point2D> a : p) {
                     for (LinkedList<Point2D> b : p) {
                         if (a == b) {
@@ -188,11 +214,11 @@ public class SunkenShipsHandler {
                                         | (c.getX() == d.getX() & c.getY() - 1 == d.getY())) {
                                     int inB = p.indexOf(b);
                                     int inA = p.indexOf(a);
-                                    LinkedList<Point2D> valueA = all.get(inA);
-                                    LinkedList<Point2D> valueB = all.get(inB);
+                                    LinkedList<Point2D> valueA = sunkPositions.get(inA);
+                                    LinkedList<Point2D> valueB = sunkPositions.get(inB);
                                     valueA.addAll(valueB);
-                                    all.set(inA, valueA);
-                                    all.remove(inB);
+                                    sunkPositions.set(inA, valueA);
+                                    sunkPositions.remove(inB);
                                     findOne = true;
                                     break;
                                 }
@@ -203,42 +229,23 @@ public class SunkenShipsHandler {
                     }
                     if (findOne) break;
                 }
-
             }
             if (!findOne) success = false;
-
         }
-
-        logger.debug("Sunken positions of client {}", clientId);
-        for (LinkedList<Point2D> l : all) {
-            System.out.println("A sunk collection: ");
-            for (Point2D z : l) {
-                System.out.println(z);
-            }
-        }
-        return all;
-
+        return sunkPositions;
     }
 
-
-    public LinkedList<Integer> findIds(LinkedList<LinkedList<Point2D>> sortedHitsByPosition, int clientId) {
-        //3. Finden der zu den gefundenen Schiffsverteilungen passenden Schiffen aus der shipConfig
-        //   Dazu wird jedes Schiff aus der config einmal in jeder Rotation über das Spielfeld geschoben
-        //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
-        //   aufgenommen
-        Collection<Shot> sunk = ai.getSunk();
-
-        LinkedList<LinkedList<Point2D>> all = Lists.newLinkedList();
-
-
+    public LinkedList<LinkedList<Point2D>> getSunksOfHits(LinkedList<LinkedList<Point2D>> sortedHitsByPosition,
+                                                          int clientId) {
+        LinkedList<LinkedList<Point2D>> sortedSunksByPosition = Lists.newLinkedList();
         boolean isSunkShip;
-
         for (LinkedList<Point2D> l : sortedHitsByPosition) {
+            Collection<Shot> sunk = ai.getSunk();
             isSunkShip = false;
             for (Point2D p : l) {
                 for (Shot s : sunk) {
                     if (PositionComparator.comparePointShot(p, s, clientId)) {
-                        all.add(l);
+                        sortedSunksByPosition.add(l);
                         isSunkShip = true;
                         break;
                     }
@@ -246,7 +253,15 @@ public class SunkenShipsHandler {
                 if (isSunkShip) break;
             }
         }
+        return sortedSunksByPosition;
+    }
 
+
+    public LinkedList<Integer> findIds(LinkedList<LinkedList<Point2D>> sortedSunkByPosition, int clientId) {
+        //3. Finden der zu den gefundenen Schiffsverteilungen passenden Schiffen aus der shipConfig
+        //   Dazu wird jedes Schiff aus der config einmal in jeder Rotation über das Spielfeld geschoben
+        //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
+        //   aufgenommen
 
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
         Map<Integer, ShipType> ships = ai.getShips();
@@ -255,7 +270,7 @@ public class SunkenShipsHandler {
             int shipId = entry.getKey();
             Rotator rotator = new Rotator(this.ai);
             ArrayList<ArrayList<Point2D>> t = rotator.rotateShips((ArrayList<Point2D>) entry.getValue().getPositions()); //schiff aus der config wird gedreht
-            for (LinkedList<Point2D> a : all) { //erster Eintrag in all (erstes gesunkens Schiff)
+            for (LinkedList<Point2D> a : sortedSunkByPosition) { //erster Eintrag in all (erstes gesunkens Schiff)
                 boolean find = false;
 
                 for (ArrayList<Point2D> b : t) {//erster Eintrag in t (erstes rotiertes Schiff aus der shipconfig
@@ -328,40 +343,38 @@ public class SunkenShipsHandler {
      * Creates a map which maps from the clientID on their sunk points
      *
      * @return The map with ordered sunks
-     * @deprecated Replaced with {@link HitsHandler#sortTheHits()}
      */
-    public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
-        //logger.info("Number of sunken points: {}", ai.getSunk().size());
-        //logger.info(MARKER.AI, "Sorting the sunken ships by their clients...");
-        HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
+    public HashMap<Integer, LinkedList<Point2D>> sortTheSunk() {
+        HashMap<Integer, LinkedList<Point2D>> sortedSunk = new HashMap<>();
+
         for (Shot i : ai.getSunk()) {
             int clientId = i.getClientId();
             boolean success = false;
-            for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
+            for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
                 if (entry.getKey() == clientId) {
-                    entry.getValue().add(i);
+                    entry.getValue().add(i.getTargetField());
                     success = true;
                 }
             }
             if (!success) {
                 //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
-                sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i)));
+                sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
             }
         }
         for (Client c : ai.getClientArrayList()) {
             if (!sortedSunk.containsKey(c.getId())) {
-                LinkedList<Shot> emptyList = new LinkedList<>();
+                LinkedList<Point2D> emptyList = new LinkedList<>();
                 sortedSunk.put(c.getId(), emptyList);
             }
         }
         //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
-        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
+        for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 logger.info("No sunk points of client {}", entry.getKey());
                 continue;
             }
             logger.info("Sunk points of client {} are", entry.getKey());
-            for (Shot s : entry.getValue()) {
+            for (Point2D s : entry.getValue()) {
                 logger.info(s);
             }
         }

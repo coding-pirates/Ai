@@ -7,9 +7,9 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,17 +39,9 @@ public class InvalidPointsHandler {
 
     public LinkedList<Point2D> createInvalidPointsOne(int clientId) {
 
-        //logger.info("Computing the invalid points of client " + clientId);
-
         ai.getInvalidPointsAll().putIfAbsent(clientId, null);
 
-        LinkedList<Shot> sortedSunkShotsTC = ai.getSortedSunk().get(clientId);
-
-        ArrayList<Point2D> sortedSunkPointsTC = new ArrayList<>();
-
-        for (Shot s : sortedSunkShotsTC) {
-            sortedSunkPointsTC.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
-        }
+        LinkedList<Point2D> sortedSunkPointsTC = ai.getSortedSunk().get(clientId);
 
         LinkedList<Point2D> temp = new LinkedList<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
 
@@ -72,7 +64,7 @@ public class InvalidPointsHandler {
      * @param shipPos The positions of one ship.
      * @return The set of invalid points around one ship.
      */
-    public LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(ArrayList<Point2D> shipPos) {
+    public LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(List<Point2D> shipPos) {
         //todo prevent multiple insertion of the same point
         LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
         for (Point2D point : shipPos) {

@@ -47,6 +47,7 @@ public class HeatmapCreator {
         ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll()); //compute the sunken ship Ids for every client
 
         for (Client client : ai.getClientArrayList()) {
+            if (client.getId() == ai.getAiClientId()) continue;
             heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
         }
         //printHeatmapsAll(heatmapAllClients);

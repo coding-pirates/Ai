@@ -79,6 +79,8 @@ public class Ai implements
     int aiClientId;
     int gameId;
 
+    int roundCounter = 0;
+
     Map<Integer, PlacementInfo> positions; //ship positions of Ais field
 
     Map<Integer, ShipType> ships = Maps.newHashMap(); //all ships which have to be placed (shipConfig)
@@ -86,7 +88,7 @@ public class Ai implements
     Map<Integer, Integer> points = Maps.newHashMap(); //points of the clients
 
     Collection<Shot> sunk = Lists.newArrayList(); //sunks which are updated every round
-    Map<Integer, LinkedList<Shot>> sortedSunk = Maps.newHashMap(); //sunks sorted by their clients
+    Map<Integer, LinkedList<Point2D>> sortedSunk = Maps.newHashMap(); //sunks sorted by their clients
     Map<Integer, LinkedList<Integer>> allSunkenShipIds = Maps.newHashMap(); //sunk ship ids by their clients
 
     Map<Integer, Double[][]> heatmapAllClients = Maps.newHashMap(); //heatmaps
@@ -220,6 +222,12 @@ public class Ai implements
         }
     }
 
+    public void increaseRoundCounter() {
+        this.roundCounter++;
+        System.out.println();
+        System.out.println("+++++++++++ Round " + roundCounter + " ++++++++++++++++++++++++++++");
+        System.out.println();
+    }
 
     //Message listening-------------------------------------------------------------------------
 
@@ -245,7 +253,16 @@ public class Ai implements
 
     @Override
     public void onFinishNotification(FinishNotification message, int clientId) {
-        logger.info(MARKER.AI, "FinishNotification");
+        logger.info(MARKER.AI, "FinishNotification, game has finished.");
+
+        System.out.println("Points: ");
+        for (Map.Entry<Integer, Integer> entry : message.getPoints().entrySet()) {
+            System.out.println();
+        }
+        System.out.println("Winner: ");
+        for (int i : message.getWinner()) {
+            System.out.println(i);
+        }
         AiMain.close();
     }
 
@@ -273,6 +290,7 @@ public class Ai implements
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
         logger.info(MARKER.AI, "GameStartNotification: game started, first shot placement with difficulty level {}", this.getDifficultyLevel());
+        increaseRoundCounter();
         try {
             //logger.info("Trying to place shots");
             this.placeShots(this.getDifficultyLevel());
@@ -293,10 +311,6 @@ public class Ai implements
     public void onPauseNotification(PauseNotification message, int clientId) {
         logger.info(MARKER.AI, "PauseNotification");
     }
-
-    //For reference server
-    Collection<Shot> allHits = Lists.newArrayList();
-    Collection<Shot> allSunk = Lists.newArrayList();
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
@@ -330,24 +344,19 @@ public class Ai implements
 
         this.setMisses(missesLastRound);
 
-        if (this.getMisses().isEmpty()) {
-            logger.debug("No misses");
-        } else {
-            for (Shot s : this.getMisses()) {
-                logger.debug(s);
-            }
-        }
+        logger.debug("Size of all misses (of this player): {}", this.misses.size());
 
         //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this);
-        this.setSortedSunk(sunkenShipsHandler.sortTheSunk());
+        this.setSortedSunk(sunkenShipsHandler.createSortedSunk());
     }
 
     @Override
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
+        increaseRoundCounter();
         logger.info(MARKER.AI, "RoundStartNotification: placing shots");
         try {
-            AiMain.ai.placeShots(this.getDifficultyLevel());
+            this.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -378,16 +387,6 @@ public class Ai implements
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
         logger.info(MARKER.AI, "LobbyResponse");
-        /*
-        try {
-            sendMessage(RequestBuilder.gameJoinPlayerRequest(0));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-         */
-
-
     }
 
     //getter and setter -----------------------------------------------------------------------------------------------
@@ -408,11 +407,11 @@ public class Ai implements
         return this.clientArrayList;
     }
 
-    public void setSortedSunk(HashMap<Integer, LinkedList<Shot>> sortedSunk) {
+    public void setSortedSunk(HashMap<Integer, LinkedList<Point2D>> sortedSunk) {
         this.sortedSunk = sortedSunk;
     }
 
-    public Map<Integer, LinkedList<Shot>> getSortedSunk() {
+    public Map<Integer, LinkedList<Point2D>> getSortedSunk() {
         return this.sortedSunk;
     }
 
@@ -478,10 +477,14 @@ public class Ai implements
 
     public void setHits(Collection<Shot> hits) {
         this.hits.addAll(hits);
+        logger.debug("Size all Hits: {}", this.hits.size());
+        /*
         logger.debug("All hits are: ");
         for (Shot s : this.hits) {
             logger.debug(s);
         }
+
+         */
         //this.hits = hits;
     }
 
@@ -491,10 +494,13 @@ public class Ai implements
 
     public void setSunk(Collection<Shot> sunk) {
         this.sunk.addAll(sunk);
+        logger.debug("Size all Sunk: {}", this.sunk.size());
+        /*
         logger.debug("All sunks are: ");
         for (Shot s : this.sunk) {
             logger.debug(s);
         }
+         */
         //this.sunk = sunk;
     }
 

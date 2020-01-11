@@ -55,9 +55,7 @@ public class ShotPlacer {
             }
         }
 
-        Collection<Shot> choosenShots = new ArrayList<>();
-
-        ArrayList<Point2D> aimsThisRound = new ArrayList<>();
+        ArrayList<Shot> myShots = new ArrayList<>();
 
         //placing the shots randomly until the max of shots is not reached
         //all shots will be placed on the field of only one opponents field(other client)
@@ -67,38 +65,45 @@ public class ShotPlacer {
 
             Point2D aimPoint = randomPointCreator.getRandomPoint2D();
 
+            Shot targetShot = new Shot(shotClientId, aimPoint);
             boolean alreadyChoosen = false;
-            for (Point2D p : aimsThisRound) {
-                if (p.getX() == aimPoint.getX() & p.getY() == aimPoint.getY()) {
+
+            for (Shot s : ai.requestedShots) {
+                if (PositionComparator.compareShots(s, targetShot)) {
                     alreadyChoosen = true;
-                    logger.info(MARKER.AI, "Shot was already selected this round" + p);
-                }
-            }
-            for (Shot h : ai.getHits()) {
-                if (h.getTargetField().getX() == aimPoint.getX() & h.getTargetField().getY() == aimPoint.getY() & h.getClientId() == shotClientId) {
-                    alreadyChoosen = true;
-                    logger.info(MARKER.AI, "Shot is already a hit " + h);
-                }
-            }
-            for (Shot s : ai.getMisses()) {
-                if (s.getClientId() == shotClientId & s.getTargetField().getX() == aimPoint.getX() & s.getTargetField().getY() == aimPoint.getY()) {
-                    alreadyChoosen = true;
-                    logger.info(MARKER.AI, "Shot is already a miss " + s);
+                    logger.info("Shot was requested already: {}", targetShot);
+                    break;
                 }
             }
             if (alreadyChoosen) continue;
 
-            aimsThisRound.add(aimPoint);
-            //create a new shot object, add it to requestedShot Array and increase i
-            Shot shot = new Shot(shotClientId, aimPoint);
-            choosenShots.add(shot);
+            for (Shot h : ai.getHits()) {
+                if (h.getTargetField().getX() == aimPoint.getX() & h.getTargetField().getY() == aimPoint.getY() & h.getClientId() == shotClientId) {
+                    alreadyChoosen = true;
+                    logger.info(MARKER.AI, "Shot is a hit already: {}", targetShot);
+                    break;
+                }
+            }
+            if (alreadyChoosen) continue;
+
+            for (Shot s : ai.getMisses()) {
+                if (PositionComparator.compareShots(s, targetShot)) {
+                    alreadyChoosen = true;
+                    logger.info(MARKER.AI, "Shot is a miss already: {}", s);
+                    break;
+                }
+            }
+            if (alreadyChoosen) continue;
+
+            myShots.add(targetShot);
+            ai.requestedShots.add(targetShot);
+            logger.info(MARKER.AI, "Found shot {}", targetShot);
             i++;
-            logger.info(MARKER.AI, "Found shot {}", shot);
 
         }
 
         //return the choosen shots
-        return choosenShots;
+        return myShots;
     }
 
 
