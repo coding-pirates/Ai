@@ -65,7 +65,7 @@ public class HeatmapCreator {
      * @return a heatmap for the client
      */
     public Double[][] createHeatmapOneClient(int clientId, int k) {
-        logger.info("Create heatmap for client " + clientId);
+        //logger.info("Create heatmap for client " + clientId);
 
         Integer[][] heatmap = new Integer[ai.getHeight()][ai.getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
@@ -160,13 +160,13 @@ public class HeatmapCreator {
                 dHeatmap[i][j] = (double) heatmap[i][j];
             }
         }
-        logger.info(MARKER.AI, "Created heatmap of client " + clientId);
+        logger.info(MARKER.AI, "Heatmap of client " + clientId);
         if (k == 2) {
             Double[][] probHeatmap = createProbHeatmap(heatmap);
-            printHeatmap(probHeatmap);
+            printHeatmap(probHeatmap, clientId);
             return probHeatmap;
         }
-        printHeatmap(dHeatmap);
+        printHeatmap(dHeatmap, clientId);
         return dHeatmap;
     }
 
@@ -210,7 +210,8 @@ public class HeatmapCreator {
      *
      * @param probHeat the heatmap to print
      */
-    public void printHeatmap(Double[][] probHeat) {
+    public void printHeatmap(Double[][] probHeat, int clientId) {
+        boolean isHit = false;
         for (int i = probHeat.length - 1; i >= 0; i--) {
             for (double j : probHeat[i]) {
                 if (j == 0.0000) {
@@ -221,7 +222,6 @@ public class HeatmapCreator {
             }
             System.out.println();
         }
-
     }
 
 

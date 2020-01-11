@@ -39,7 +39,7 @@ public class InvalidPointsHandler {
 
     public LinkedList<Point2D> createInvalidPointsOne(int clientId) {
 
-        logger.info("Computing the invalid points of client " + clientId);
+        //logger.info("Computing the invalid points of client " + clientId);
 
         ai.getInvalidPointsAll().putIfAbsent(clientId, null);
 
@@ -59,8 +59,7 @@ public class InvalidPointsHandler {
             }
         }
 
-        logger.info("The invalid points: ");
-        System.out.println(temp);
+        logger.info("Size of invalid points of client {}: {} ", clientId, temp.size());
         return temp;
     }
 

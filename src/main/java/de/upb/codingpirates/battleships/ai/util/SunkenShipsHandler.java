@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai.util;
 
+import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Client;
@@ -32,49 +33,6 @@ public class SunkenShipsHandler {
         this.ai = ai;
     }
 
-    /**
-     * Creates a map which maps from the clientID on their sunken ships
-     *
-     * @return The map with ordered shots (sunk)
-     */
-    public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
-        logger.info("Number of sunken points: {}", ai.getSunk().size());
-        logger.info(MARKER.AI, "Sorting the sunken ships by their clients...");
-        HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
-        for (Shot i : ai.getSunk()) {
-            int clientId = i.getClientId();
-            boolean success = false;
-            for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
-                if (entry.getKey() == clientId) {
-                    entry.getValue().add(i);
-                    success = true;
-                }
-            }
-            if (!success) {
-                //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
-                sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i)));
-            }
-        }
-        for (Client c : ai.getClientArrayList()) {
-            if (!sortedSunk.containsKey(c.getId())) {
-                LinkedList<Shot> emptyList = new LinkedList<>();
-                sortedSunk.put(c.getId(), emptyList);
-            }
-        }
-        //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
-        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()){
-            if (entry.getValue().isEmpty()){
-                logger.info("No sunk points of client {}", entry.getKey());
-                continue;
-            }
-            logger.info("Sunk points of client {} are", entry.getKey());
-            for (Shot s : entry.getValue()){
-                logger.info(s);
-            }
-        }
-        return sortedSunk;
-    }
-
 
     /**
      * Can be called for getting the id of sunken ships for each client.
@@ -83,12 +41,13 @@ public class SunkenShipsHandler {
      * @return sunken ship ids of each client
      */
     public Map<Integer, LinkedList<Integer>> findSunkenShipIdsAll() {
-        logger.info(MARKER.AI, "Try finding sunken ShipIds");
+        //logger.info(MARKER.AI, "Try finding sunken ShipIds");
         Map<Integer, LinkedList<Shot>> sortedSunk = ai.getSortedSunk();
         Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //maps from client id on the sunken ship ids
         for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
             int clientId = entry.getKey();
-            LinkedList<Integer> a = findSunkenShipsIdsOne(entry.getValue());
+            LinkedList<LinkedList<Point2D>> a_ = findConnectedPoints(entry.getValue(), clientId);
+            LinkedList<Integer> a = findIds(a_, clientId);
             allSunkenShipIds.put(clientId, a);
             if (a.isEmpty()) {
                 logger.info(MARKER.AI, "Found no sunken ships of Client " + clientId);
@@ -103,18 +62,17 @@ public class SunkenShipsHandler {
     }
 
     /**
-     * Finds the sunken ship ids of one sunk collection.
-     * Called by {@link #findSunkenShipIdsAll()}  for each client who has sunken ships.
+     * Finds the points for each sunken ship for one client.
      *
-     * @param sunksThisClient All shots on one client
+     * @param hitsThisClient All shots on one client
      * @return sunken ship ids of this client
      */
-    public LinkedList<Integer> findSunkenShipsIdsOne(LinkedList<Shot> sunksThisClient) {
+    public LinkedList<LinkedList<Point2D>> findConnectedPoints(LinkedList<Shot> hitsThisClient, int clientId) {
         LinkedList<Point2D> sunk = new LinkedList<>(); // enthält alle shots als punkte
         LinkedList<LinkedList<Point2D>> all = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird
         LinkedList<LinkedList<Point2D>> p; //die temporäre linkedlist zum bearbeiten
 
-        for (Shot i : sunksThisClient) { //shots liste in punkte liste umwandeln
+        for (Shot i : hitsThisClient) { //shots liste in punkte liste umwandeln
             sunk.add(new Point2D(i.getTargetField().getX(), i.getTargetField().getY()));
         }
 
@@ -251,10 +209,45 @@ public class SunkenShipsHandler {
 
         }
 
+        logger.debug("Sunken positions of client {}", clientId);
+        for (LinkedList<Point2D> l : all) {
+            System.out.println("A sunk collection: ");
+            for (Point2D z : l) {
+                System.out.println(z);
+            }
+        }
+        return all;
+
+    }
+
+
+    public LinkedList<Integer> findIds(LinkedList<LinkedList<Point2D>> sortedHitsByPosition, int clientId) {
         //3. Finden der zu den gefundenen Schiffsverteilungen passenden Schiffen aus der shipConfig
         //   Dazu wird jedes Schiff aus der config einmal in jeder Rotation über das Spielfeld geschoben
         //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
         //   aufgenommen
+        Collection<Shot> sunk = ai.getSunk();
+
+        LinkedList<LinkedList<Point2D>> all = Lists.newLinkedList();
+
+
+        boolean isSunkShip;
+
+        for (LinkedList<Point2D> l : sortedHitsByPosition) {
+            isSunkShip = false;
+            for (Point2D p : l) {
+                for (Shot s : sunk) {
+                    if (PositionComparator.comparePointShot(p, s, clientId)) {
+                        all.add(l);
+                        isSunkShip = true;
+                        break;
+                    }
+                }
+                if (isSunkShip) break;
+            }
+        }
+
+
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
         Map<Integer, ShipType> ships = ai.getShips();
 
@@ -330,4 +323,49 @@ public class SunkenShipsHandler {
         }
         return sunkenShipIds;
     }
+
+    /**
+     * Creates a map which maps from the clientID on their sunk points
+     *
+     * @return The map with ordered sunks
+     * @deprecated Replaced with {@link HitsHandler#sortTheHits()}
+     */
+    public HashMap<Integer, LinkedList<Shot>> sortTheSunk() {
+        //logger.info("Number of sunken points: {}", ai.getSunk().size());
+        //logger.info(MARKER.AI, "Sorting the sunken ships by their clients...");
+        HashMap<Integer, LinkedList<Shot>> sortedSunk = new HashMap<>();
+        for (Shot i : ai.getSunk()) {
+            int clientId = i.getClientId();
+            boolean success = false;
+            for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
+                if (entry.getKey() == clientId) {
+                    entry.getValue().add(i);
+                    success = true;
+                }
+            }
+            if (!success) {
+                //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
+                sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i)));
+            }
+        }
+        for (Client c : ai.getClientArrayList()) {
+            if (!sortedSunk.containsKey(c.getId())) {
+                LinkedList<Shot> emptyList = new LinkedList<>();
+                sortedSunk.put(c.getId(), emptyList);
+            }
+        }
+        //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
+        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedSunk.entrySet()) {
+            if (entry.getValue().isEmpty()) {
+                logger.info("No sunk points of client {}", entry.getKey());
+                continue;
+            }
+            logger.info("Sunk points of client {} are", entry.getKey());
+            for (Shot s : entry.getValue()) {
+                logger.info(s);
+            }
+        }
+        return sortedSunk;
+    }
+
 }

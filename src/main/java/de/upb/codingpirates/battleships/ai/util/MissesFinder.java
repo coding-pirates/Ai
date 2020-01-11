@@ -70,7 +70,7 @@ public class MissesFinder {
                 //logger.info("A miss {}", s);
             }
         }
-        logger.info(MARKER.AI, "All misses size(1): {}", tempMisses.size());
+        //logger.info(MARKER.AI, "All misses size(1): {}", tempMisses.size());
         return tempMisses;
     }
 

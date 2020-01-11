@@ -40,6 +40,7 @@ import java.util.*;
  * @author Benjamin Kasten
  */
 public class Ai implements
+
         BattleshipsExceptionListener,
         ConnectionClosedReportListener,
         ErrorNotificationListener,
@@ -140,11 +141,12 @@ public class Ai implements
             }
             case 3: {
                 logger.info(MARKER.AI, "Difficulty level 3 (HeatMap) selected");
-                myShots = shotPlacement.placeShots_3_2();
+                myShots = shotPlacement.placeShots_Relative_3();
                 break;
             }
             default: {
-                logger.error(MARKER.AI, "The difficulty level ({}) is not valid, start again and use choose " +
+                //todo schon im vorhinein die eingabe von anderen werten verbieten (Scanner Implementierung)
+                logger.error(MARKER.AI, "The difficulty level ({}) is not valid, run again and use choose " +
                         "between the level 1, 2 or 3", difficultyLevel);
                 AiMain.close();
             }
@@ -272,7 +274,7 @@ public class Ai implements
     public void onGameStartNotification(GameStartNotification message, int clientId) {
         logger.info(MARKER.AI, "GameStartNotification: game started, first shot placement with difficulty level {}", this.getDifficultyLevel());
         try {
-            logger.info("Trying to place shots");
+            //logger.info("Trying to place shots");
             this.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             logger.error("Shot placement failed");
@@ -292,44 +294,52 @@ public class Ai implements
         logger.info(MARKER.AI, "PauseNotification");
     }
 
+    //For reference server
+    Collection<Shot> allHits = Lists.newArrayList();
+    Collection<Shot> allSunk = Lists.newArrayList();
+
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
 
-        logger.info(MARKER.AI, "PlayerUpdateNotification: getting updated hits, points and sunk");
-        logger.debug("All Hits: ");
+        logger.info(MARKER.AI, "PlayerUpdateNotification: new hits and sunks");
+
         if (message.getHits().isEmpty()) {
-            logger.debug("no hits");
+            logger.debug("No new hits.");
         } else {
+            logger.debug("New hits are:");
             for (Shot s : message.getHits()) {
                 logger.debug(s);
             }
         }
         this.setHits(message.getHits());
 
-        logger.debug("All Sunk: ");
+
         if (message.getSunk().isEmpty()) {
-            logger.debug("no sunk");
+            logger.debug("No new sunks.");
         } else {
+            logger.debug("New sunks are: ");
             for (Shot s : message.getSunk()) {
                 logger.debug(s);
             }
         }
         this.setSunk(message.getSunk());
 
-        this.setPoints(message.getPoints());
-
         MissesFinder missesFinder = new MissesFinder(this);
 
-        Collection<Shot> missesLastRound = missesFinder.computeMisses();
+        Collection<Shot> missesLastRound = missesFinder.computeMissesAll();
 
-        this.misses.addAll(missesLastRound);
-        logger.debug("Added these misses to misses");
-        for (Shot s : missesLastRound) {
-            System.out.println(s);
+        this.setMisses(missesLastRound);
+
+        if (this.getMisses().isEmpty()) {
+            logger.debug("No misses");
+        } else {
+            for (Shot s : this.getMisses()) {
+                logger.debug(s);
+            }
         }
 
         //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(AiMain.ai.getInstance());
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this);
         this.setSortedSunk(sunkenShipsHandler.sortTheSunk());
     }
 
@@ -467,7 +477,12 @@ public class Ai implements
     }
 
     public void setHits(Collection<Shot> hits) {
-        this.hits = hits;
+        this.hits.addAll(hits);
+        logger.debug("All hits are: ");
+        for (Shot s : this.hits) {
+            logger.debug(s);
+        }
+        //this.hits = hits;
     }
 
     public Collection<Shot> getHits() {
@@ -475,7 +490,12 @@ public class Ai implements
     }
 
     public void setSunk(Collection<Shot> sunk) {
-        this.sunk = sunk;
+        this.sunk.addAll(sunk);
+        logger.debug("All sunks are: ");
+        for (Shot s : this.sunk) {
+            logger.debug(s);
+        }
+        //this.sunk = sunk;
     }
 
     public Collection<Shot> getSunk() {
@@ -598,7 +618,6 @@ public class Ai implements
 
         logger.info("Setting configuration successful.");
     }
-
 
 
     public void setMaxPlayerCount(int maxPlayerCount) {

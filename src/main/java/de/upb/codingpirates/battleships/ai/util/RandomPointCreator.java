@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.ai.util;
 
-import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import org.apache.logging.log4j.LogManager;
@@ -34,7 +33,7 @@ public class RandomPointCreator {
         int x = (int) (Math.random() * ai.getWidth());
         int y = (int) (Math.random() * ai.getHeight());
         Point2D randPoint = new Point2D(x, y);
-        logger.info(MARKER.AI, "Random Point : {}", randPoint);
+        //logger.info(MARKER.AI, "Random Point : {}", randPoint);
         return randPoint;
     }
 }
