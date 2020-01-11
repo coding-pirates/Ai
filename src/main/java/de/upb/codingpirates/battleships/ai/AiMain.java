@@ -47,7 +47,7 @@ public class AiMain {
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
-        System.out.println("ID des Spiels: ");
+        aiName = args[3];
         gameToJoin = "0"; //new Scanner(System.in).next();
         connect(ipAddress, port);
 

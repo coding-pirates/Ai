@@ -293,6 +293,9 @@ public class ShotPlacer {
 
         logger.debug("Size of valid points to shoot: {}", allHeatVal.size());
         logger.debug("Highest valid heat point is: {}", allHeatVal.get(0));
+        System.out.println("All hits: ");
+        System.out.println(ai.getHits());
+
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = Lists.newArrayList();
 
