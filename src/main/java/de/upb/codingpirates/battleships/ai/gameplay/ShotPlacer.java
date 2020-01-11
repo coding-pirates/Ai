@@ -271,28 +271,16 @@ public class ShotPlacer {
         }
 
 
-        //using an iterator to remove hits from allHeatVal
-        ListIterator<Triple<Integer, Point2D, Double>> iterator = allHeatVal.listIterator();
-        for (Shot s : ai.getHits()) {
-            while (iterator.hasNext()) {
-                Triple<Integer, Point2D, Double> t = iterator.next();
-                if (t.getVal1() == s.getClientId() & t.getVal2().getX() == s.getTargetField().getX() & t.getVal2().getY() == s.getTargetField().getY()) {
-                    iterator.remove();
-                    //logger.debug("Removed {} because its a hit", t);
-                }
-            }
-        }
-
         //remove all zero values of the heat points collection
-        allHeatVal.removeIf((Triple t) -> (double) t.getVal3() == (double) 0);
+        allHeatVal.removeIf((Triple<Integer, Point2D, Double> t) -> t.getVal3() == (double) 0);
         //logger.debug("Size allHeatVal after removing hits and zero values: {}", allHeatVal.size());
 
         //using the TripleComparator class we can sort the the triple objects by their heat value
         allHeatVal.sort(new TripleComparator().reversed());
 
-
         logger.debug("Size of valid points to shoot: {}", allHeatVal.size());
-        logger.debug("Highest valid heat point is: {}", allHeatVal.get(0));
+        //logger.debug("Highest valid heat point is: {}", allHeatVal.get(0));
+        ai.allHeatVal = allHeatVal;
         System.out.println("All hits: ");
         System.out.println(ai.getHits());
 
@@ -333,8 +321,8 @@ public class ShotPlacer {
                 }
             }
             for (Shot k : ai.getHits()) {
-                if (k.getTargetField().getX() == p.getX() & k.getTargetField().getY() == p.getY()) {
-                    logger.debug("If this block is called something went wrong. {} is already a hit", p);
+                if (k.getTargetField().getX() == p.getX() & k.getTargetField().getY() == p.getY() & k.getClientId() == clientId) {
+                    //logger.debug("If this block is called something went wrong. {} is already a hit", p);
                     valid = false;
                     break;
                 }

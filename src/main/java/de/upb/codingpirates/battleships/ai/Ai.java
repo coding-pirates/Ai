@@ -7,6 +7,7 @@ import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.ai.util.MissesFinder;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
+import de.upb.codingpirates.battleships.ai.util.Triple;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -57,6 +58,7 @@ public class Ai implements
         LobbyResponseListener {
 
     private static final Logger logger = LogManager.getLogger();
+    public LinkedList<Triple<Integer, Point2D, Double>> allHeatVal;
 
     int difficultyLevel;
 
@@ -284,11 +286,13 @@ public class Ai implements
         } catch (IOException e) {
             logger.error("Ship placement failed");
             e.printStackTrace();
+
         }
     }
 
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
+
         logger.info(MARKER.AI, "GameStartNotification: game started, first shot placement with difficulty level {}", this.getDifficultyLevel());
         increaseRoundCounter();
         try {
@@ -298,8 +302,8 @@ public class Ai implements
             logger.error("Shot placement failed");
             e.printStackTrace();
         }
-
     }
+
 
     @Override
     public void onLeaveNotification(LeaveNotification message, int clientId) {
@@ -314,52 +318,61 @@ public class Ai implements
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
-
-        logger.info(MARKER.AI, "PlayerUpdateNotification: new hits and sunks");
-
-        if (message.getHits().isEmpty()) {
-            logger.debug("No new hits.");
-        } else {
-            logger.debug("New hits are:");
-            for (Shot s : message.getHits()) {
-                logger.debug(s);
+        synchronized (this) {
+            try {
+                wait(1);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
-        this.setHits(message.getHits());
+            logger.info(MARKER.AI, "PlayerUpdateNotification: new hits and sunks");
 
-
-        if (message.getSunk().isEmpty()) {
-            logger.debug("No new sunks.");
-        } else {
-            logger.debug("New sunks are: ");
-            for (Shot s : message.getSunk()) {
-                logger.debug(s);
+            if (message.getHits().isEmpty()) {
+                logger.debug("No new hits.");
+            } else {
+                logger.debug("New hits are:");
+                for (Shot s : message.getHits()) {
+                    logger.debug(s);
+                }
             }
+            this.setHits(message.getHits());
+
+
+            if (message.getSunk().isEmpty()) {
+                logger.debug("No new sunks.");
+            } else {
+                logger.debug("New sunks are: ");
+                for (Shot s : message.getSunk()) {
+                    logger.debug(s);
+                }
+            }
+            this.setSunk(message.getSunk());
+
+            MissesFinder missesFinder = new MissesFinder(this);
+
+            Collection<Shot> missesLastRound = missesFinder.computeMissesAll();
+
+            this.setMisses(missesLastRound);
+
+            logger.debug("Size of all misses (of this player): {}", this.misses.size());
+
+            //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
+            SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this);
+            this.setSortedSunk(sunkenShipsHandler.createSortedSunk());
         }
-        this.setSunk(message.getSunk());
-
-        MissesFinder missesFinder = new MissesFinder(this);
-
-        Collection<Shot> missesLastRound = missesFinder.computeMissesAll();
-
-        this.setMisses(missesLastRound);
-
-        logger.debug("Size of all misses (of this player): {}", this.misses.size());
-
-        //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this);
-        this.setSortedSunk(sunkenShipsHandler.createSortedSunk());
     }
+
 
     @Override
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
         increaseRoundCounter();
+
         logger.info(MARKER.AI, "RoundStartNotification: placing shots");
         try {
             this.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     @Override
@@ -478,14 +491,7 @@ public class Ai implements
     public void setHits(Collection<Shot> hits) {
         this.hits.addAll(hits);
         logger.debug("Size all Hits: {}", this.hits.size());
-        /*
-        logger.debug("All hits are: ");
-        for (Shot s : this.hits) {
-            logger.debug(s);
-        }
 
-         */
-        //this.hits = hits;
     }
 
     public Collection<Shot> getHits() {
@@ -495,13 +501,6 @@ public class Ai implements
     public void setSunk(Collection<Shot> sunk) {
         this.sunk.addAll(sunk);
         logger.debug("Size all Sunk: {}", this.sunk.size());
-        /*
-        logger.debug("All sunks are: ");
-        for (Shot s : this.sunk) {
-            logger.debug(s);
-        }
-         */
-        //this.sunk = sunk;
     }
 
     public Collection<Shot> getSunk() {
