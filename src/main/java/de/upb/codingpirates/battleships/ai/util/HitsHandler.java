@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai.util;
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
+import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,21 +27,22 @@ public class HitsHandler {
      *
      * @return The map with ordered sunks
      */
-    public HashMap<Integer, LinkedList<Shot>> sortTheHits() {
+    public HashMap<Integer, LinkedList<Point2D>> sortTheHits() {
 
-        HashMap<Integer, LinkedList<Shot>> sortedHits = Maps.newHashMap();
+        HashMap<Integer, LinkedList<Point2D>> sortedHits = Maps.newHashMap();
+
         for (Shot i : ai.getHits()) {
             int clientId = i.getClientId();
             boolean success = false;
-            for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedHits.entrySet()) {
+            for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedHits.entrySet()) {
                 if (entry.getKey() == clientId) {
-                    entry.getValue().add(i);
+                    entry.getValue().add(i.getTargetField());
                     success = true;
                 }
             }
             if (!success) {
                 //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
-                sortedHits.put(clientId, new LinkedList<>(Collections.singletonList(i)));
+                sortedHits.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
             }
         }
         for (Client c : ai.getClientArrayList()) {
@@ -49,21 +51,17 @@ public class HitsHandler {
             }
         }
         //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
-        for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedHits.entrySet()) {
+        for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedHits.entrySet()) {
             if (entry.getValue().isEmpty()) {
-                if (entry.getKey() == ai.getAiClientId()) {
-                    logger.info("I ({}) have not yet been hit", ai.getAiClientId());
-                } else {
-                    logger.info("Player {} has not yet been hit.", entry.getKey());
-                }
+
+                logger.info("Player {} has not yet been hit.", entry.getKey());
+
                 continue;
 
             }
-            if (entry.getKey() == ai.getAiClientId()) {
-                logger.info("I ({}) have been hit {} timer", entry.getKey(), entry.getValue().size());
-            } else {
-                logger.info("Player {} has been hit {} times.", entry.getKey(), entry.getValue().size());
-            }
+
+            logger.info("Player {} has been hit {} times.", entry.getKey(), entry.getValue().size());
+
         }
         return sortedHits;
     }
