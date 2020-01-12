@@ -50,7 +50,7 @@ public class ShotPlacer {
             int randomIndex = (int) (Math.random() * numberOfClients);
             if (randomIndex != aiIndex) {
                 shotClientId = ai.getClientArrayList().get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
-                logger.info(MARKER.AI, "Shooting on client with id: {} ", shotClientId);
+                logger.info(MARKER.Ai_ShotPlacer, "Shooting on client with id: {} ", shotClientId);
                 break;
             }
         }
@@ -61,7 +61,7 @@ public class ShotPlacer {
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
         while (i < ai.getShotCount()) {
-            logger.info(MARKER.AI, "Trying to find  {}. shot", i + 1);
+            logger.info(MARKER.Ai_ShotPlacer, "Trying to find  {}. shot", i + 1);
 
             Point2D aimPoint = randomPointCreator.getRandomPoint2D();
 
@@ -80,7 +80,7 @@ public class ShotPlacer {
             for (Shot h : ai.getHits()) {
                 if (h.getTargetField().getX() == aimPoint.getX() & h.getTargetField().getY() == aimPoint.getY() & h.getClientId() == shotClientId) {
                     alreadyChoosen = true;
-                    logger.info(MARKER.AI, "Shot is a hit already: {}", targetShot);
+                    logger.info(MARKER.Ai_ShotPlacer, "Shot is a hit already: {}", targetShot);
                     break;
                 }
             }
@@ -89,7 +89,7 @@ public class ShotPlacer {
             for (Shot s : ai.getMisses()) {
                 if (PositionComparator.compareShots(s, targetShot)) {
                     alreadyChoosen = true;
-                    logger.info(MARKER.AI, "Shot is a miss already: {}", s);
+                    logger.info(MARKER.Ai_ShotPlacer, "Shot is a miss already: {}", s);
                     break;
                 }
             }
@@ -97,7 +97,7 @@ public class ShotPlacer {
 
             myShots.add(targetShot);
             ai.requestedShots.add(targetShot);
-            logger.info(MARKER.AI, "Found shot {}", targetShot);
+            logger.info(MARKER.Ai_ShotPlacer, "Found shot {}", targetShot);
             i++;
 
         }
@@ -117,7 +117,7 @@ public class ShotPlacer {
      * @return requested shots
      */
     public Collection<Shot> placeShots_2() {
-        logger.info(MARKER.AI, "Placing shots with difficulty level 2");
+        logger.info(MARKER.Ai_ShotPlacer, "Placing shots with difficulty level 2");
         RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
         Collection<Shot> myShots = new ArrayList<>();
         //ai.addMisses();
@@ -127,14 +127,14 @@ public class ShotPlacer {
         for (Client c : ai.getClientArrayList()) {
             if (c.getId() == ai.getAiClientId()) {
                 aiIndex = ai.getClientArrayList().indexOf(c);
-                logger.info(MARKER.AI, "Ai Index: {}.", aiIndex);
+                logger.info(MARKER.Ai_ShotPlacer, "Ai Index: {}.", aiIndex);
             }
         }
 
         Set<Point2D> pot = new HashSet<>();
         for (Shot s : ai.getHits()) {
             if (s.getClientId() == shotClientId) {
-                logger.info(MARKER.AI, "Looking for all neighbours of Shot {}", s);
+                logger.info(MARKER.Ai_ShotPlacer, "Looking for all neighbours of Shot {}", s);
                 ArrayList<Point2D> temp = new ArrayList<>();
                 //west
                 temp.add(new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
@@ -168,13 +168,13 @@ public class ShotPlacer {
                         continue;
                     }
                     pot.add(p);
-                    logger.info(MARKER.AI, "Added {} to potential hits", p);
+                    logger.info(MARKER.Ai_ShotPlacer, "Added {} to potential hits", p);
                 }
                 if (pot.size() < ai.getShotCount()) {
-                    logger.info(MARKER.AI, "There are less potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
+                    logger.info(MARKER.Ai_ShotPlacer, "There are less potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
                     for (Point2D p : pot) {
                         myShots.add(new Shot(shotClientId, new Point2D(p.getX(), p.getY())));
-                        logger.info(MARKER.AI, "Added {} to myShots", p);
+                        logger.info(MARKER.Ai_ShotPlacer, "Added {} to myShots", p);
                     }
                     while (true) {
                         boolean invalid = false;
@@ -198,15 +198,15 @@ public class ShotPlacer {
                         if (invalid) continue;
                         else {
                             myShots.add(new Shot(shotClientId, point));
-                            logger.info(MARKER.AI, "Added random shot {} to myShots", point);
+                            logger.info(MARKER.Ai_ShotPlacer, "Added random shot {} to myShots", point);
                         }
                         if (myShots.size() == ai.getShotCount()) break;
                     }
                 } else {
-                    logger.info(MARKER.AI, "There are more potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
+                    logger.info(MARKER.Ai_ShotPlacer, "There are more potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
                     for (Point2D p : pot) {
                         myShots.add(new Shot(shotClientId, p));
-                        logger.info(MARKER.AI, "Added {} to myShots", p);
+                        logger.info(MARKER.Ai_ShotPlacer, "Added {} to myShots", p);
                         if (myShots.size() == ai.getShotCount()) break;
                     }
                 }
@@ -247,7 +247,7 @@ public class ShotPlacer {
         for (Map.Entry<Integer, LinkedList<Integer>> entry : ai.getAllSunkenShipIds().entrySet()) {
             if (!(ai.getInvalidPointsAll().get(entry.getKey()).size() == (ai.getWidth() * ai.getHeight())
                     | entry.getValue().size() == ai.getShips().size() | entry.getKey() == ai.getAiClientId())) {
-                //logger.info(MARKER.AI, "A valid target is client: {}", entry.getKey());
+                //logger.info(MARKER.Ai_ShotPlacer, "A valid target is client: {}", entry.getKey());
                 validTargets.put(entry.getKey(), entry.getValue());
             }
         }
@@ -278,11 +278,12 @@ public class ShotPlacer {
         //using the TripleComparator class we can sort the the triple objects by their heat value
         allHeatVal.sort(new TripleComparator().reversed());
 
-        logger.debug("Size of valid points to shoot: {}", allHeatVal.size());
-        //logger.debug("Highest valid heat point is: {}", allHeatVal.get(0));
+        /*
+        logger.debug("Size of valid points to shoot (with hits): {}", allHeatVal.size());
+        logger.debug("Highest valid heat point is: {}", allHeatVal.get(0));
+        */
         ai.allHeatVal = allHeatVal;
-        System.out.println("All hits: ");
-        System.out.println(ai.getHits());
+
 
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = Lists.newArrayList();
@@ -331,7 +332,7 @@ public class ShotPlacer {
 
             Shot targetShot = new Shot(clientId, p);
             myShotsThisRound.add(targetShot);
-            logger.info("Added shot {} with value {} to myShots", targetShot, fieldVal);
+            logger.info("Added shot {} with value {}", targetShot, fieldVal);
             if (myShotsThisRound.size() >= ai.getShotCount()) {
                 break;
             }
@@ -358,7 +359,7 @@ public class ShotPlacer {
      * @deprecated placeShots_3_2 uses relative values
      */
     public Collection<Shot> placeShots_Absolute_3() {
-        logger.info(MARKER.AI, "Placing shots with difficulty level 3");
+        logger.info(MARKER.Ai_ShotPlacer, "Placing shots with difficulty level 3");
 
 
         //We have to add the shots of the last round directly to the invalidPointsAll before we create new heatmaps
@@ -374,14 +375,14 @@ public class ShotPlacer {
         for (Map.Entry<Integer, LinkedList<Integer>> entry : ai.getAllSunkenShipIds().entrySet()) {
             if (!(ai.getInvalidPointsAll().get(entry.getKey()).size() == (ai.getWidth() * ai.getHeight())
                     | entry.getValue().size() == ai.getShips().size() | entry.getKey() == ai.getAiClientId())) {
-                logger.info(MARKER.AI, "A valid target is client: {}", entry.getKey());
+                logger.info(MARKER.Ai_ShotPlacer, "A valid target is client: {}", entry.getKey());
                 validTargets.put(entry.getKey(), entry.getValue());
             }
         }
         Map<Integer, Integer> invalidPointsSize = new HashMap<>();
 
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : ai.getInvalidPointsAll().entrySet()) {
-            logger.info(MARKER.AI, "Client {} has {} invalid fields", entry.getKey(), entry.getValue().size());
+            logger.info(MARKER.Ai_ShotPlacer, "Client {} has {} invalid fields", entry.getKey(), entry.getValue().size());
             if (validTargets.containsKey(entry.getKey())) {
                 invalidPointsSize.put(entry.getKey(), entry.getValue().size());
             }
@@ -399,7 +400,7 @@ public class ShotPlacer {
             for (Map.Entry<Integer, Integer> entry : invalidPointsSizeOrdered.entrySet()) {
                 int countShotsOne = 0;
                 int targetClient = entry.getKey();
-                logger.info(MARKER.AI, "Now shooting on client {} with {} invalid fields", targetClient, entry.getValue());
+                logger.info(MARKER.Ai_ShotPlacer, "Now shooting on client {} with {} invalid fields", targetClient, entry.getValue());
 
                 //get the heatmap of this client
                 Double[][] targetHeatmap = ai.getHeatmapAllClients().get(targetClient);
@@ -439,10 +440,10 @@ public class ShotPlacer {
                     }
                     if (isInvalid) continue;
                     myShotsThisRound.add(targetShot);
-                    logger.info(MARKER.Ai_SHOTPLACER, "Added shot {} with value {} to myShots", targetShot, entryy.getValue());
+                    logger.info(MARKER.Ai_ShotPlacer, "Added shot {} with value {} to myShots", targetShot, entryy.getValue());
                     countShotsOne++;
                     if (myShotsThisRound.size() == ai.getShotCount()) {
-                        logger.info(MARKER.Ai_SHOTPLACER, "{} shots on client {}", countShotsOne, entry.getKey());
+                        logger.info(MARKER.Ai_ShotPlacer, "{} shots on client {}", countShotsOne, entry.getKey());
                         ai.requestedShotsLastRound.clear(); //leere die Liste von dieser Runde
                         ai.requestedShotsLastRound.addAll(myShotsThisRound);
 
@@ -452,7 +453,7 @@ public class ShotPlacer {
                     }
                 }
                 counter++;
-                logger.info(MARKER.AI, "{} shot(s) on client {}", countShotsOne, entry.getKey());
+                logger.info(MARKER.Ai_ShotPlacer, "{} shot(s) on client {}", countShotsOne, entry.getKey());
             }
         }
         return myShotsThisRound;

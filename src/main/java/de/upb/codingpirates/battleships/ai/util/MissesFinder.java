@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,7 +15,7 @@ import java.util.Collection;
  * @author Benjamin Kasten
  */
 public class MissesFinder {
-    private static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LogManager.getLogger(MARKER.Ai_Misses);
     Ai ai;
 
     /**
@@ -39,12 +40,12 @@ public class MissesFinder {
             for (Shot i : ai.getHits()) { //check if shot s is a miss
                 if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
                     miss = false; //no miss, its a hit
-                    logger.info("A hit {}", s);
+                    logger.info(MARKER.Ai_Misses, "A hit {}", s);
                 }
             }
             if (miss) {
                 tempMisses.add(s); // if its not hit, its a miss
-                logger.info("A miss {}", s);
+                logger.info(MARKER.Ai_Misses, "A miss {}", s);
             }
         }
         return tempMisses;

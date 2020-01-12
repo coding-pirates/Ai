@@ -2,7 +2,6 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -161,7 +160,11 @@ public class HeatmapCreator {
                 dHeatmap[i][j] = (double) heatmap[i][j];
             }
         }
-        logger.info(MARKER.AI, "Heatmap of client " + clientId);
+
+        if (clientId == ai.getAiClientId()) {
+            System.out.println(String.format("Heatmap of my field (%s)", ai.getAiClientId()));
+        }
+        System.out.println("Heatmap of player " + clientId);
         if (k == 2) {
             Double[][] probHeatmap = createProbHeatmap(heatmap);
             printHeatmap(probHeatmap, clientId);
@@ -222,31 +225,6 @@ public class HeatmapCreator {
                 }
             }
             System.out.println();
-        }
-    }
-
-
-    /**
-     * @param heatmaps
-     * @deprecated
-     */
-    public void printHeatmapsAll(Map<Integer, Double[][]> heatmaps) {
-        logger.info("Print the heatmaps:");
-        for (Map.Entry<Integer, Double[][]> entry : heatmaps.entrySet()) {
-            int clientId = entry.getKey();
-            System.out.println("Heatmap of client " + clientId);
-
-            for (int i = entry.getValue().length - 1; i >= 0; i--) {
-                for (Double j : entry.getValue()[i]) {
-                    if (j == 0) {
-                        System.out.print("---  ");
-                    } else {
-                        System.out.print(String.format("%03d", j) + "  ");
-                    }
-                }
-                System.out.println();
-                //System.out.println(Arrays.toString(entry.getValue()[i]) + " ");
-            }
         }
     }
 

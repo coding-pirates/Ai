@@ -2,7 +2,6 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -54,12 +53,21 @@ public class SunkenShipsHandler {
             LinkedList<Integer> sunkenShipIds = findIds(sortedSunkByPosition, clientId);
             allSunkenShipIds.put(clientId, sunkenShipIds);
             if (sunkenShipIds.isEmpty()) {
-                logger.info(MARKER.AI, "Found no sunken ships of Client " + clientId);
-            } else {
-                logger.info(MARKER.AI, "Found sunken ships of Client " + clientId);
-                for (int i : sunkenShipIds) {
-                    logger.info(MARKER.AI, "ShipId: " + i);
+                if (clientId == ai.getAiClientId()) {
+                    logger.info("I ({}) have no sunken ships yet", ai.getAiClientId());
+                } else {
+                    logger.info("Player {} has no sunken ships yet", clientId);
                 }
+            } else {
+                if (clientId == ai.getAiClientId()) {
+                    logger.info("My ({}) sunken ships are: ", clientId);
+                } else {
+                    logger.info("Sunken ships of player {} are: ", clientId);
+                }
+                for (int i : sunkenShipIds) {
+                    logger.info("ShipId: " + i);
+                }
+
             }
         }
         return allSunkenShipIds;
@@ -367,7 +375,7 @@ public class SunkenShipsHandler {
                 sortedSunk.put(c.getId(), emptyList);
             }
         }
-        //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
+        //logger.info( "Sorted the sunken ships by their clients.");
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 logger.info("No sunk points of client {}", entry.getKey());

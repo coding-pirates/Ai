@@ -51,7 +51,7 @@ public class InvalidPointsHandler {
             }
         }
 
-        logger.info("Size of invalid points of client {}: {} ", clientId, temp.size());
+        //logger.info("Size of invalid points of client {}: {} ", clientId, temp.size());
         return temp;
     }
 

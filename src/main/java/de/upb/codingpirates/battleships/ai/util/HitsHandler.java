@@ -51,12 +51,18 @@ public class HitsHandler {
         //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
         for (Map.Entry<Integer, LinkedList<Shot>> entry : sortedHits.entrySet()) {
             if (entry.getValue().isEmpty()) {
-                logger.info("No hit points of client {}", entry.getKey());
+                if (entry.getKey() == ai.getAiClientId()) {
+                    logger.info("I ({}) have not yet been hit", ai.getAiClientId());
+                } else {
+                    logger.info("Player {} has not yet been hit.", entry.getKey());
+                }
                 continue;
+
             }
-            logger.info("Hit points of client {} are", entry.getKey());
-            for (Shot s : entry.getValue()) {
-                logger.info(s);
+            if (entry.getKey() == ai.getAiClientId()) {
+                logger.info("I ({}) have been hit {} timer", entry.getKey(), entry.getValue().size());
+            } else {
+                logger.info("Player {} has been hit {} times.", entry.getKey(), entry.getValue().size());
             }
         }
         return sortedHits;

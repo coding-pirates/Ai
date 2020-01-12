@@ -1,12 +1,15 @@
 package de.upb.codingpirates.battleships.ai.logger;
 
-import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
-import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
 public class MARKER {
-    public final static Marker AI = MarkerManager.getMarker("Ai");
-    public final static  Marker AI_HEATMAP = MarkerManager.getMarker("Ai-HeatmapCreator");
-    public final static  Marker Ai_SHOTPLACER = MarkerManager.getMarker("Ai- ShotPlacer");
+    public final static Marker Ai_Main = MarkerManager.getMarker("Ai_Main");
+    public final static Marker Ai = MarkerManager.getMarker("Ai");
+    public final static Marker Ai_Heatmap = MarkerManager.getMarker("Ai_HeatmapCreator");
+    public final static Marker Ai_ShotPlacer = MarkerManager.getMarker("Ai_ShotPlacer");
+    public final static Marker Ai_Hits = MarkerManager.getMarker("Ai_HitsHandler");
+    public final static Marker Ai_Misses = MarkerManager.getMarker("Ai_MissesFinder");
+    public final static Marker Ai_SunkenShips = MarkerManager.getMarker("Ai_SunkenShipsHandler");
+    public final static Marker Ai_ShipPlacer = MarkerManager.getMarker("ShipPlacer");
 }

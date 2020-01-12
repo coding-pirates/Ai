@@ -67,9 +67,9 @@ public class AiMain {
 
         //aiName = "EnginePlayer" + random.nextInt(10000000);   //random ai name without any claim to be unique
         ai.setInstance(ai);
-        logger.info(MARKER.AI, "Connect new Engine Player with name: {}", aiName);
+        logger.info(MARKER.Ai_Main, "Connect new Engine Player with name: {}", aiName);
         ai.getTcpConnector().connect(ipAddress, port);
-        logger.info(MARKER.AI);
+        logger.info(MARKER.Ai_Main);
         ai.sendMessage(new ServerJoinRequest(aiName, ClientType.PLAYER));
     }
 
