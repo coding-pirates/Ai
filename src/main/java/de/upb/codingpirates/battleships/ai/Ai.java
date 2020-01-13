@@ -245,7 +245,7 @@ public class Ai implements
         } else {
             logger.debug(MARKER.Ai, "New hits are:");
             for (Shot s : update.getHits()) {
-                logger.debug(s);
+                logger.debug(MARKER.Ai, s);
             }
         }
         this.setHits(update.getHits());
@@ -256,7 +256,7 @@ public class Ai implements
         } else {
             logger.debug(MARKER.Ai, "New sunks are: ");
             for (Shot s : update.getSunk()) {
-                logger.debug(s);
+                logger.debug(MARKER.Ai, s);
             }
         }
         this.setSunk(update.getSunk());
@@ -340,6 +340,7 @@ public class Ai implements
     }
 
     boolean isFirstCall = true;
+
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
 
