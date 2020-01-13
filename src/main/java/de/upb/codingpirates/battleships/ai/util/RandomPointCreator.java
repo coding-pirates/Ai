@@ -32,8 +32,6 @@ public class RandomPointCreator {
     public Point2D getRandomPoint2D() {
         int x = (int) (Math.random() * ai.getWidth());
         int y = (int) (Math.random() * ai.getHeight());
-        Point2D randPoint = new Point2D(x, y);
-        //logger.info(MARKER.AI, "Random Point : {}", randPoint);
-        return randPoint;
+        return new Point2D(x, y);
     }
 }

@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
@@ -54,13 +55,13 @@ public class HitsHandler {
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedHits.entrySet()) {
             if (entry.getValue().isEmpty()) {
 
-                logger.info("Player {} has not yet been hit.", entry.getKey());
+                logger.info(MARKER.Ai_Hits, "Player {} has not yet been hit.", entry.getKey());
 
                 continue;
 
             }
 
-            logger.info("Player {} has been hit {} times.", entry.getKey(), entry.getValue().size());
+            logger.info(MARKER.Ai_Hits, "Player {} has been hit {} times.", entry.getKey(), entry.getValue().size());
 
         }
         return sortedHits;

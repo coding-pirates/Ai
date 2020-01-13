@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -53,43 +54,20 @@ public class SunkenShipsHandler {
             used.clear();
             int clientId = entry.getKey();
             LinkedList<LinkedList<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue(), clientId);
-
-
-            logger.debug("All related hits of player {}: ", entry.getKey());
-            for (LinkedList<Point2D> l : sortedHitsByPosition) {
-                for (Point2D p : l) {
-                    System.out.print(p + " ");
-                }
-                System.out.println();
-
-            }
-
-
             LinkedList<LinkedList<Point2D>> sortedSunkByPosition = getSunksOfHits(sortedHitsByPosition, clientId);
-
-
-            logger.debug("All sunken points per ship of player {}: ", entry.getKey());
-            for (LinkedList<Point2D> l : sortedSunkByPosition) {
-                used.addAll(l);
-                for (Point2D p : l) {
-                    System.out.print(p + " ");
-                }
-                System.out.println();
-
-            }
 
 
             LinkedList<Integer> sunkenShipIds = findIds(sortedSunkByPosition, clientId);
             allSunkenShipIds.put(clientId, sunkenShipIds);
             if (sunkenShipIds.isEmpty()) {
-                logger.info("Player {} has no sunken ships yet", clientId);
+                logger.info(MARKER.Ai_SunkenShips, "Player {} has no sunken ships yet", clientId);
                 continue;
             }
 
-            logger.info("Sunken ships of player {} are: ", clientId);
+            logger.info(MARKER.Ai_SunkenShips, "Sunken ships of player {} are: ", clientId);
 
             for (int i : sunkenShipIds) {
-                logger.info("ShipId: " + i);
+                logger.info(MARKER.Ai_SunkenShips, "ShipId: " + i);
             }
 
 
@@ -295,8 +273,8 @@ public class SunkenShipsHandler {
         //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
         //   aufgenommen
 
-        logger.debug("The points which cannot be accessed for identification for ships of client {}", clientId);
-        System.out.println(used);
+        //logger.debug("The points which cannot be accessed for identification for ships of client {}", clientId);
+        //System.out.println(used);
         boolean isValid;
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
         Map<Integer, ShipType> ships = ai.getShips();
@@ -308,7 +286,6 @@ public class SunkenShipsHandler {
             for (LinkedList<Point2D> a : sortedSunkByPosition) { //erster Eintrag in all (erstes gesunkens Schiff)
                 boolean find = false;
                 for (ArrayList<Point2D> b : t) {//erster Eintrag in t (erstes rotiertes Schiff aus der shipconfig
-                    isValid = true;
                     ArrayList<Point2D> bCopy = new ArrayList<>(b); //das schiff in der pos, mit der es über das feld geschoben wird
 
                     if (a.size() == b.size()) {
@@ -324,9 +301,9 @@ public class SunkenShipsHandler {
                         int maxY = yValues.get(yValues.size() - 1);
                         int initMaxX = xValues.get(xValues.size() - 1);
                         int initMaxY = yValues.get(yValues.size() - 1);
-
                         while (maxY < ai.getHeight()) {
                             while (maxX < ai.getWidth()) {
+                                isValid = true;
                                 for (Point2D s : bCopy) {
                                     for (Point2D f : used) {
                                         if (PositionComparator.comparePoints(s, f)) {
@@ -340,32 +317,32 @@ public class SunkenShipsHandler {
                                     }
                                 }
 
-                                if (isValid) {
 
-                                    //Collection<Point2D> invTemp = new ArrayList<>();
+                                if (isValid) {
+                                    Collection<Point2D> tempInv = new ArrayList<>();
                                     int size = 0;
                                     for (Point2D k : a) {
                                         for (Point2D i : bCopy) {
-                                            if (k.getX() == i.getX() & k.getY() == i.getY()) {
-                                                //invTemp.add(i);
-                                                //for (Point2D p : invTemp){
-                                                //    System.out.print(p);
-                                                //}
+                                            if (PositionComparator.comparePoints(k, i)) {
+                                                tempInv.add(i);
                                                 size++;
-                                            } else {
-                                                continue;
                                             }
                                             if (size == a.size()) {
-                                                //invTemp.clear();
                                                 sunkenShipIds.add(shipId);
+                                                //logger.debug("Added to sunk: {}", shipId);
                                                 find = true;
                                                 break;
                                             }
                                         }
-                                        if (find) break;
+                                        if (find) {
+                                            used.addAll(new ArrayList<>(tempInv));
+                                            break;
+                                        }
                                     }
                                 }
-                                if (find) break;
+                                if (find) {
+                                    break;
+                                }
                                 ArrayList<Point2D> newPos = new ArrayList<>();
                                 for (Point2D u : bCopy) {
                                     newPos.add(new Point2D(u.getX() + 1, u.getY()));
@@ -390,8 +367,11 @@ public class SunkenShipsHandler {
                     }
                     if (find) break;
                 }
-                if (find) break;
 
+                if (find) {
+                    //logger.info("Find true - break");
+                    break;
+                }
             }
         }
         return sunkenShipIds;
@@ -428,12 +408,12 @@ public class SunkenShipsHandler {
         //logger.info( "Sorted the sunken ships by their clients.");
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
             if (entry.getValue().isEmpty()) {
-                logger.info("No sunk points of client {}", entry.getKey());
+                logger.info(MARKER.Ai_SunkenShips, "No sunk points of client {}", entry.getKey());
                 continue;
             }
-            logger.info("Sunk points of client {} are", entry.getKey());
+            logger.info(MARKER.Ai_SunkenShips, "Sunk points of client {} are", entry.getKey());
             for (Point2D s : entry.getValue()) {
-                logger.info(s);
+                logger.info(MARKER.Ai_SunkenShips, s);
             }
         }
         return sortedSunk;

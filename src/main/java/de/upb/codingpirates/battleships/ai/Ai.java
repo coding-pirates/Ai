@@ -19,9 +19,8 @@ import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.Message;
 import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
-import de.upb.codingpirates.battleships.network.message.request.LobbyRequest;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
-import de.upb.codingpirates.battleships.network.message.request.ShotsRequest;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
@@ -159,14 +158,14 @@ public class Ai implements
                 AiMain.close();
             }
         }
-        sendMessage(new ShotsRequest(myShots));
+        sendMessage(RequestBuilder.shotsRequest(myShots));
 
     }
 
 
     /**
      * Creates a {@link ShipPlacer} instance and calls {@link ShipPlacer#guessRandomShipPositions(Map)} method.
-     * Sets the placement by calling {@link #setPositions(Map)} and calls {@link #sendMessage(Message)} for
+     * Sets the placement by calling {@link #setPositions(Map)} and calls {@link #sendMessage(Message)} (Message)} for
      * sending the {@link PlaceShipsRequest} to the server.
      *
      * @throws IOException Connection error.
@@ -176,7 +175,7 @@ public class Ai implements
 
         setPositions(shipPlacer.placeShipsRandomly());
 
-        sendMessage(new PlaceShipsRequest(getPositions()));
+        sendMessage(RequestBuilder.placeShipsRequest(getPositions()));
     }
 
     /**
@@ -268,8 +267,8 @@ public class Ai implements
 
         this.setMisses(missesLastRound);
 
-        logger.debug(MARKER.Ai, "Size of all misses (of this player): {}", this.misses.size());
-        logger.debug("Size all requested shots: {}", this.requestedShots.size());
+        //logger.debug(MARKER.Ai, "Size of all misses (of this player): {}", this.misses.size());
+        //logger.debug("Size all requested shots: {}", this.requestedShots.size());
 
 
         //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
@@ -286,7 +285,7 @@ public class Ai implements
         logger.info(MARKER.Ai, "ServerJoinResponse, AiClientId is: {}", message.getClientId());
         this.setAiClientId(message.getClientId());
         try {
-            this.tcpConnector.sendMessageToServer(new LobbyRequest());
+            this.tcpConnector.sendMessageToServer(RequestBuilder.lobbyRequest());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -340,19 +339,24 @@ public class Ai implements
         }
     }
 
+    boolean isFirstCall = true;
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
 
         update = message;
-        increaseRoundCounter();
+        if (!isFirstCall) {
+            increaseRoundCounter();
+
+        }
+        isFirstCall = false;
         logger.debug("------------------------------PlayerUpdateNotification------------------------------");
     }
 
     @Override
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
         logger.info(MARKER.Ai, "------------------------------RoundStartNotification------------------------------");
-        logger.info("A player has to be hit {} times until he has lost.");
-        logger.info("Own id is: {}", this.getAiClientId());
+        logger.info(MARKER.Ai, "A player has to be hit {} times until he has lost.", this.sizeOfPointsToHit);
+        logger.info(MARKER.Ai, "Own id is: {}", this.getAiClientId());
         updateValues();
         try {
             this.placeShots(this.getDifficultyLevel());
@@ -368,7 +372,7 @@ public class Ai implements
         logger.info(MARKER.Ai, "------------------------------FinishNotification------------------------------");
         updateValues();
         if (this.getDifficultyLevel() == 3) {
-            logger.info("Calculate heatmap in finished state:");
+            logger.info(MARKER.Ai, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
             this.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(2)); //Value 2 is the signal for the heatmap creator to create a relative heatmap.
         }

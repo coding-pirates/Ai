@@ -8,6 +8,7 @@ import java.util.Comparator;
  * A class which implements the {@link Comparator} interface for sorting the heat points by their heat value.
  *
  * @author Benjamin Kasten
+ * @see Triple
  */
 public class TripleComparator implements Comparator<Triple<Integer, Point2D, Double>> {
 

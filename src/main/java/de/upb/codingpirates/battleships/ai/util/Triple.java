@@ -33,7 +33,7 @@ public class Triple<T, Z, K> {
 
     @Override
     public String toString() {
-        return String.format("[Point %s with value %.4s of client %s ]", getVal2(), getVal3(), getVal1());
+        return String.format("[%s, value %.4s, client %s]", getVal2(), getVal3(), getVal1());
     }
 
 }

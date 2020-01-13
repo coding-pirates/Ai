@@ -3,7 +3,7 @@ package de.upb.codingpirates.battleships.ai;
 import de.upb.codingpirates.battleships.ai.logger.MARKER;
 import de.upb.codingpirates.battleships.logic.ClientType;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
-import de.upb.codingpirates.battleships.network.message.request.*;
+import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -42,16 +42,23 @@ public class AiMain {
             public void run() {
             }
         }, 1L, 1L);
-        //default (reference server): "swtpra.cs.upb.de" 33101 3 <Name>
-        //default: "192.168.0.234" 47345 3 <Name>
+
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
-        aiName = args[3];
-        gameToJoin = "0"; //new Scanner(System.in).next();
+        if (args[3] != null) {
+            aiName = args[3];
+        } else {
+            Random random = new Random();
+            aiName = "EnginePlayer" + random.nextInt(100000);   //random ai name without any claim to be unique
+
+        }
+        if (args[4] != null) {
+            gameToJoin = args[4];
+        }
+
         connect(ipAddress, port);
 
-        //Todo Eingabe der Parameter über Scanner implementieren
     }
 
     /**
@@ -63,14 +70,13 @@ public class AiMain {
      * @throws IOException Network error
      */
     public static void connect(String ipAddress, int port) throws IOException {
-        Random random = new Random();
 
-        //aiName = "EnginePlayer" + random.nextInt(10000000);   //random ai name without any claim to be unique
         ai.setInstance(ai);
         logger.info(MARKER.Ai_Main, "Connect new Engine Player with name: {}", aiName);
         ai.getTcpConnector().connect(ipAddress, port);
         logger.info(MARKER.Ai_Main);
-        ai.sendMessage(new ServerJoinRequest(aiName, ClientType.PLAYER));
+        ai.sendMessage(RequestBuilder.serverJoinRequest(aiName, ClientType.PLAYER));
+
     }
 
     /**
