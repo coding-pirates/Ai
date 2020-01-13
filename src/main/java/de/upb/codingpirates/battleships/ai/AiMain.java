@@ -8,7 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -46,17 +45,12 @@ public class AiMain {
         ipAddress = args[0];
         port = Integer.parseInt(args[1]);
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
-        if (args[3] != null) {
-            aiName = args[3];
-        } else {
-            Random random = new Random();
-            aiName = "EnginePlayer" + random.nextInt(100000);   //random ai name without any claim to be unique
+        aiName = args[3];
 
-        }
-        if (args[4] != null) {
-            gameToJoin = args[4];
-        }
-
+        /*
+        Random random = new Random();
+        aiName = "EnginePlayer" + random.nextInt(100000);   //random ai name without any claim to be unique
+         */
         connect(ipAddress, port);
 
     }
