@@ -31,14 +31,14 @@ public class HeatmapCreator {
     }
 
     /**
-     * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int, int)}.
+     * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int)}.
      * In this version, the heatmaps will be created completely new by clearing the old heatmaps first.
      *
      * @return the created heatmaps of all clients
      * @see <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
      */
 
-    public Map<Integer, Double[][]> createHeatmapAllClients(int k) {
+    public Map<Integer, Double[][]> createHeatmapAllClients() {
         Map<Integer, Double[][]> heatmapAllClients = Maps.newConcurrentMap();
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
@@ -47,7 +47,7 @@ public class HeatmapCreator {
 
         for (Client client : ai.getClientArrayList()) {
             if (client.getId() == ai.getAiClientId()) continue;
-            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
+            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId()));
         }
         //printHeatmapsAll(heatmapAllClients);
         return heatmapAllClients;
@@ -64,8 +64,7 @@ public class HeatmapCreator {
      * @param clientId The clientId for whom the heatmap is to be created
      * @return a heatmap for the client
      */
-    public Double[][] createHeatmapOneClient(int clientId, int k) {
-        //logger.info("Create heatmap for client " + clientId);
+    public Double[][] createHeatmapOneClient(int clientId) {
 
         Integer[][] heatmap = new Integer[ai.getHeight()][ai.getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
@@ -164,14 +163,13 @@ public class HeatmapCreator {
         if (clientId == ai.getAiClientId()) {
             System.out.println(String.format("Heatmap of my field (%s)", ai.getAiClientId()));
         }
+
         System.out.println("Heatmap of player " + clientId);
-        if (k == 2) {
-            Double[][] probHeatmap = createProbHeatmap(heatmap);
-            printHeatmap(probHeatmap, clientId);
-            return probHeatmap;
-        }
-        printHeatmap(dHeatmap, clientId);
-        return dHeatmap;
+
+        Double[][] probHeatmap = createProbHeatmap(heatmap);
+        printHeatmap(probHeatmap, clientId);
+        return probHeatmap;
+
     }
 
     /**
@@ -215,7 +213,6 @@ public class HeatmapCreator {
      * @param probHeat the heatmap to print
      */
     public void printHeatmap(Double[][] probHeat, int clientId) {
-        boolean isHit = false;
         for (int i = probHeat.length - 1; i >= 0; i--) {
             for (double j : probHeat[i]) {
                 if (j == 0.0000) {

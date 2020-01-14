@@ -230,7 +230,7 @@ public class Ai implements
     public void increaseRoundCounter() {
         this.roundCounter++;
         System.out.println();
-        logger.info("------------------------------Round {}------------------------------", this.roundCounter);
+        logger.info(MARKER.Ai, "------------------------------Round {}------------------------------", this.roundCounter);
         System.out.println();
     }
 
@@ -240,26 +240,26 @@ public class Ai implements
      */
     private void updateValues() {
 
-        if (update.getHits().isEmpty()) {
+        if (this.getUpdate().getHits().isEmpty()) {
             logger.debug(MARKER.Ai, "No new hits.");
         } else {
             logger.debug(MARKER.Ai, "New hits are:");
-            for (Shot s : update.getHits()) {
+            for (Shot s : this.getUpdate().getHits()) {
                 logger.debug(MARKER.Ai, s);
             }
         }
-        this.setHits(update.getHits());
+        this.setHits(this.getUpdate().getHits());
 
 
-        if (update.getSunk().isEmpty()) {
+        if (this.getUpdate().getSunk().isEmpty()) {
             logger.debug(MARKER.Ai, "No new sunks.");
         } else {
             logger.debug(MARKER.Ai, "New sunks are: ");
-            for (Shot s : update.getSunk()) {
+            for (Shot s : this.getUpdate().getSunk()) {
                 logger.debug(MARKER.Ai, s);
             }
         }
-        this.setSunk(update.getSunk());
+        this.setSunk(this.getUpdate().getSunk());
 
         MissesFinder missesFinder = new MissesFinder(this);
 
@@ -267,14 +267,9 @@ public class Ai implements
 
         this.setMisses(missesLastRound);
 
-        //logger.debug(MARKER.Ai, "Size of all misses (of this player): {}", this.misses.size());
-        //logger.debug("Size all requested shots: {}", this.requestedShots.size());
-
-
-        //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
+        //sort the points of sunk ships by their client using a SunkenShipsHandler
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this);
         this.setSortedSunk(sunkenShipsHandler.createSortedSunk());
-
     }
 
     //Message listening-------------------------------------------------------------------------
@@ -339,18 +334,20 @@ public class Ai implements
         }
     }
 
+
     boolean isFirstCall = true;
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
+        setUpdate(message);
 
-        update = message;
         if (!isFirstCall) {
             increaseRoundCounter();
 
         }
+        logger.info("Size all requested shots until now: {}", getRequestedShots().size());
         isFirstCall = false;
-        logger.debug("------------------------------PlayerUpdateNotification------------------------------");
+        logger.debug(MARKER.Ai, "------------------------------PlayerUpdateNotification------------------------------");
     }
 
     @Override
@@ -375,7 +372,7 @@ public class Ai implements
         if (this.getDifficultyLevel() == 3) {
             logger.info(MARKER.Ai, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
-            this.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(2)); //Value 2 is the signal for the heatmap creator to create a relative heatmap.
+            this.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients());
         }
         System.out.println("Points: ");
         for (Map.Entry<Integer, Integer> entry : message.getPoints().entrySet()) {
@@ -401,10 +398,8 @@ public class Ai implements
 
     @Override
     public void onErrorNotification(ErrorNotification message, int clientId) {
-        logger.info(MARKER.Ai, "ErrorNotification");
-        logger.error(MARKER.Ai, "Errortype: " + message.getErrorType());
-        logger.error(MARKER.Ai, "Error occurred in Message: " + message.getReferenceMessageId());
-        logger.error(MARKER.Ai, "Reason: " + message.getReason());
+        logger.error(MARKER.Ai, "Received an ErrorNotification with type {} in Message {}. Reason: {} ", message.getErrorType(), message.getReferenceMessageId(),
+                message.getReason());
     }
 
 
@@ -674,5 +669,25 @@ public class Ai implements
 
     public PenaltyType getPenaltyType() {
         return penaltyType;
+    }
+
+    public void setAllHeatVal(LinkedList<Triple<Integer, Point2D, Double>> allHeatVal) {
+        this.allHeatVal = allHeatVal;
+    }
+
+    public LinkedList<Triple<Integer, Point2D, Double>> getAllHeatVal() {
+        return this.allHeatVal;
+    }
+
+    public void setUpdate(PlayerUpdateNotification message) {
+        this.update = message;
+    }
+
+    public PlayerUpdateNotification getUpdate() {
+        return this.update;
+    }
+
+    public Collection<Shot> getRequestedShots() {
+        return this.requestedShots;
     }
 }

@@ -68,7 +68,6 @@ public class AiMain {
         ai.setInstance(ai);
         logger.info(MARKER.Ai_Main, "Connect new Engine Player with name: {}", aiName);
         ai.getTcpConnector().connect(ipAddress, port);
-        logger.info(MARKER.Ai_Main);
         ai.sendMessage(RequestBuilder.serverJoinRequest(aiName, ClientType.PLAYER));
 
     }
