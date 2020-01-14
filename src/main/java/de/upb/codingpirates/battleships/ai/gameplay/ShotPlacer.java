@@ -60,7 +60,7 @@ public class ShotPlacer {
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
         while (i < ai.getShotCount()) {
-            logger.info(MARKER.Ai_ShotPlacer, "Trying to find  {}. shot", i + 1);
+            logger.info(MARKER.Ai_ShotPlacer, "Trying to find  {}. shot this round", i + 1);
 
             Point2D aimPoint = randomPointCreator.getRandomPoint2D();
 

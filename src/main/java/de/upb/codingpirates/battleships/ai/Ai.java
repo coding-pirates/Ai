@@ -315,13 +315,11 @@ public class Ai implements
         } catch (IOException e) {
             logger.error(MARKER.Ai, "Ship placement failed. Time was not enough or ships do not fit the field size.");
             e.printStackTrace();
-
         }
     }
 
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
-
         logger.info(MARKER.Ai, "------------------------------GameStartNotification------------------------------");
         increaseRoundCounter();
         updateValues();
@@ -333,19 +331,15 @@ public class Ai implements
             e.printStackTrace();
         }
     }
-
-
     boolean isFirstCall = true;
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
         setUpdate(message);
-
         if (!isFirstCall) {
             increaseRoundCounter();
-
         }
-        logger.info("Size all requested shots until now: {}", getRequestedShots().size());
+        logger.info(MARKER.Ai, "Size all requested shots until now: {}", getRequestedShots().size());
         isFirstCall = false;
         logger.debug(MARKER.Ai, "------------------------------PlayerUpdateNotification------------------------------");
     }
