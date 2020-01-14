@@ -240,26 +240,30 @@ public class Ai implements
      */
     private void updateValues() {
 
-        if (this.getUpdate().getHits().isEmpty()) {
-            logger.debug(MARKER.Ai, "No new hits.");
+        if (update == null) {
+            this.setHits(new ArrayList<>());
+            this.setSunk(new ArrayList<>());
         } else {
-            logger.debug(MARKER.Ai, "New hits are:");
-            for (Shot s : this.getUpdate().getHits()) {
-                logger.debug(MARKER.Ai, s);
+            if (this.getUpdate().getHits().isEmpty()) {
+                logger.debug(MARKER.Ai, "No new hits.");
+            } else {
+                logger.debug(MARKER.Ai, "New hits are:");
+                for (Shot s : this.getUpdate().getHits()) {
+                    logger.debug(MARKER.Ai, s);
+                }
             }
-        }
-        this.setHits(this.getUpdate().getHits());
+            this.setHits(this.getUpdate().getHits());
 
-
-        if (this.getUpdate().getSunk().isEmpty()) {
-            logger.debug(MARKER.Ai, "No new sunks.");
-        } else {
-            logger.debug(MARKER.Ai, "New sunks are: ");
-            for (Shot s : this.getUpdate().getSunk()) {
-                logger.debug(MARKER.Ai, s);
+            if (this.getUpdate().getSunk().isEmpty()) {
+                logger.debug(MARKER.Ai, "No new sunks.");
+            } else {
+                logger.debug(MARKER.Ai, "New sunks are: ");
+                for (Shot s : this.getUpdate().getSunk()) {
+                    logger.debug(MARKER.Ai, s);
+                }
             }
+            this.setSunk(this.getUpdate().getSunk());
         }
-        this.setSunk(this.getUpdate().getSunk());
 
         MissesFinder missesFinder = new MissesFinder(this);
 
@@ -331,6 +335,7 @@ public class Ai implements
             e.printStackTrace();
         }
     }
+
     boolean isFirstCall = true;
 
     @Override
