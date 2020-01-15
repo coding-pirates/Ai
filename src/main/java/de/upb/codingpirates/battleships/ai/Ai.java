@@ -30,8 +30,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.util.*;
 
-//TODO some getter/setter are missing
-
 /**
  * The model of the ai player. Stores the game configuration and values, handles the message sending,
  * the ship and shot placement.
@@ -138,7 +136,7 @@ public class Ai implements
         switch (difficultyLevel) {
             case 1: {
                 logger.info(MARKER.Ai, "Difficulty Level 1 (Random) selected");
-                myShots = shotPlacement.placeShots_1();
+                myShots = shotPlacement.placeShots_1(this.getShotCount());
                 break;
             }
             case 2: {
@@ -328,7 +326,6 @@ public class Ai implements
         increaseRoundCounter();
         updateValues();
         try {
-            //logger.info("Trying to place shots");
             this.placeShots(this.getDifficultyLevel());
         } catch (IOException e) {
             logger.error(MARKER.Ai, "Shot placement failed");

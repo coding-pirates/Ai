@@ -13,7 +13,7 @@ import java.util.TimerTask;
 
 /**
  * Creates the ai Player Object and holds it alive while playing.
- * Is associated with only one  {@link Ai} instance int this version.
+ * Is associated with only one  {@link Ai} instance this version.
  *
  * @author Benjamin Kasten
  */
@@ -23,7 +23,6 @@ public class AiMain {
     static Timer timer = new Timer();
     public static Ai ai = new Ai();
     static String aiName;
-    static String gameToJoin;
 
     static String ipAddress;
     static int port;
@@ -47,10 +46,6 @@ public class AiMain {
         ai.setDifficultyLevel(Integer.parseInt(args[2]));
         aiName = args[3];
 
-        /*
-        Random random = new Random();
-        aiName = "EnginePlayer" + random.nextInt(100000);   //random ai name without any claim to be unique
-         */
         connect(ipAddress, port);
 
     }

@@ -33,7 +33,7 @@ public class ShotPlacer {
      *
      * @return shots
      */
-    public Collection<Shot> placeShots_1() {
+    public Collection<Shot> placeShots_1(int shotCount) {
         RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
         int numberOfClients = ai.getClientArrayList().size();
         int shotClientId;
@@ -59,13 +59,14 @@ public class ShotPlacer {
         //placing the shots randomly until the max of shots is not reached
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
-        while (i < ai.getShotCount()) {
+        while (i < shotCount) {
             logger.info(MARKER.Ai_ShotPlacer, "Trying to find  {}. shot this round", i + 1);
 
             Point2D aimPoint = randomPointCreator.getRandomPoint2D();
 
             Shot targetShot = new Shot(shotClientId, aimPoint);
             boolean alreadyChoosen = false;
+
 
             for (Shot s : ai.getRequestedShots()) {
                 if (PositionComparator.compareShots(s, targetShot)) {
@@ -76,8 +77,8 @@ public class ShotPlacer {
             }
             if (alreadyChoosen) continue;
 
-            for (Shot h : ai.getHits()) {
-                if (h.getTargetField().getX() == aimPoint.getX() & h.getTargetField().getY() == aimPoint.getY() & h.getClientId() == shotClientId) {
+            for (Shot s : ai.getHits()) {
+                if (PositionComparator.compareShots(s, targetShot)) {
                     alreadyChoosen = true;
                     logger.info(MARKER.Ai_ShotPlacer, "Shot is a hit already: {}", targetShot);
                     break;
@@ -94,6 +95,15 @@ public class ShotPlacer {
             }
             if (alreadyChoosen) continue;
 
+            //used only when called by placeShots_2
+
+            for (Shot s : pot) {
+                if (PositionComparator.compareShots(s, targetShot)) {
+                    alreadyChoosen = true;
+                    logger.info(MARKER.Ai_ShotPlacer, "Shot should be used already: {}", s);
+                }
+            }
+
             myShots.add(targetShot);
             ai.requestedShots.add(targetShot);
             logger.info(MARKER.Ai_ShotPlacer, "Found shot {}", targetShot);
@@ -102,6 +112,7 @@ public class ShotPlacer {
         }
 
         //return the choosen shots
+        logger.info("My shots: {}", myShots);
         return myShots;
     }
 
@@ -109,6 +120,7 @@ public class ShotPlacer {
     //difficulty level 2 -----------------------------------------------------------------
 
 
+    Set<Shot> pot = new HashSet<>(); //the points which could be hits
     /**
      * Places shots using the hunt and target algorithm.
      * Difficulty level 2.
@@ -120,7 +132,7 @@ public class ShotPlacer {
         RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
         Collection<Shot> myShots = new ArrayList<>();
         //ai.addMisses();
-        int shotClientId = 222;
+
 
         int aiIndex;
         for (Client c : ai.getClientArrayList()) {
@@ -130,88 +142,77 @@ public class ShotPlacer {
             }
         }
 
-        Set<Point2D> pot = new HashSet<>();
-        for (Shot s : ai.getHits()) {
-            if (s.getClientId() == shotClientId) {
-                logger.info(MARKER.Ai_ShotPlacer, "Looking for all neighbours of Shot {}", s);
-                ArrayList<Point2D> temp = new ArrayList<>();
-                //west
-                temp.add(new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
-                //south
-                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
-                //east
-                temp.add(new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
-                //north
-                temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
 
-                boolean isHitOrMiss = false;
-                for (Point2D p : temp) {
-                    if (p.getX() >= 0 & p.getY() >= 0) {
-                        for (Shot h : ai.getHits()) {
-                            if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
-                                isHitOrMiss = true;
-                                break;
+        if (ai.getHits().isEmpty()) {
+            placeShots_1(ai.getShotCount()); // if no hits exists call random shot method and place shot randomly
+        } else {
+            logger.debug("Size hits");
+            for (Shot s : ai.getHits()) {
+                if (s.getClientId() != ai.getAiClientId()) {
+                    logger.info(MARKER.Ai_ShotPlacer, "Looking for all neighbours of Shot {}", s);
+
+                    int id = s.getClientId();
+                    ArrayList<Shot> temp = new ArrayList<>();
+                    //west
+                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY())));
+                    //south
+                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1)));
+                    //east
+                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY())));
+                    //north
+                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1)));
+
+                    boolean isHitOrMiss = false;
+
+                    for (Shot p : temp) {
+                        logger.info("Looking at point {}", p);
+                        if (p.getTargetField().getX() >= 0 & p.getTargetField().getY() >= 0) {
+                            logger.debug("{} is in field", p);
+                            for (Shot h : ai.getHits()) {
+                                if (PositionComparator.compareShots(p, h)) {
+                                    logger.debug("{} is a hit", p);
+                                    isHitOrMiss = true;
+                                    break;
+                                }
+
                             }
-
-                        }
-                        if (isHitOrMiss) continue;
-                        for (Shot h : ai.getMisses()) {
-                            if (h.getTargetField().getX() == p.getX() & h.getTargetField().getY() == p.getY() & h.getClientId() == shotClientId) {
-                                isHitOrMiss = true;
-                                break;
+                            if (isHitOrMiss) continue;
+                            for (Shot h : ai.getMisses()) {
+                                if (PositionComparator.compareShots(p, h)) {
+                                    logger.debug("{} is a miss", p);
+                                    isHitOrMiss = true;
+                                    break;
+                                }
                             }
-
+                            if (isHitOrMiss) continue;
+                        } else {
+                            continue;
                         }
-                        if (isHitOrMiss) continue;
-                    } else {
-                        continue;
+                        logger.debug("Add point {}", p);
+                        pot.add(p);
+                        logger.info(MARKER.Ai_ShotPlacer, "Added {} to potential hits", p);
                     }
-                    pot.add(p);
-                    logger.info(MARKER.Ai_ShotPlacer, "Added {} to potential hits", p);
                 }
                 if (pot.size() < ai.getShotCount()) {
                     logger.info(MARKER.Ai_ShotPlacer, "There are less potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
-                    for (Point2D p : pot) {
-                        myShots.add(new Shot(shotClientId, new Point2D(p.getX(), p.getY())));
+                    for (Shot p : pot) {
+                        myShots.add(p);
                         logger.info(MARKER.Ai_ShotPlacer, "Added {} to myShots", p);
                     }
-                    while (true) {
-                        boolean invalid = false;
-                        Point2D point = randomPointCreator.getRandomPoint2D();
-
-                        for (Shot h : ai.getHits()) {
-                            if (h.getTargetField().getX() == point.getX() & h.getTargetField().getY() == point.getY() & h.getClientId() == shotClientId) {
-                                invalid = true;
-                                break;
-                            }
-
-                        }
-                        if (invalid) continue;
-                        for (Shot h : ai.getMisses()) {
-                            if (h.getTargetField().getX() == point.getX() & h.getTargetField().getY() == point.getY() & h.getClientId() == shotClientId) {
-                                invalid = true;
-                                break;
-                            }
-
-                        }
-                        if (invalid) continue;
-                        else {
-                            myShots.add(new Shot(shotClientId, point));
-                            logger.info(MARKER.Ai_ShotPlacer, "Added random shot {} to myShots", point);
-                        }
-                        if (myShots.size() == ai.getShotCount()) break;
-                    }
+                    int availableShots = ai.getShotCount() - myShots.size();
+                    myShots.addAll(placeShots_1(availableShots));
                 } else {
                     logger.info(MARKER.Ai_ShotPlacer, "There are more potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
-                    for (Point2D p : pot) {
-                        myShots.add(new Shot(shotClientId, p));
+                    for (Shot p : pot) {
+                        myShots.add(p);
                         logger.info(MARKER.Ai_ShotPlacer, "Added {} to myShots", p);
                         if (myShots.size() == ai.getShotCount()) break;
                     }
                 }
+                if (myShots.size() == ai.getShotCount()) break;
             }
-            if (myShots.size() == ai.getShotCount()) break;
         }
+
         pot.clear();
         ai.requestedShotsLastRound.clear();
         ai.requestedShotsLastRound.addAll(myShots);
