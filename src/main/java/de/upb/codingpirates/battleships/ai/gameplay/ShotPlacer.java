@@ -95,14 +95,6 @@ public class ShotPlacer {
             }
             if (alreadyChoosen) continue;
 
-            //used only when called by placeShots_2
-
-            for (Shot s : pot) {
-                if (PositionComparator.compareShots(s, targetShot)) {
-                    alreadyChoosen = true;
-                    logger.info(MARKER.Ai_ShotPlacer, "Shot should be used already: {}", s);
-                }
-            }
 
             myShots.add(targetShot);
             ai.requestedShots.add(targetShot);
@@ -120,7 +112,6 @@ public class ShotPlacer {
     //difficulty level 2 -----------------------------------------------------------------
 
 
-    Set<Shot> pot = new HashSet<>(); //the points which could be hits
     /**
      * Places shots using the hunt and target algorithm.
      * Difficulty level 2.
@@ -129,95 +120,110 @@ public class ShotPlacer {
      */
     public Collection<Shot> placeShots_2() {
         logger.info(MARKER.Ai_ShotPlacer, "Placing shots with difficulty level 2");
-        RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
+        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this.ai);
+        HitsHandler hitsHandler = new HitsHandler(this.ai);
+
+        Map<Integer, LinkedList<Point2D>> sortedHits = hitsHandler.sortTheHits();
+        Map<Integer, LinkedList<LinkedList<Point2D>>> sortedSunk = new HashMap<>();
+        for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedHits.entrySet()) {
+            int clientId = entry.getKey();
+            LinkedList<LinkedList<Point2D>> sortedHitsByPosition = sunkenShipsHandler.findConnectedPoints(entry.getValue(), clientId);
+            LinkedList<LinkedList<Point2D>> sortedSunkByPosition = sunkenShipsHandler.getSunksOfHits(sortedHitsByPosition, clientId);
+            sortedSunk.put(clientId, sortedSunkByPosition);
+        }
+
         Collection<Shot> myShots = new ArrayList<>();
-        //ai.addMisses();
+        List<List<Shot>> pots = new ArrayList<>();
 
+        logger.debug("Size hits: {}", ai.getHits().size());
+        for (Shot s : ai.getHits()) {
+            if (s.getClientId() != ai.getAiClientId()) {
+                int id = s.getClientId();
+                List<Shot> temp = new ArrayList<>();
+                //west
+                Shot west = new Shot(id, new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
 
-        int aiIndex;
-        for (Client c : ai.getClientArrayList()) {
-            if (c.getId() == ai.getAiClientId()) {
-                aiIndex = ai.getClientArrayList().indexOf(c);
-                logger.info(MARKER.Ai_ShotPlacer, "Ai Index: {}.", aiIndex);
+                if (checkValid(west)) {
+                    temp.add(west);
+                }
+                //south
+                Shot south = new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
+
+                if (checkValid(south)) {
+                    temp.add(south);
+                }
+                //east
+                Shot east = new Shot(id, new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
+
+                if (checkValid(east)) {
+                    temp.add(east);
+                }
+                //north
+                Shot north = new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
+
+                if (checkValid(north)) {
+                    temp.add(north);
+                }
+
+                if (!temp.isEmpty()) {
+                    logger.debug("temp is not empty: {}", temp);
+                    pots.add(temp);
+                }
+
             }
         }
 
-
-        if (ai.getHits().isEmpty()) {
-            placeShots_1(ai.getShotCount()); // if no hits exists call random shot method and place shot randomly
-        } else {
-            logger.debug("Size hits");
-            for (Shot s : ai.getHits()) {
-                if (s.getClientId() != ai.getAiClientId()) {
-                    logger.info(MARKER.Ai_ShotPlacer, "Looking for all neighbours of Shot {}", s);
-
-                    int id = s.getClientId();
-                    ArrayList<Shot> temp = new ArrayList<>();
-                    //west
-                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY())));
-                    //south
-                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1)));
-                    //east
-                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY())));
-                    //north
-                    temp.add(new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1)));
-
-                    boolean isHitOrMiss = false;
-
-                    for (Shot p : temp) {
-                        logger.info("Looking at point {}", p);
-                        if (p.getTargetField().getX() >= 0 & p.getTargetField().getY() >= 0) {
-                            logger.debug("{} is in field", p);
-                            for (Shot h : ai.getHits()) {
-                                if (PositionComparator.compareShots(p, h)) {
-                                    logger.debug("{} is a hit", p);
-                                    isHitOrMiss = true;
-                                    break;
-                                }
-
-                            }
-                            if (isHitOrMiss) continue;
-                            for (Shot h : ai.getMisses()) {
-                                if (PositionComparator.compareShots(p, h)) {
-                                    logger.debug("{} is a miss", p);
-                                    isHitOrMiss = true;
-                                    break;
-                                }
-                            }
-                            if (isHitOrMiss) continue;
-                        } else {
-                            continue;
-                        }
-                        logger.debug("Add point {}", p);
-                        pot.add(p);
-                        logger.info(MARKER.Ai_ShotPlacer, "Added {} to potential hits", p);
-                    }
+        logger.debug("potential array: {}", pots);
+        Collections.shuffle(pots); //shuffle the lists in pots
+        for (List<Shot> l : pots) {
+            for (Shot s : l) {
+                myShots.add(s);
+                logger.info("Added shot {} to myShots", s);
+                ai.getRequestedShots().add(s);
+                if (myShots.size() == ai.getShotCount()) {
+                    return myShots;
                 }
-                if (pot.size() < ai.getShotCount()) {
-                    logger.info(MARKER.Ai_ShotPlacer, "There are less potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
-                    for (Shot p : pot) {
-                        myShots.add(p);
-                        logger.info(MARKER.Ai_ShotPlacer, "Added {} to myShots", p);
-                    }
-                    int availableShots = ai.getShotCount() - myShots.size();
-                    myShots.addAll(placeShots_1(availableShots));
-                } else {
-                    logger.info(MARKER.Ai_ShotPlacer, "There are more potential hits ({}) as possible shots ({})", pot.size(), ai.getShotCount());
-                    for (Shot p : pot) {
-                        myShots.add(p);
-                        logger.info(MARKER.Ai_ShotPlacer, "Added {} to myShots", p);
-                        if (myShots.size() == ai.getShotCount()) break;
-                    }
-                }
-                if (myShots.size() == ai.getShotCount()) break;
             }
         }
+        if (myShots.size() < ai.getShotCount()) {
+            logger.debug("Placing shots randomly");
+            myShots.addAll(this.placeShots_1(ai.getShotCount() - myShots.size()));
+            return myShots;
+        }
 
-        pot.clear();
-        ai.requestedShotsLastRound.clear();
-        ai.requestedShotsLastRound.addAll(myShots);
         return myShots;
+    }
 
+    public boolean checkValid(Shot s) {
+        boolean isValid = true;
+        if (s.getTargetField().getX() < 0
+                | s.getTargetField().getY() < 0
+                | s.getTargetField().getX() > ai.getWidth() - 1
+                | s.getTargetField().getY() > ai.getHeight() - 1) {
+            isValid = false;
+        }
+        if (isValid) {
+            for (Shot h : ai.getHits()) {
+                if (PositionComparator.compareShots(s, h)) {
+                    isValid = false;
+                    break;
+                }
+            }
+            for (Shot h : ai.getRequestedShots()) {
+                if (PositionComparator.compareShots(s, h)) {
+                    isValid = false;
+                    break;
+                }
+            }
+
+            for (Point2D h : ai.getSortedSunk().get(s.getClientId())) {
+                if (PositionComparator.comparePointShot(h, s)) {
+                    isValid = false;
+                    break;
+                }
+            }
+        }
+        return isValid;
     }
 
 
