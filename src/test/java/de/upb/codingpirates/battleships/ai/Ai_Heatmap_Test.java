@@ -4,6 +4,7 @@ import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -115,12 +116,14 @@ public class Ai_Heatmap_Test {
     }
 
     @Test
+    @Disabled
     public void create_heatmap_all_clients_Test() {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
         ai.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients(1));
     }
 
     @Test
+    @Disabled
     public void create_Heatmap_one_Client_Test() {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
         heatmapCreator.createHeatmapOneClient(3, 2);

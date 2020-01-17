@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -108,6 +109,7 @@ public class Ai_SunkenShipsHandler_Test {
     }
 
     @Test
+    @Disabled
     public void get_Sunken_shipIds_all_Clients() {
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         assertEquals(3, ai.getSortedSunk().size());
