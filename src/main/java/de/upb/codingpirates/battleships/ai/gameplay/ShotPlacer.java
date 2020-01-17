@@ -120,6 +120,7 @@ public class ShotPlacer {
      */
     public Collection<Shot> placeShots_2() {
         logger.info(MARKER.Ai_ShotPlacer, "Placing shots with difficulty level 2");
+
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this.ai);
         HitsHandler hitsHandler = new HitsHandler(this.ai);
 
@@ -132,44 +133,60 @@ public class ShotPlacer {
             sortedSunk.put(clientId, sortedSunkByPosition);
         }
 
+
         Collection<Shot> myShots = new ArrayList<>();
         List<List<Shot>> pots = new ArrayList<>();
 
         logger.debug("Size hits: {}", ai.getHits().size());
         for (Shot s : ai.getHits()) {
-            if (s.getClientId() != ai.getAiClientId()) {
-                int id = s.getClientId();
-                List<Shot> temp = new ArrayList<>();
-                //west
-                Shot west = new Shot(id, new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
+            int id = s.getClientId();
+            boolean isValid = true;
 
-                if (checkValid(west)) {
-                    temp.add(west);
+            for (LinkedList<Point2D> l : sortedSunk.get(id)) {
+                for (Point2D p : l) {
+                    if (PositionComparator.comparePointShot(p, s)) {
+                        isValid = false;
+                        break;
+                    }
                 }
-                //south
-                Shot south = new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
+                if (!isValid) break;
+            }
 
-                if (checkValid(south)) {
-                    temp.add(south);
+
+            if (isValid) {
+                if (s.getClientId() != ai.getAiClientId()) {
+                    List<Shot> temp = new ArrayList<>();
+                    //west
+                    Shot west = new Shot(id, new Point2D(s.getTargetField().getX() - 1, s.getTargetField().getY()));
+
+                    if (checkValid(west)) {
+                        temp.add(west);
+                    }
+                    //south
+                    Shot south = new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() - 1));
+
+                    if (checkValid(south)) {
+                        temp.add(south);
+                    }
+                    //east
+                    Shot east = new Shot(id, new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
+
+                    if (checkValid(east)) {
+                        temp.add(east);
+                    }
+                    //north
+                    Shot north = new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
+
+                    if (checkValid(north)) {
+                        temp.add(north);
+                    }
+
+                    if (!temp.isEmpty()) {
+                        logger.debug("temp is not empty: {}", temp);
+                        pots.add(temp);
+                    }
+
                 }
-                //east
-                Shot east = new Shot(id, new Point2D(s.getTargetField().getX() + 1, s.getTargetField().getY()));
-
-                if (checkValid(east)) {
-                    temp.add(east);
-                }
-                //north
-                Shot north = new Shot(id, new Point2D(s.getTargetField().getX(), s.getTargetField().getY() + 1));
-
-                if (checkValid(north)) {
-                    temp.add(north);
-                }
-
-                if (!temp.isEmpty()) {
-                    logger.debug("temp is not empty: {}", temp);
-                    pots.add(temp);
-                }
-
             }
         }
 
