@@ -1,11 +1,10 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests if Ship placement also works with ships with no (0,0) point.
  */
 public class Ai_ShipPlacement_3_Test {
-    static Ai ai = new Ai();
+    static AI ai = new AI("AiPlayer", 1);
 
     @BeforeAll
     public static void create() {
@@ -32,17 +31,18 @@ public class Ai_ShipPlacement_3_Test {
 
         Map<Integer, ShipType> ships = new HashMap<>();
         ships.put(1, new ShipType(s1));
-        ai.setShips(ships);
 
-        ai.setHeight(10);
-        ai.setWidth(10);
+        ai.setConfiguration(new Configuration.Builder()
+            .ships(ships)
+            .width(10)
+            .height(10)
+            .build());
     }
 
     @Test
     public void place_ships_test() throws IOException {
         ai.placeShips();
 
-        assertEquals(ai.getPositions().size(), ai.getShips().values().size());
-
+        assertEquals(ai.getPositions().size(), ai.getConfiguration().getShips().values().size());
     }
 }

@@ -1,9 +1,11 @@
 package de.upb.codingpirates.battleships.ai.util;
 
-import de.upb.codingpirates.battleships.ai.Ai;
+import java.util.Random;
+
+import javax.annotation.Nonnull;
+
+import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Creates a random {@link Point2D} object.
@@ -11,17 +13,21 @@ import org.apache.logging.log4j.Logger;
  * @author Benjamin Kasten
  */
 public class RandomPointCreator {
-    private static final Logger logger = LogManager.getLogger();
-    Ai ai;
+
+    @Nonnull
+    private final Configuration configuration;
+
+    private final Random random = new Random();
 
     /**
-     * Constructor for {@link RandomPointCreator}. Gets an instance of the ai object which creates the {@link RandomPointCreator}
-     * instance. Is used to get the right field parameters (width and height).
+     * Constructor for {@link RandomPointCreator}. Gets an instance of the {@link Configuration} object which creates
+     * the {@link RandomPointCreator} instance. Is used to get the right field parameters (width and height).
      *
-     * @param ai The instance of the ai who called the constructor.
+     * @param configuration The {@link Configuration} for which random {@link Point2D} objects on the playing field are
+     *                      to be created.
      */
-    public RandomPointCreator(Ai ai) {
-        this.ai = ai;
+    public RandomPointCreator(@Nonnull final Configuration configuration) {
+        this.configuration = configuration;
     }
 
     /**
@@ -30,8 +36,6 @@ public class RandomPointCreator {
      * @return Point2d Random Point with X and Y coordinates
      */
     public Point2D getRandomPoint2D() {
-        int x = (int) (Math.random() * ai.getWidth());
-        int y = (int) (Math.random() * ai.getHeight());
-        return new Point2D(x, y);
+        return new Point2D(random.nextInt(configuration.getWidth()), random.nextInt(configuration.getHeight()));
     }
 }

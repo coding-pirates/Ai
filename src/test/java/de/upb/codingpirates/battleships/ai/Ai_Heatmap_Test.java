@@ -1,12 +1,8 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.logic.Shot;
+import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -16,12 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Ai_Heatmap_Test {
-    static Ai ai = new Ai();
+    static AI ai = new AI("AiPlayer", 3);
 
     @BeforeAll
     public static void create() {
-
-
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
         //ship1 id = 1
@@ -109,9 +103,11 @@ public class Ai_Heatmap_Test {
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         //Has to be set before creating heatmaps
-        ai.setHeight(7);
-        ai.setWidth(7);
-        ai.setShips(shipconfig);
+        ai.setConfiguration(new Configuration.Builder()
+            .ships(shipconfig)
+            .width(7)
+            .height(7)
+            .build());
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
@@ -121,7 +117,7 @@ public class Ai_Heatmap_Test {
     @Test
     public void create_heatmap_all_clients_Test() {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(1));
+        ai.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients(1));
     }
 
     @Test
@@ -129,6 +125,4 @@ public class Ai_Heatmap_Test {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
         heatmapCreator.createHeatmapOneClient(3, 2);
     }
-
-
 }

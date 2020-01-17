@@ -1,6 +1,6 @@
 package de.upb.codingpirates.battleships.ai.util;
 
-import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class Rotator {
     private static final Logger logger = LogManager.getLogger();
     ZeroPointMover mover = new ZeroPointMover();
-    Ai ai;
+    AI ai;
 
 
     /**
@@ -28,7 +28,7 @@ public class Rotator {
      *
      * @param ai The instance of the ai who called the constructor.
      */
-    public Rotator(Ai ai) {
+    public Rotator(AI ai) {
         this.ai = ai;
     }
 

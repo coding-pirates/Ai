@@ -1,8 +1,8 @@
 package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Lists;
-import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.ai.logger.MARKER;
+import de.upb.codingpirates.battleships.ai.AI;
+import de.upb.codingpirates.battleships.ai.logger.Markers;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -19,7 +19,7 @@ import java.util.*;
  */
 public class SunkenShipsHandler {
     private static final Logger logger = LogManager.getLogger();
-    Ai ai;
+    AI ai;
 
 
     /**
@@ -29,7 +29,7 @@ public class SunkenShipsHandler {
      * @param ai The instance of the ai who called the constructor.
      */
 
-    public SunkenShipsHandler(Ai ai) {
+    public SunkenShipsHandler(AI ai) {
         this.ai = ai;
     }
 
@@ -60,14 +60,14 @@ public class SunkenShipsHandler {
             LinkedList<Integer> sunkenShipIds = findIds(sortedSunkByPosition, clientId);
             allSunkenShipIds.put(clientId, sunkenShipIds);
             if (sunkenShipIds.isEmpty()) {
-                logger.info(MARKER.Ai_SunkenShips, "Player {} has no sunken ships yet", clientId);
+                logger.info(Markers.Ai_SunkenShips, "Player {} has no sunken ships yet", clientId);
                 continue;
             }
 
-            logger.info(MARKER.Ai_SunkenShips, "Sunken ships of player {} are: ", clientId);
+            logger.info(Markers.Ai_SunkenShips, "Sunken ships of player {} are: ", clientId);
 
             for (int i : sunkenShipIds) {
-                logger.info(MARKER.Ai_SunkenShips, "ShipId: " + i);
+                logger.info(Markers.Ai_SunkenShips, "ShipId: " + i);
             }
 
 
@@ -277,7 +277,7 @@ public class SunkenShipsHandler {
         //System.out.println(used);
         boolean isValid;
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
-        Map<Integer, ShipType> ships = ai.getShips();
+        Map<Integer, ShipType> ships = ai.getConfiguration().getShips();
 
         for (Map.Entry<Integer, ShipType> entry : ships.entrySet()) {
             int shipId = entry.getKey();
@@ -301,8 +301,8 @@ public class SunkenShipsHandler {
                         int maxY = yValues.get(yValues.size() - 1);
                         int initMaxX = xValues.get(xValues.size() - 1);
                         int initMaxY = yValues.get(yValues.size() - 1);
-                        while (maxY < ai.getHeight()) {
-                            while (maxX < ai.getWidth()) {
+                        while (maxY < ai.getConfiguration().getHeight()) {
+                            while (maxX < ai.getConfiguration().getWidth()) {
                                 isValid = true;
                                 for (Point2D s : bCopy) {
                                     for (Point2D f : used) {
@@ -355,7 +355,7 @@ public class SunkenShipsHandler {
                             if (find) break;
                             ArrayList<Point2D> newPos = new ArrayList<>();
                             for (Point2D u : bCopy) {
-                                newPos.add(new Point2D(u.getX() - (ai.getWidth() - initMaxX), u.getY() + 1));
+                                newPos.add(new Point2D(u.getX() - (ai.getConfiguration().getWidth() - initMaxX), u.getY() + 1));
                             }
                             bCopy = new ArrayList<>(newPos);
                             newPos.clear();
@@ -408,12 +408,12 @@ public class SunkenShipsHandler {
         //logger.info( "Sorted the sunken ships by their clients.");
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
             if (entry.getValue().isEmpty()) {
-                logger.info(MARKER.Ai_SunkenShips, "No sunk points of client {}", entry.getKey());
+                logger.info(Markers.Ai_SunkenShips, "No sunk points of client {}", entry.getKey());
                 continue;
             }
-            logger.info(MARKER.Ai_SunkenShips, "Sunk points of client {} are", entry.getKey());
+            logger.info(Markers.Ai_SunkenShips, "Sunk points of client {} are", entry.getKey());
             for (Point2D s : entry.getValue()) {
-                logger.info(MARKER.Ai_SunkenShips, s);
+                logger.info(Markers.Ai_SunkenShips, s);
             }
         }
         return sortedSunk;
