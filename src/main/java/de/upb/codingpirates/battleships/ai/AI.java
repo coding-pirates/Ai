@@ -235,7 +235,7 @@ public class AI implements AutoCloseable,
     public void increaseRoundCounter() {
         this.roundCounter++;
         System.out.println();
-        logger.info("------------------------------Round {}------------------------------", this.roundCounter);
+        logger.info(Markers.Ai, "------------------------------Round {}------------------------------", this.roundCounter);
         System.out.println();
     }
 
@@ -244,26 +244,30 @@ public class AI implements AutoCloseable,
      */
     private void updateValues() {
 
-        if (update.getHits().isEmpty()) {
-            logger.debug(Markers.Ai, "No new hits.");
+        if (update == null) {
+            this.setHits(new ArrayList<>());
+            this.setSunk(new ArrayList<>());
         } else {
-            logger.debug(Markers.Ai, "New hits are:");
-            for (Shot s : update.getHits()) {
-                logger.debug(Markers.Ai, s);
+            if (this.getUpdate().getHits().isEmpty()) {
+                logger.debug(Markers.Ai, "No new hits.");
+            } else {
+                logger.debug(Markers.Ai, "New hits are:");
+                for (Shot s : this.getUpdate().getHits()) {
+                    logger.debug(Markers.Ai, s);
+                }
             }
-        }
-        this.setHits(update.getHits());
+            this.setHits(this.getUpdate().getHits());
 
-
-        if (update.getSunk().isEmpty()) {
-            logger.debug(Markers.Ai, "No new sunks.");
-        } else {
-            logger.debug(Markers.Ai, "New sunks are: ");
-            for (Shot s : update.getSunk()) {
-                logger.debug(Markers.Ai, s);
+            if (this.getUpdate().getSunk().isEmpty()) {
+                logger.debug(MARKER.Ai, "No new sunks.");
+            } else {
+                logger.debug(MARKER.Ai, "New sunks are: ");
+                for (Shot s : this.getUpdate().getSunk()) {
+                    logger.debug(MARKER.Ai, s);
+                }
             }
+            this.setSunk(this.getUpdate().getSunk());
         }
-        this.setSunk(update.getSunk());
 
         MissesFinder missesFinder = new MissesFinder(this);
 
@@ -271,14 +275,9 @@ public class AI implements AutoCloseable,
 
         this.setMisses(missesLastRound);
 
-        //logger.debug(MARKER.Ai, "Size of all misses (of this player): {}", this.misses.size());
-        //logger.debug("Size all requested shots: {}", this.requestedShots.size());
-
-
-        //sortiere die sunks nach ihren Clients mit dem SunkenShipsHandler
+        //sort the points of sunk ships by their client using a SunkenShipsHandler
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this);
         this.setSortedSunk(sunkenShipsHandler.createSortedSunk());
-
     }
 
     // <editor-fold desc="Listeners">
@@ -325,13 +324,11 @@ public class AI implements AutoCloseable,
         } catch (IOException e) {
             logger.error(Markers.Ai, "Ship placement failed. Time was not enough or ships do not fit the field size.");
             e.printStackTrace();
-
         }
     }
 
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
-
         logger.info(Markers.Ai, "------------------------------GameStartNotification------------------------------");
         increaseRoundCounter();
         updateValues();
@@ -348,12 +345,13 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onPlayerUpdateNotification(PlayerUpdateNotification message, int clientId) {
-        update = message;
+        setUpdate(message);
         if (!isFirstCall) {
             increaseRoundCounter();
         }
+        logger.info(Markers.Ai, "Size all requested shots until now: {}", getRequestedShots().size());
         isFirstCall = false;
-        logger.debug("------------------------------PlayerUpdateNotification------------------------------");
+        logger.debug(Markers.Ai, "------------------------------PlayerUpdateNotification------------------------------");
     }
 
     @Override
@@ -377,7 +375,7 @@ public class AI implements AutoCloseable,
         if (this.getDifficultyLevel() == 3) {
             logger.info(Markers.Ai, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
-            this.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients(2)); //Value 2 is the signal for the heatmap creator to create a relative heatmap.
+            this.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
         }
         System.out.println("Points: ");
         for (Map.Entry<Integer, Integer> entry : message.getPoints().entrySet()) {
@@ -413,10 +411,8 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onErrorNotification(ErrorNotification message, int clientId) {
-        logger.info(Markers.Ai, "ErrorNotification");
-        logger.error(Markers.Ai, "Errortype: " + message.getErrorType());
-        logger.error(Markers.Ai, "Error occurred in Message: " + message.getReferenceMessageId());
-        logger.error(Markers.Ai, "Reason: " + message.getReason());
+        logger.error(Markers.Ai, "Received an ErrorNotification with type {} in Message {}. Reason: {} ", message.getErrorType(), message.getReferenceMessageId(),
+                message.getReason());
     }
 
 
@@ -549,5 +545,25 @@ public class AI implements AutoCloseable,
     @VisibleForTesting
     void setConfiguration(@Nonnull final Configuration configuration) {
         this.configuration = configuration;
+    }
+
+    public void setAllHeatVal(LinkedList<Triple<Integer, Point2D, Double>> allHeatVal) {
+        this.allHeatVal = allHeatVal;
+    }
+
+    public LinkedList<Triple<Integer, Point2D, Double>> getAllHeatVal() {
+        return this.allHeatVal;
+    }
+
+    public void setUpdate(PlayerUpdateNotification message) {
+        this.update = message;
+    }
+
+    public PlayerUpdateNotification getUpdate() {
+        return this.update;
+    }
+
+    public Collection<Shot> getRequestedShots() {
+        return this.requestedShots;
     }
 }

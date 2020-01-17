@@ -54,7 +54,7 @@ public class MissesFinder {
     public Collection<Shot> computeMissesAll() {
         //logger.debug(MARKER.AI, "Compute all misses");
         Collection<Shot> tempMisses = Lists.newArrayList();
-        for (Shot s : ai.requestedShots) {
+        for (Shot s : ai.getRequestedShots()) {
             boolean miss = true; //assume the shot s is a miss
             for (Shot i : ai.getHits()) { //check if shot s is a miss
                 if (PositionComparator.compareShots(i, s) & s.getClientId() == i.getClientId()) {
