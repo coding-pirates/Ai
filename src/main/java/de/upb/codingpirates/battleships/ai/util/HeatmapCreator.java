@@ -1,7 +1,7 @@
 package de.upb.codingpirates.battleships.ai.util;
 
 import com.google.common.collect.Maps;
-import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -17,7 +17,7 @@ import java.util.*;
  */
 public class HeatmapCreator {
     private static final Logger logger = LogManager.getLogger();
-    Ai ai;
+    AI ai;
 
     /**
      * /**
@@ -26,19 +26,19 @@ public class HeatmapCreator {
      *
      * @param ai The instance of the ai who called the constructor.
      */
-    public HeatmapCreator(Ai ai) {
+    public HeatmapCreator(AI ai) {
         this.ai = ai;
     }
 
     /**
-     * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int, int)}.
+     * Creates a heatmap for each client and calls {@link HeatmapCreator#createHeatmapOneClient(int)}.
      * In this version, the heatmaps will be created completely new by clearing the old heatmaps first.
      *
      * @return the created heatmaps of all clients
      * @see <a href="http://www.datagenetics.com/blog/december32011/">http://www.datagenetics.com/blog/december32011/</a>
      */
 
-    public Map<Integer, Double[][]> createHeatmapAllClients(int k) {
+    public Map<Integer, Double[][]> createHeatmapAllClients() {
         Map<Integer, Double[][]> heatmapAllClients = Maps.newConcurrentMap();
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
@@ -47,7 +47,7 @@ public class HeatmapCreator {
 
         for (Client client : ai.getClientArrayList()) {
             if (client.getId() == ai.getAiClientId()) continue;
-            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId(), k));
+            heatmapAllClients.put(client.getId(), createHeatmapOneClient(client.getId()));
         }
         //printHeatmapsAll(heatmapAllClients);
         return heatmapAllClients;
@@ -64,10 +64,9 @@ public class HeatmapCreator {
      * @param clientId The clientId for whom the heatmap is to be created
      * @return a heatmap for the client
      */
-    public Double[][] createHeatmapOneClient(int clientId, int k) {
-        //logger.info("Create heatmap for client " + clientId);
+    public Double[][] createHeatmapOneClient(int clientId) {
 
-        Integer[][] heatmap = new Integer[ai.getHeight()][ai.getWidth()]; //heatmap array
+        Integer[][] heatmap = new Integer[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()]; //heatmap array
         for (Integer[] integers : heatmap) {
             Arrays.fill(integers, 0);
         }
@@ -76,7 +75,7 @@ public class HeatmapCreator {
 
         LinkedList<Integer> sunkenIdsThisClient = ai.getAllSunkenShipIds().get(clientId); // get the sunken ship Ids of this client
 
-        Map<Integer, ShipType> shipConfig = ai.getShips();
+        Map<Integer, ShipType> shipConfig = ai.getConfiguration().getShips();
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             if (sunkenIdsThisClient.contains(entry.getKey())) {
                 continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
@@ -103,8 +102,8 @@ public class HeatmapCreator {
                 int initMaxX = xValues.get(xValues.size() - 1);//lege initiales x, y fest
                 int initMaxY = yValues.get(yValues.size() - 1);
 
-                while (maxY < ai.getHeight()) {
-                    while (maxX < ai.getWidth()) {
+                while (maxY < ai.getConfiguration().getHeight()) {
+                    while (maxX < ai.getConfiguration().getWidth()) {
                         boolean valid = true;
                         //check if cShip fits on the field
                         for (Point2D p : cShip) { //jeder Punkt in cShip
@@ -137,7 +136,7 @@ public class HeatmapCreator {
                     maxX = initMaxX;
                     ArrayList<Point2D> newPos = new ArrayList<>();
                     for (Point2D u : cShip) {
-                        newPos.add(new Point2D(u.getX() - (ai.getWidth() - initMaxX), u.getY() + 1));
+                        newPos.add(new Point2D(u.getX() - (ai.getConfiguration().getWidth() - initMaxX), u.getY() + 1));
                     }
                     cShip = new ArrayList<>(newPos);
                     newPos.clear();
@@ -146,14 +145,14 @@ public class HeatmapCreator {
             }
             //logger.info(MARKER.AI, "Finished field with rotated versions of ship " + shipId);
         }
-        if (ai.getAllSunkenShipIds().get(clientId).size() == ai.getShips().size()) {
+        if (ai.getAllSunkenShipIds().get(clientId).size() == ai.getConfiguration().getShips().size()) {
             for (Integer[] i : heatmap) {
                 Arrays.fill(i, 0);
             }
         }
 
         //die heatmap mit absoluten Werten
-        Double[][] dHeatmap = new Double[ai.getHeight()][ai.getWidth()];
+        Double[][] dHeatmap = new Double[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
 
         for (int i = 0; i < heatmap.length; i++) {
             for (int j = 0; j < heatmap[i].length; j++) {
@@ -164,14 +163,13 @@ public class HeatmapCreator {
         if (clientId == ai.getAiClientId()) {
             System.out.println(String.format("Heatmap of my field (%s)", ai.getAiClientId()));
         }
+
         System.out.println("Heatmap of player " + clientId);
-        if (k == 2) {
-            Double[][] probHeatmap = createProbHeatmap(heatmap);
-            printHeatmap(probHeatmap, clientId);
-            return probHeatmap;
-        }
-        printHeatmap(dHeatmap, clientId);
-        return dHeatmap;
+
+        Double[][] probHeatmap = createProbHeatmap(heatmap);
+        printHeatmap(probHeatmap, clientId);
+        return probHeatmap;
+
     }
 
     /**
@@ -190,7 +188,7 @@ public class HeatmapCreator {
             }
         }
 
-        Double[][] probHeat = new Double[ai.getHeight()][ai.getWidth()];
+        Double[][] probHeat = new Double[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
 
         for (Double[] i : probHeat) {
             Arrays.fill(i, (double) 0);
@@ -215,7 +213,6 @@ public class HeatmapCreator {
      * @param probHeat the heatmap to print
      */
     public void printHeatmap(Double[][] probHeat, int clientId) {
-        boolean isHit = false;
         for (int i = probHeat.length - 1; i >= 0; i--) {
             for (double j : probHeat[i]) {
                 if (j == 0.0000) {

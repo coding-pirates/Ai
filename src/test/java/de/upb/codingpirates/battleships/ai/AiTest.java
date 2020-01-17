@@ -1,22 +1,17 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
+import com.google.common.collect.Lists;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.logic.Shot;
+import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class Ai_Heatmap_Test {
-    static Ai ai = new Ai();
+import static org.junit.jupiter.api.Assertions.*;
+
+public class AiTest {
+    static AI ai = new AI("AiPlayer", 1);
 
     @BeforeAll
     public static void create() {
@@ -81,27 +76,22 @@ public class Ai_Heatmap_Test {
         sunk.add(new Shot(1, new Point2D(5, 4)));
         sunk.add(new Shot(1, new Point2D(6, 3)));
 
-
         sunk.add(new Shot(2, new Point2D(3, 2)));
         sunk.add(new Shot(2, new Point2D(3, 3)));
         sunk.add(new Shot(2, new Point2D(0, 1)));
         sunk.add(new Shot(2, new Point2D(1, 1)));
         sunk.add(new Shot(2, new Point2D(1, 0)));
 
-/*
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6, 6)));
         ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1, 6)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 3)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 5)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(4, 6)));
 
-
- */
         Collection<Shot> hits = new ArrayList<>();
         hits.add(new Shot(3, new Point2D(1, 1)));
         hits.add(new Shot(3, new Point2D(1, 2)));
         hits.add(new Shot(3, new Point2D(2, 2)));
-
 
         ai.setHits(hits);
 
@@ -109,26 +99,25 @@ public class Ai_Heatmap_Test {
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         //Has to be set before creating heatmaps
-        ai.setHeight(7);
-        ai.setWidth(7);
-        ai.setShips(shipconfig);
+        ai.setConfiguration(new Configuration.Builder()
+            .width(7)
+            .height(7)
+            .ships(shipconfig)
+            .build());
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
 
     }
 
-    @Test
-    public void create_heatmap_all_clients_Test() {
-        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        ai.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients(1));
-    }
 
     @Test
-    public void create_Heatmap_one_Client_Test() {
-        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        heatmapCreator.createHeatmapOneClient(3, 2);
+    public void create_LinkedList_One_Element_Test() {
+        Shot shot = new Shot(111, new Point2D(12, 4));
+        List<Shot> list = new ArrayList<>(Lists.newArrayList(shot));
+        assertNotNull(list);
+        assertEquals(list.size(), 1);
+        assertSame(list.get(0).getClass(), Shot.class);
     }
-
 
 }

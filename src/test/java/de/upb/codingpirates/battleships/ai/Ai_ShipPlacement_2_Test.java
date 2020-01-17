@@ -1,6 +1,6 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,13 +16,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class Ai_ShipPlacement_2_Test {
-    static Ai ai = new Ai();
+    static AI ai = new AI("AiPlayer", 1);
 
     @BeforeAll
     public static void create() {
-
-        ai.setHeight(10);
-        ai.setWidth(10);
         Collection<Point2D> shipPos1 = new ArrayList<>();
         shipPos1.add(new Point2D(0, 0));
         shipPos1.add(new Point2D(1, 0));
@@ -52,14 +49,17 @@ public class Ai_ShipPlacement_2_Test {
         shipConfig.put(2, ship2);
         shipConfig.put(3, ship3);
 
-        ai.setShips(shipConfig);
-
+        ai.setConfiguration(new Configuration.Builder()
+            .ships(shipConfig)
+            .width(10)
+            .height(10)
+            .build());
     }
 
     @Test
     public void place_Ship_test() {
 
-        try{
+        try {
             ai.placeShips();
         } catch (IOException e) {
             e.printStackTrace();
@@ -71,8 +71,5 @@ public class Ai_ShipPlacement_2_Test {
 
         //in this case 3 entries
         assertEquals(3, ai.getPositions().size());
-
-
     }
-
 }
