@@ -109,7 +109,7 @@ public class AI implements AutoCloseable,
         ListenerHandler.registerListener(this);
     }
 
-    public static void main(@Nonnull final String[] args) throws IOException, InterruptedException {
+    public static void main(@Nonnull final String[] args) throws IOException {
         if (args.length != 4) {
             System.err.println("host ip difficultyLevel aiName");
             System.exit(1);
@@ -145,8 +145,7 @@ public class AI implements AutoCloseable,
     public void placeShots() throws IOException {
         ShotPlacer shotPlacement = new ShotPlacer(this);
 
-        Collection<Shot> myShots = null;
-
+        Collection<Shot> myShots = Collections.emptyList();
         switch (difficultyLevel) {
             case 1:
                 logger.info(Markers.Ai, "Difficulty Level 1 (Random) selected");
@@ -259,11 +258,11 @@ public class AI implements AutoCloseable,
             this.setHits(this.getUpdate().getHits());
 
             if (this.getUpdate().getSunk().isEmpty()) {
-                logger.debug(MARKER.Ai, "No new sunks.");
+                logger.debug(Markers.Ai, "No new sunks.");
             } else {
-                logger.debug(MARKER.Ai, "New sunks are: ");
+                logger.debug(Markers.Ai, "New sunks are: ");
                 for (Shot s : this.getUpdate().getSunk()) {
-                    logger.debug(MARKER.Ai, s);
+                    logger.debug(Markers.Ai, s);
                 }
             }
             this.setSunk(this.getUpdate().getSunk());
@@ -551,7 +550,7 @@ public class AI implements AutoCloseable,
         this.allHeatVal = allHeatVal;
     }
 
-    public LinkedList<Triple<Integer, Point2D, Double>> getAllHeatVal() {
+    public List<Triple<Integer, Point2D, Double>> getAllHeatVal() {
         return this.allHeatVal;
     }
 
