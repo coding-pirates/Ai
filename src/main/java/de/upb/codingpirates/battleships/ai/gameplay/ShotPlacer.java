@@ -113,6 +113,19 @@ public class ShotPlacer {
 
 
     public Collection<Shot> placeShots_2() {
+        logger.debug("All requested shots: ");
+        System.out.println(ai.getRequestedShots());
+        logger.debug("All misses: ");
+        System.out.println(ai.getMisses());
+        logger.debug("All sunk: ");
+        System.out.println(ai.getSunk());
+        logger.debug("All hits others: ");
+        for (Shot s : ai.getHits()) {
+            if (s.getClientId() != ai.getAiClientId()) {
+                System.out.print(s + " ");
+            }
+        }
+        System.out.println();
         Collection<Shot> hits = ai.getHits();
         Collection<Shot> sunk = ai.getSunk();
         Collection<Shot> misses = ai.getMisses();
@@ -120,75 +133,96 @@ public class ShotPlacer {
         Map<Integer, LinkedList<Point2D>> sortedHIts = new HitsHandler(this.ai).sortTheHits();
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this.ai);
 
-        Map<Integer, LinkedList<LinkedList<Point2D>>> connected = new HashMap<>();
+        Map<Integer, LinkedList<LinkedList<Point2D>>> connectedNotClean = new HashMap<>();
         for (Client c : ai.getClientArrayList()) {
             LinkedList<LinkedList<Point2D>> temp = sunkenShipsHandler.findConnectedPoints(sortedHIts.get(c.getId()), c.getId());
-            connected.put(c.getId(), temp);
+            connectedNotClean.put(c.getId(), temp);
         }
 
+        System.out.println("Connected not cleaned:");
+        System.out.println(connectedNotClean);
 
-        //clean the connected map by sunk collections
-        Iterator<Map.Entry<Integer, LinkedList<LinkedList<Point2D>>>> itr = connected.entrySet().iterator();
-        while (itr.hasNext()) {
-            boolean valid = true;
-            Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry = itr.next();
+        Map<Integer, LinkedList<LinkedList<Point2D>>> connected = new HashMap<>();
+
+
+        boolean isValid;
+
+        for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connectedNotClean.entrySet()) {
+
+            if (entry.getKey() == ai.getAiClientId()) continue;
             int id = entry.getKey();
+            LinkedList<LinkedList<Point2D>> clean = new LinkedList<>();
             for (LinkedList<Point2D> l : entry.getValue()) {
+                isValid = true;
+
                 for (Point2D p : l) {
                     for (Shot s : sunk) {
                         if (PositionComparator.comparePointShot(p, s, id)) {
-                            logger.debug("Removed for cleaning {} of {}", entry.getValue(), id);
-                            itr.remove();
-                            valid = false;
+                            isValid = false;
+                            logger.debug("A sunk inside {}: {}", l, s);
                             break;
                         }
                     }
-                    if (!valid) break;
-
                 }
-                if (!valid) break;
-            }
 
+                if (isValid) {
+                    clean.add(l);
+                    logger.debug("Added {} to cleaned --> no sunk inside", l);
+                }
+            }
+            connected.put(id, new LinkedList<>(clean));
         }
+        logger.debug("Connected Cleaned:");
+        System.out.println(connected);
 
-        Map<Integer, LinkedList<LinkedList<Shot>>> pots = new HashMap<>();
-        for (Client c : ai.getClientArrayList()) {
-            LinkedList<LinkedList<Shot>> temp = new LinkedList<>();
-            int id = c.getId();
-            if (connected.containsKey(id)) {
-                for (LinkedList<Point2D> l : connected.get(id)) {
-                    LinkedList<Shot> temp2 = new LinkedList<>();
-                    for (Point2D p : l) {
-                        //west
-                        Shot west = new Shot(id, new Point2D(p.getX() - 1, p.getY()));
+        Map<Integer, LinkedList<Set<Shot>>> pots = new HashMap<>();
+        for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connected.entrySet()) {
 
-                        if (checkValid(west)) {
-                            temp2.add(west);
-                        }
-                        //south
-                        Shot south = new Shot(id, new Point2D(p.getX(), p.getY() - 1));
+            logger.debug("The connected hits of client {}:", entry.getKey());
+            logger.debug(entry.getValue());
 
-                        if (checkValid(south)) {
-                            temp2.add(south);
-                        }
-                        //east
-                        Shot east = new Shot(id, new Point2D(p.getX() + 1, p.getY()));
+            if (entry.getKey() == ai.getAiClientId()) {
+                logger.debug("Skip own id for shooting");
+                continue;
+            }
+            LinkedList<Set<Shot>> temp = new LinkedList<>();
+            int id = entry.getKey();
+            logger.debug("Client id : {}", id);
 
-                        if (checkValid(east)) {
-                            temp2.add(east);
-                        }
-                        //north
-                        Shot north = new Shot(id, new Point2D(p.getX(), p.getY() + 1));
+            for (LinkedList<Point2D> l : entry.getValue()) {
 
-                        if (checkValid(north)) {
-                            temp2.add(north);
-                        }
+                Set<Shot> temp2 = new HashSet<>();
+                for (Point2D p : l) {
+                    //west
+                    Shot west = new Shot(id, new Point2D(p.getX() - 1, p.getY()));
+
+                    if (checkValid(west)) {
+                        temp2.add(west);
                     }
-                    if (!temp2.isEmpty()) {
-                        temp.add(temp2);
+                    //south
+                    Shot south = new Shot(id, new Point2D(p.getX(), p.getY() - 1));
+
+                    if (checkValid(south)) {
+                        temp2.add(south);
+                    }
+                    //east
+                    Shot east = new Shot(id, new Point2D(p.getX() + 1, p.getY()));
+
+                    if (checkValid(east)) {
+                        temp2.add(east);
+                    }
+                    //north
+                    Shot north = new Shot(id, new Point2D(p.getX(), p.getY() + 1));
+
+                    if (checkValid(north)) {
+                        temp2.add(north);
                     }
                 }
+                if (!temp2.isEmpty()) {
+                    temp.add(temp2);
+                }
             }
+
             if (!temp.isEmpty()) {
                 logger.debug("Added this points {} of client {}", temp, id);
                 pots.put(id, temp);
@@ -196,8 +230,9 @@ public class ShotPlacer {
         }
 
         Collection<Shot> myShots = new ArrayList<>();
-        for (Map.Entry<Integer, LinkedList<LinkedList<Shot>>> entry : pots.entrySet()) {
-            for (LinkedList<Shot> l : entry.getValue()) {
+        for (
+                Map.Entry<Integer, LinkedList<Set<Shot>>> entry : pots.entrySet()) {
+            for (Set<Shot> l : entry.getValue()) {
                 for (Shot s : l) {
                     myShots.add(s);
                     logger.debug("Added shot {} to myShots", s);
@@ -209,8 +244,50 @@ public class ShotPlacer {
                 }
             }
         }
-        if (myShots.size() < ai.getShotCount()) {
-            myShots.addAll(placeShots_1(ai.getShotCount() - myShots.size()));
+        while (myShots.size() < ai.
+
+                getShotCount()) {
+            //get random shots
+
+
+            Collections.shuffle(ai.getClientArrayList());
+
+
+            int targetClientId = ai.getClientArrayList().get(0).getId();
+
+
+            if (targetClientId != ai.getAiClientId()) {
+                Shot targetShot = new Shot(targetClientId, new RandomPointCreator(this.ai).getRandomPoint2D());
+
+                boolean valid = true;
+                for (Shot s : ai.getHits()) {
+                    if (PositionComparator.compareShots(targetShot, s)) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (!valid) continue;
+                for (Shot s : ai.getMisses()) {
+                    if (PositionComparator.compareShots(targetShot, s)) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (!valid) continue;
+
+                for (Shot s : ai.getRequestedShots()) {
+
+                    if (PositionComparator.compareShots(targetShot, s)) {
+                        valid = false;
+                        break;
+                    }
+
+                }
+                if (!valid) continue;
+                myShots.add(targetShot);
+                ai.requestedShots.add(targetShot);
+                logger.debug("Added random shot {}", targetShot);
+            }
         }
         return myShots;
 
@@ -218,6 +295,7 @@ public class ShotPlacer {
 
     public boolean checkValid(Shot s) {
         logger.debug("Checking validity of shot {}", s);
+
         if (s.getTargetField().getX() < 0
                 | s.getTargetField().getY() < 0
                 | s.getTargetField().getX() > ai.getWidth() - 1
@@ -227,14 +305,18 @@ public class ShotPlacer {
 
         }
 
+        Map<Integer, LinkedList<Point2D>> sortedHits = new HitsHandler(this.ai).sortTheHits();
+
         for (Shot d : ai.getHits()) {
             if (PositionComparator.compareShots(s, d)) {
+                logger.debug("{} is a hit already", s);
                 return false;
             }
         }
 
         for (Shot d : ai.getMisses()) {
             if (PositionComparator.compareShots(s, d)) {
+                logger.debug("{} is a miss already", s);
                 return false;
             }
         }

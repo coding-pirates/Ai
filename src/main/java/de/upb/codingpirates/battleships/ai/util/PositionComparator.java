@@ -10,7 +10,7 @@ public class PositionComparator {
     }
 
     public static boolean compareShots(Shot s1, Shot s2) {
-        return s1.getTargetField().getX() == s2.getTargetField().getX() & s1.getTargetField().getY() == s2.getTargetField().getY();
+        return s1.getTargetField().getX() == s2.getTargetField().getX() & s1.getTargetField().getY() == s2.getTargetField().getY() & s1.getClientId() == s2.getClientId();
     }
 
     public static boolean comparePointShot(Point2D p, Shot s) {
