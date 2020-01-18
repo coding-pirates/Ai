@@ -366,12 +366,13 @@ public class Ai implements
         logger.info(MARKER.Ai, "------------------------------FinishNotification------------------------------");
         updateValues();
 
-        System.out.printf("My Id is: %d%n", this.getAiClientId());
         if (this.getDifficultyLevel() == 3) {
             logger.info(MARKER.Ai, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
             this.setHeatmapAllClients(heatmapCreator.createHeatmapAllClients());
         }
+        System.out.printf("My Id is: %d%n", this.getAiClientId());
+
         System.out.println("Points: ");
         for (Map.Entry<Integer, Integer> entry : message.getPoints().entrySet()) {
             System.out.println(entry);
