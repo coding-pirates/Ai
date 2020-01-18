@@ -126,6 +126,8 @@ public class ShotPlacer {
             }
         }
         System.out.println();
+
+        Collection<Shot> surroundingInv = new HashSet<>();
         Collection<Shot> hits = ai.getHits();
         Collection<Shot> sunk = ai.getSunk();
         Collection<Shot> misses = ai.getMisses();
@@ -154,7 +156,6 @@ public class ShotPlacer {
             LinkedList<LinkedList<Point2D>> clean = new LinkedList<>();
             for (LinkedList<Point2D> l : entry.getValue()) {
                 isValid = true;
-
                 for (Point2D p : l) {
                     for (Shot s : sunk) {
                         if (PositionComparator.comparePointShot(p, s, id)) {
@@ -163,9 +164,16 @@ public class ShotPlacer {
                             break;
                         }
                     }
+                    if (!isValid) break;
                 }
 
                 if (isValid) {
+                    ArrayList<Point2D> temp = new ArrayList<>(l);
+                    ArrayList<Point2D> temp1 = new ArrayList<>(new InvalidPointsHandler(this.ai).addSurroundingPointsToUsedPoints(temp));
+                    for (Point2D p : temp1) {
+                        surroundingInv.add(new Shot(id, p));
+                    }
+
                     clean.add(l);
                     logger.debug("Added {} to cleaned --> no sunk inside", l);
                 }
@@ -258,8 +266,16 @@ public class ShotPlacer {
 
             if (targetClientId != ai.getAiClientId()) {
                 Shot targetShot = new Shot(targetClientId, new RandomPointCreator(this.ai).getRandomPoint2D());
-
                 boolean valid = true;
+
+                for (Shot s : surroundingInv) {
+                    if (PositionComparator.compareShots(targetShot, s)) {
+                        valid = false;
+                        break;
+                    }
+                }
+                if (!valid) continue;
+
                 for (Shot s : ai.getHits()) {
                     if (PositionComparator.compareShots(targetShot, s)) {
                         valid = false;
@@ -267,6 +283,7 @@ public class ShotPlacer {
                     }
                 }
                 if (!valid) continue;
+
                 for (Shot s : ai.getMisses()) {
                     if (PositionComparator.compareShots(targetShot, s)) {
                         valid = false;
@@ -284,6 +301,7 @@ public class ShotPlacer {
 
                 }
                 if (!valid) continue;
+
                 myShots.add(targetShot);
                 ai.requestedShots.add(targetShot);
                 logger.debug("Added random shot {}", targetShot);

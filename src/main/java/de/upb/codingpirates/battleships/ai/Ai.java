@@ -365,6 +365,8 @@ public class Ai implements
     public void onFinishNotification(FinishNotification message, int clientId) {
         logger.info(MARKER.Ai, "------------------------------FinishNotification------------------------------");
         updateValues();
+
+        System.out.printf("My Id is: %d%n", this.getAiClientId());
         if (this.getDifficultyLevel() == 3) {
             logger.info(MARKER.Ai, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
