@@ -381,7 +381,7 @@ public class Ai implements
         for (int i : message.getWinner()) {
             System.out.println(i);
         }
-        AiMain.close();
+
     }
 
     @Override

@@ -112,25 +112,15 @@ public class ShotPlacer {
     //difficulty level 2 -----------------------------------------------------------------
 
 
+    /**
+     * Implements the hunt & target algorithm mentioned on datagenetics blog.
+     *
+     * @return shots to fire
+     */
     public Collection<Shot> placeShots_2() {
-        logger.debug("All requested shots: ");
-        System.out.println(ai.getRequestedShots());
-        logger.debug("All misses: ");
-        System.out.println(ai.getMisses());
-        logger.debug("All sunk: ");
-        System.out.println(ai.getSunk());
-        logger.debug("All hits others: ");
-        for (Shot s : ai.getHits()) {
-            if (s.getClientId() != ai.getAiClientId()) {
-                System.out.print(s + " ");
-            }
-        }
-        System.out.println();
 
         Collection<Shot> surroundingInv = new HashSet<>();
-        Collection<Shot> hits = ai.getHits();
-        Collection<Shot> sunk = ai.getSunk();
-        Collection<Shot> misses = ai.getMisses();
+
 
         Map<Integer, LinkedList<Point2D>> sortedHIts = new HitsHandler(this.ai).sortTheHits();
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(this.ai);
@@ -157,10 +147,10 @@ public class ShotPlacer {
             for (LinkedList<Point2D> l : entry.getValue()) {
                 isValid = true;
                 for (Point2D p : l) {
-                    for (Shot s : sunk) {
+                    for (Shot s : ai.getSunk()) {
                         if (PositionComparator.comparePointShot(p, s, id)) {
                             isValid = false;
-                            logger.debug("A sunk inside {}: {}", l, s);
+                            //logger.debug("A sunk inside {}: {}", l, s);
                             break;
                         }
                     }
@@ -175,27 +165,27 @@ public class ShotPlacer {
                     }
 
                     clean.add(l);
-                    logger.debug("Added {} to cleaned --> no sunk inside", l);
+                    //logger.debug("Added {} to cleaned --> no sunk inside", l);
                 }
             }
             connected.put(id, new LinkedList<>(clean));
         }
-        logger.debug("Connected Cleaned:");
+        //logger.debug("Connected Cleaned:");
         System.out.println(connected);
 
         Map<Integer, LinkedList<Set<Shot>>> pots = new HashMap<>();
         for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connected.entrySet()) {
 
-            logger.debug("The connected hits of client {}:", entry.getKey());
+            // logger.debug("The connected hits of client {}:", entry.getKey());
             logger.debug(entry.getValue());
 
             if (entry.getKey() == ai.getAiClientId()) {
-                logger.debug("Skip own id for shooting");
+                //  logger.debug("Skip own id for shooting");
                 continue;
             }
             LinkedList<Set<Shot>> temp = new LinkedList<>();
             int id = entry.getKey();
-            logger.debug("Client id : {}", id);
+            //logger.debug("Client id : {}", id);
 
             for (LinkedList<Point2D> l : entry.getValue()) {
 
@@ -232,7 +222,7 @@ public class ShotPlacer {
             }
 
             if (!temp.isEmpty()) {
-                logger.debug("Added this points {} of client {}", temp, id);
+                //logger.debug("Added this points {} of client {}", temp, id);
                 pots.put(id, temp);
             }
         }
@@ -312,13 +302,13 @@ public class ShotPlacer {
     }
 
     public boolean checkValid(Shot s) {
-        logger.debug("Checking validity of shot {}", s);
+        //logger.debug("Checking validity of shot {}", s);
 
         if (s.getTargetField().getX() < 0
                 | s.getTargetField().getY() < 0
                 | s.getTargetField().getX() > ai.getWidth() - 1
                 | s.getTargetField().getY() > ai.getHeight() - 1) {
-            logger.debug("Doesnt fit the field");
+            //logger.debug("Doesnt fit the field");
             return false;
 
         }
@@ -327,14 +317,14 @@ public class ShotPlacer {
 
         for (Shot d : ai.getHits()) {
             if (PositionComparator.compareShots(s, d)) {
-                logger.debug("{} is a hit already", s);
+                //logger.debug("{} is a hit already", s);
                 return false;
             }
         }
 
         for (Shot d : ai.getMisses()) {
             if (PositionComparator.compareShots(s, d)) {
-                logger.debug("{} is a miss already", s);
+                //logger.debug("{} is a miss already", s);
                 return false;
             }
         }
@@ -348,7 +338,7 @@ public class ShotPlacer {
     /**
      * Placing shots based on the relative value. Heatmaps will be created with relative values.
      *
-     * @return
+     * @return shots to fire
      */
     public Collection<Shot> placeShots_Relative_3() {
 
