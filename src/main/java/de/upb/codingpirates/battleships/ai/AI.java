@@ -376,6 +376,7 @@ public class AI implements AutoCloseable,
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
             this.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
         }
+        System.out.printf("Own Id: %d%n", this.getAiClientId());
         System.out.println("Points: ");
         for (Map.Entry<Integer, Integer> entry : message.getPoints().entrySet()) {
             System.out.println(entry);
