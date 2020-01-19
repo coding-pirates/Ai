@@ -109,7 +109,9 @@ public class AI implements AutoCloseable,
         ListenerHandler.registerListener(this);
     }
 
+    static Timer timer = new Timer();
     public static void main(@Nonnull final String[] args) throws IOException {
+
         if (args.length != 4) {
             System.err.println("host ip difficultyLevel aiName");
             System.exit(1);
