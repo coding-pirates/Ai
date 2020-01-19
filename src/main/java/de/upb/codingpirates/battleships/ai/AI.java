@@ -125,8 +125,10 @@ public class AI implements AutoCloseable,
 
         //Use scanner instead direct input if there are nor passed arguments
         if (args.length == 0) {
+            System.out.println("Please answer the following questions for starting the engine player.");
             System.out.println("Give this engine player a name: ");
             while (true) {
+
                 name = new Scanner(System.in).next();
                 if (name == null) {
                     System.err.println("The name has to be a word and cannot start with a number. Try again...");
@@ -161,11 +163,16 @@ public class AI implements AutoCloseable,
                 break;
             }
 
-            System.out.println("Choose between the difficulty levels 1, 2 or 3, or write help to get more information");
+            System.out.println("Choose between the difficulty levels 1, 2 or 3, or type help to get more information about the difficulty level.");
             while (true) {
                 String input = new Scanner(System.in).next();
                 if (input.equals("help")) {
-                    System.out.println("1: Random, 2: Hunt&Target, 3: Heatmap. Type in the level please: ");
+                    System.out.print("Explanations of the difficulty level:\n" +
+                            "1: Random: Shots will be fired randomly.\n" +
+                            "2: Hunt & Target: The main goal is to sink ships. Based on the hits, the algorithm tries to hit all surrounding fields\n" +
+                            "until the ship is sunk. If there are no hits anymore, shots will be fired randomly. Use this if points for a sunken ship are high.\n" +
+                            "3: Heatmap: Shots will be fired on the field with the highest probability. Choose this algorithm if sunk points are low\n" +
+                            "or you have only one opponent.\n");
                     continue;
                 }
                 switch (input) {
@@ -182,11 +189,12 @@ public class AI implements AutoCloseable,
                         break;
                     }
                     default:
-                        System.err.println("Your input was invalid. Try again and choose between level 1, 2, 3 or help...");
+                        System.err.println("Please type in a valid level or type help for getting more information. Try again...");
                         continue;
                 }
                 break;
             }
+
         } else {
             //if arguments were passed, use them
             if (args.length != 4) {
