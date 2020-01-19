@@ -1,7 +1,7 @@
 package de.upb.codingpirates.battleships.ai.gameplay;
 
-import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.ai.logger.MARKER;
+import de.upb.codingpirates.battleships.ai.AI;
+import de.upb.codingpirates.battleships.ai.logger.Markers;
 import de.upb.codingpirates.battleships.ai.util.InvalidPointsHandler;
 import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.util.ZeroPointMover;
@@ -20,7 +20,7 @@ import java.util.*;
  * @author Benjamin Kasten
  */
 public class ShipPlacer {
-    Ai ai;
+    AI ai;
     private static final Logger logger = LogManager.getLogger();
 
     /**
@@ -29,7 +29,7 @@ public class ShipPlacer {
      *
      * @param ai The instance of the ai who called the constructor.
      */
-    public ShipPlacer(Ai ai) {
+    public ShipPlacer(AI ai) {
         this.ai = ai;
     }
 
@@ -52,9 +52,9 @@ public class ShipPlacer {
         logger.info("Try placing ships");
         while (!successful) {
             //    logger.info(MARKER.Ai_ShipPlacer, "Placing ships failed/ships are not placed");
-            guessRandomShipPositions(ai.getShips());
+            guessRandomShipPositions(ai.getConfiguration().getShips());
         }
-        logger.info(MARKER.Ai_ShipPlacer, "Placing ships successful");
+        logger.info(Markers.Ai_ShipPlacer, "Placing ships successful");
         shipPrinter();
         return positions;
     }
@@ -70,7 +70,7 @@ public class ShipPlacer {
                 logger.debug(p);
             }
         }
-        String[][] field = new String[ai.getHeight()][ai.getWidth()];
+        String[][] field = new String[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
         for (String[] i : field) {
             Arrays.fill(i, "-");
         }
@@ -81,8 +81,8 @@ public class ShipPlacer {
                     if (p.getY() == i & p.getX() == j) {
                         field[i][j] = "-";
                         ship = true;
+                        break;
                     }
-                    if (ship) break;
                 }
                 if (!ship) {
                     field[i][j] = "X";
@@ -145,7 +145,7 @@ public class ShipPlacer {
             Collection<Point2D> shipPositive = new ArrayList<>(zeroPointMover.moveToZeroPoint((ArrayList<Point2D>) ship));
 
             //use a RandomPointCreator to get a random point
-            RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai);
+            RandomPointCreator randomPointCreator = new RandomPointCreator(ai.getConfiguration());
 
             //the random point for positioning the ship
             Point2D guessPoint = randomPointCreator.getRandomPoint2D();
@@ -185,7 +185,7 @@ public class ShipPlacer {
                 //if the newPoint is not unavailable, check if the coordinates fits to the field:
                 // No negative values, no greater values as the fields height and width
                 if (newPoint.getY() < 0 | newPoint.getX() < 0 |
-                        newPoint.getX() > (ai.getWidth() - 1) | newPoint.getY() > (ai.getHeight() - 1)) {
+                        newPoint.getX() > (ai.getConfiguration().getWidth() - 1) | newPoint.getY() > (ai.getConfiguration().getHeight() - 1)) {
                     //if the newPoint is unavailable: delete usedPoints, positions and return
                     //-->starting the loop in placeShips again
                     usedPoints.clear();
@@ -208,8 +208,8 @@ public class ShipPlacer {
             usedPoints.addAll(invalidPointsHandler.addSurroundingPointsToUsedPoints(tempShipPos));
 
             //find the placement info point position (the bottom left point)
-            int minX = ai.getWidth() + 1; // a value which cannot be reached
-            int minY = ai.getHeight() + 1; // ~
+            int minX = ai.getConfiguration().getWidth() + 1; // a value which cannot be reached
+            int minY = ai.getConfiguration().getHeight() + 1; // ~
 
             //search for the lowest y position
             for (Point2D p : tempShipPos) {

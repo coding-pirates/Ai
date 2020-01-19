@@ -1,6 +1,6 @@
 package de.upb.codingpirates.battleships.ai.util;
 
-import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
@@ -22,9 +22,9 @@ public class InvalidPointsHandler {
     //Logger
     private static final Logger logger = LogManager.getLogger();
 
-    Ai ai;
+    AI ai;
 
-    public InvalidPointsHandler(Ai ai) {
+    public InvalidPointsHandler(AI ai) {
         this.ai = ai;
     }
 

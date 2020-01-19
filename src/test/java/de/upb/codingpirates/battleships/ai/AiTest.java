@@ -1,12 +1,8 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
 import com.google.common.collect.Lists;
-import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.logic.Shot;
+import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +11,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AiTest {
-    static Ai ai = new Ai();
+    static AI ai = new AI("AiPlayer", 1);
 
     @BeforeAll
     public static void create() {
@@ -103,9 +99,11 @@ public class AiTest {
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         //Has to be set before creating heatmaps
-        ai.setHeight(7);
-        ai.setWidth(7);
-        ai.setShips(shipconfig);
+        ai.setConfiguration(new Configuration.Builder()
+                .width(7)
+                .height(7)
+                .ships(shipconfig)
+                .build());
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());

@@ -1,25 +1,22 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.Ai;
+import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.logic.Shot;
+import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-public class Ai_SunkenShipsHandler_Test {
-    static Ai ai = new Ai();
+public class Ai_Heatmap_Test {
+    static AI ai = new AI("AiPlayer", 3);
 
     @BeforeAll
     public static void create() {
-
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
         //ship1 id = 1
@@ -50,6 +47,7 @@ public class Ai_SunkenShipsHandler_Test {
         ShipType s4 = new ShipType(pos4);
         shipconfig.put(4, s4);
 
+
         //Clients erstellen
         Client c1 = new Client(1, "c1");
         Client c2 = new Client(2, "c2");
@@ -62,6 +60,7 @@ public class Ai_SunkenShipsHandler_Test {
 
 
         //sunk erstellen
+
         ArrayList<Shot> sunk = new ArrayList<>();
         //Client 1's ships are already sunken
         sunk.add(new Shot(1, new Point2D(1, 4)));
@@ -77,50 +76,56 @@ public class Ai_SunkenShipsHandler_Test {
         sunk.add(new Shot(1, new Point2D(5, 4)));
         sunk.add(new Shot(1, new Point2D(6, 3)));
 
+
         sunk.add(new Shot(2, new Point2D(3, 2)));
         sunk.add(new Shot(2, new Point2D(3, 3)));
         sunk.add(new Shot(2, new Point2D(0, 1)));
         sunk.add(new Shot(2, new Point2D(1, 1)));
         sunk.add(new Shot(2, new Point2D(1, 0)));
 
+/*
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6, 6)));
         ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1, 6)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 3)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 5)));
         ai.requestedShotsLastRound.add(new Shot(3, new Point2D(4, 6)));
 
+
+ */
+        Collection<Shot> hits = new ArrayList<>();
+        hits.add(new Shot(3, new Point2D(1, 1)));
+        hits.add(new Shot(3, new Point2D(1, 2)));
+        hits.add(new Shot(3, new Point2D(2, 2)));
+
+
+        ai.setHits(hits);
+
         ai.setAiClientId(999);
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         //Has to be set before creating heatmaps
-        ai.setHeight(7);
-        ai.setWidth(7);
-        ai.setShips(shipconfig);
+        ai.setConfiguration(new Configuration.Builder()
+                .ships(shipconfig)
+                .width(7)
+                .height(7)
+                .build());
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
-    }
 
-
-    @Test
-    public void sort_The_Sunk_Test() {
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        HashMap<Integer, LinkedList<Point2D>> sortedSunk = sunkenShipsHandler.sortTheSunk();
-        assertEquals(sortedSunk.get(1).size(), 12);
-        assertEquals(sortedSunk.get(2).size(), 5);
     }
 
     @Test
-    public void get_Sunken_shipIds_all_Clients() {
-        SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        assertEquals(3, ai.getSortedSunk().size());
-        ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll());
-        Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
-        assertNotNull(sunken);
-        assertEquals(sunken.size(), 3);
-        assertEquals(sunken.get(1).size(), 4);
-        assertEquals(sunken.get(2).size(), 2);
+    @Disabled
+    public void create_heatmap_all_clients_Test() {
+        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
+        ai.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
     }
 
-
+    @Test
+    @Disabled
+    public void create_Heatmap_one_Client_Test() {
+        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
+        heatmapCreator.createHeatmapOneClient(3);
+    }
 }

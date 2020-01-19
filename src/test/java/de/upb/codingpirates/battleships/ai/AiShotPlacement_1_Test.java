@@ -1,7 +1,7 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.Ai;
 import de.upb.codingpirates.battleships.logic.Client;
+import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,10 +11,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class AiShotPlacement_2_Test {
-    static Ai ai = new Ai();
+public class AiShotPlacement_1_Test {
+    static AI ai = new AI("AiPlayer", 1);
+
     @BeforeAll
-    public static void create(){
+    public static void create() {
         //Clients erstellen
         Client client1 = new Client(111, "c1");
         Client client2 = new Client(222, "c2");
@@ -27,18 +28,11 @@ public class AiShotPlacement_2_Test {
         temp.add(clientAi);
 
         ai.setClientArrayList(temp);
+
         //ai id festlegen
         ai.setAiClientId(999);
-        //requested shots last round
-        Shot s1 = new Shot(111, new Point2D(2, 1));
-        Shot s5 = new Shot(111, new Point2D(3, 3));
-        Shot s6 = new Shot(333, new Point2D(2, 0));
 
-        ai.requestedShotsLastRound.add(s1);
-        ai.requestedShotsLastRound.add(s5);
-        ai.requestedShotsLastRound.add(s6);
-
-
+        //hits
         Shot hit1 = new Shot(111, new Point2D(2, 1));
         Shot hit2 = new Shot(222, new Point2D(1, 3));
         Shot hit3 = new Shot(222, new Point2D(2, 3));
@@ -48,17 +42,27 @@ public class AiShotPlacement_2_Test {
         temp1.add(hit3);
         ai.setHits(temp1);
 
-        //shotcount
-        ai.setShotCount(3);
+        //misses
 
-        ai.setHeight(5);
-        ai.setWidth(5);
+        Shot miss1 = new Shot(111, new Point2D(0, 1));
+        Shot miss2 = new Shot(111, new Point2D(3, 3));
+        Shot miss3 = new Shot(333, new Point2D(2, 0));
+        Collection<Shot> temp2 = new ArrayList<>();
+        temp2.add(miss1);
+        temp2.add(miss2);
+        temp2.add(miss3);
+        ai.setMisses(temp2); //todo getter für misses fehlt
 
-
-
+        ai.setConfiguration(
+                new Configuration.Builder()
+                        .shotCount(3)
+                        .width(5)
+                        .height(5)
+                        .build());
     }
+
     @Test
-    public void place_shots_level_2_test() throws IOException {
-        ai.placeShots(2);
+    public void place_shots_level_1_test() throws IOException {
+        ai.placeShots();
     }
 }

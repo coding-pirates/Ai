@@ -22,7 +22,7 @@ dependencies {
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
 
-mainClassName = 'de.upb.codingpirates.battleships.ai.AiMain'
+mainClassName = 'de.upb.codingpirates.battleships.ai.AI'
 
 sourceSets {
     main {

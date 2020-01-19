@@ -1,11 +1,7 @@
-package de.upb.codingpirates.battleships.ai.test;
+package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.ai.Ai;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.ShipType;
-import de.upb.codingpirates.battleships.logic.Shot;
+import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -16,11 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AiShotPlacement_3_Test {
-    static Ai ai = new Ai();
+    static AI ai = new AI("AiPlayer", 3);
 
     @BeforeAll
     public static void create() {
-
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
         //ship1 id = 1
@@ -51,8 +46,6 @@ public class AiShotPlacement_3_Test {
         ShipType s4 = new ShipType(pos4);
 
         shipconfig.put(4, s4);
-        ai.setShips(shipconfig);
-
 
         //Clients erstellen
         Client c1 = new Client(1, "c1");
@@ -135,16 +128,18 @@ public class AiShotPlacement_3_Test {
         ai.setAiClientId(5);
 
         //Has to be set before creating heatmaps
-        ai.setHeight(7);
-        ai.setWidth(7);
+        ai.setConfiguration(new Configuration.Builder()
+                .ships(shipconfig)
+                .width(7)
+                .height(7)
+                .shotCount(10)
+                .build());
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
-        ai.setShotCount(10);
     }
+
     @Test
     public void place_shots_3_test() throws IOException {
-        ai.placeShots(3);
+        ai.placeShots();
     }
-
-
 }
