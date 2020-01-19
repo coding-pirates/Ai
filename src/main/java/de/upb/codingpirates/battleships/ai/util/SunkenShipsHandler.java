@@ -64,10 +64,10 @@ public class SunkenShipsHandler {
                 continue;
             }
 
-            logger.info(Markers.Ai_SunkenShips, "Sunken ships of player {} are: ", clientId);
+            logger.info(Markers.Ai_SunkenShips, "Sunken ship ids of player {} are: ", clientId);
 
             for (int i : sunkenShipIds) {
-                logger.info(Markers.Ai_SunkenShips, "ShipId: " + i);
+                System.out.print(i + " ");
             }
 
 
