@@ -228,7 +228,7 @@ public class ShipPlacer {
                 }
             }
             //logger.debug(MARKER.Ai_ShipPlacer, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
-            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX - xOffset, minY - xOffset), Rotation.NONE);
+            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX - xOffset, minY - yOffset), Rotation.NONE);
             positions.put(shipId, pInfo);
             placedShipMap.put(shipId, new ArrayList<>(tempShipPos));
 
