@@ -111,7 +111,11 @@ public class AI implements AutoCloseable,
 
     static Timer timer = new Timer();
     public static void main(@Nonnull final String[] args) throws IOException {
-
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+            }
+        }, 1L, 1L);
         if (args.length != 4) {
             System.err.println("host ip difficultyLevel aiName");
             System.exit(1);

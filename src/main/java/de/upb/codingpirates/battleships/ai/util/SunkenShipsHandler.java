@@ -69,6 +69,7 @@ public class SunkenShipsHandler {
             for (int i : sunkenShipIds) {
                 System.out.print(i + " ");
             }
+            System.out.println();
 
 
         }
