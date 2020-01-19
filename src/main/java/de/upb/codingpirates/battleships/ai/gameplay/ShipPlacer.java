@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai.gameplay;
 import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.ai.logger.Markers;
 import de.upb.codingpirates.battleships.ai.util.InvalidPointsHandler;
+import de.upb.codingpirates.battleships.ai.util.Offset;
 import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.util.ZeroPointMover;
 import de.upb.codingpirates.battleships.logic.PlacementInfo;
@@ -132,6 +133,9 @@ public class ShipPlacer {
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
+
+            int xOffset = Offset.getXOffset(entry.getValue().getPositions());
+            int yOffset = Offset.getYOffset(entry.getValue().getPositions());
             //logger.info(MARKER.Ai_ShipPlacer, "Try placing ship: " + entry.getKey());
             //ship Id
             int shipId = entry.getKey();
@@ -224,12 +228,13 @@ public class ShipPlacer {
                 }
             }
             //logger.debug(MARKER.Ai_ShipPlacer, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
-            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX, minY), Rotation.NONE);
+            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX - xOffset, minY - xOffset), Rotation.NONE);
             positions.put(shipId, pInfo);
             placedShipMap.put(shipId, new ArrayList<>(tempShipPos));
 
             //clear the tempShipPos Array for the next loop
             tempShipPos.clear();
+
         }
         //is called only if the placing of the ships in the positions Map worked for all ships
         //responsible for leaving the while loop in placeShips()
