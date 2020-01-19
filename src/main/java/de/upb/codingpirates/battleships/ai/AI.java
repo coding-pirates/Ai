@@ -22,7 +22,6 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
-import de.upb.codingpirates.battleships.network.message.request.ServerJoinRequest;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
@@ -58,6 +57,7 @@ public class AI implements AutoCloseable,
         GameJoinPlayerResponseListener,
         ServerJoinResponseListener,
         LobbyResponseListener {
+
 
     public List<Triple<Integer, Point2D, Double>> allHeatVal;
 
@@ -110,30 +110,122 @@ public class AI implements AutoCloseable,
     }
 
     static Timer timer = new Timer();
+
     public static void main(@Nonnull final String[] args) throws IOException {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
             }
         }, 1L, 1L);
-        if (args.length != 4) {
-            System.err.println("host ip difficultyLevel aiName");
-            System.exit(1);
-        }
-        final AI ai = new AI(args[3], Integer.parseInt(args[2]));
 
-        ai.connect(args[0], Integer.parseInt(args[1]));
+        String name;
+        String host;
+        String port;
+        int difficulty;
+
+        //Use scanner instead direct input if there are nor passed arguments
+        if (args.length == 0) {
+            System.out.println("Give this engine player a name: ");
+            while (true) {
+                name = new Scanner(System.in).next();
+                if (name == null) {
+                    System.err.println("The name has to be a word and cannot start with a number. Try again...");
+                    continue;
+                }
+                break;
+            }
+
+            System.out.println("The host (ip address or domain) to connect to: ");
+            while (true) {
+                host = new Scanner(System.in).next();
+                if (host == null) {
+                    System.err.println("You need a host to connect this engine player. Try again...");
+                    continue;
+                }
+                break;
+            }
+
+            System.out.println("Give me the port of the server: ");
+            while (true) {
+                port = new Scanner(System.in).next();
+                if (port == null) {
+                    System.err.println("Give me a valid port please. Try again...");
+                    continue;
+                }
+                try {
+                    Integer.parseInt(port);
+                } catch (Exception e) {
+                    System.err.println("Please type in a valid port. It has to be a number. Try again...");
+                    continue;
+                }
+                break;
+            }
+
+            System.out.println("Choose between the difficulty levels 1, 2 or 3, or write help to get more information");
+            while (true) {
+                String input = new Scanner(System.in).next();
+                if (input.equals("help")) {
+                    System.out.println("1: Random, 2: Hunt&Target, 3: Heatmap. Type in the level please: ");
+                    continue;
+                }
+                switch (input) {
+                    case "1": {
+                        difficulty = 1;
+                        break;
+                    }
+                    case "2": {
+                        difficulty = 2;
+                        break;
+                    }
+                    case "3": {
+                        difficulty = 3;
+                        break;
+                    }
+                    default:
+                        System.err.println("Your input was invalid. Try again and choose between level 1, 2, 3 or help...");
+                        continue;
+                }
+                break;
+            }
+        } else {
+            //if arguments were passed, use them
+            if (args.length != 4) {
+                System.err.println("Use this order: host ip difficultyLevel aiName");
+                System.exit(1);
+            }
+            name = args[3];
+            difficulty = Integer.parseInt(args[2]);
+            host = args[0];
+            port = args[1];
+
+        }
+
+        final AI ai = new AI(name, difficulty);
+
+        ai.connect(host, Integer.parseInt(port));
+
     }
 
+    /**
+     * Disconnects this ai instance from the server.
+     *
+     * @throws IOException network error,
+     */
     @Override
     public void close() throws IOException {
         tcpConnector.disconnect();
     }
 
+    /**
+     * Connects the ai instance with the server.
+     *
+     * @param host the ip address or domain of the server.
+     * @param port the server port.
+     * @throws IOException network error.
+     */
     public void connect(@Nonnull final String host, final int port) throws IOException {
         tcpConnector.connect(host, port);
-
-        sendMessage(new ServerJoinRequest(name, ClientType.PLAYER));
+        sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER));
     }
 
     /**
@@ -150,25 +242,22 @@ public class AI implements AutoCloseable,
      */
     public void placeShots() throws IOException {
         ShotPlacer shotPlacement = new ShotPlacer(this);
-
         Collection<Shot> myShots = Collections.emptyList();
         switch (difficultyLevel) {
             case 1:
-                logger.info(Markers.Ai, "Difficulty Level 1 (Random) selected");
                 myShots = shotPlacement.placeShots_1(this.getConfiguration().getShotCount());
                 break;
             case 2:
-                logger.info(Markers.Ai, "Difficulty Level 2 (Hunt & Target) selected");
                 myShots = shotPlacement.placeShots_2();
                 break;
             case 3:
-                logger.info(Markers.Ai, "Difficulty level 3 (HeatMap) selected");
                 myShots = shotPlacement.placeShots_Relative_3();
                 break;
-            default:
-                logger.error(Markers.Ai, "The difficulty level ({}) is not valid, run again and use choose " +
-                        "between the level 1, 2 or 3", difficultyLevel);
-                close();
+            default: {
+                logger.error("Something went wrong. Start again.");
+                this.close();
+            }
+
         }
         sendMessage(RequestBuilder.shotsRequest(myShots));
 
@@ -339,6 +428,7 @@ public class AI implements AutoCloseable,
         updateValues();
         try {
             //logger.info("Trying to place shots");
+            logger.debug("Place shots with difficulty level {}", this.getDifficultyLevel());
             placeShots();
         } catch (IOException e) {
             logger.error(Markers.Ai, "Shot placement failed");
@@ -443,9 +533,7 @@ public class AI implements AutoCloseable,
     // </editor-fold>
 
     /**
-     * Only for converting the Client Collection of the {@link GameInitNotification} into a LinkedList to have more
-     * functions.
-     * Called by {@link #onGameInitNotification(GameInitNotification, int)}
+     * Converts the clientList directly in an arrayList with more functions.
      *
      * @param clientList of the configuration
      */
@@ -491,7 +579,6 @@ public class AI implements AutoCloseable,
 
     public void setHits(Collection<Shot> hits) {
         this.hits.addAll(hits);
-        //logger.debug("Size all Hits: {}", this.hits.size());
     }
 
     public Collection<Shot> getHits() {
@@ -500,7 +587,6 @@ public class AI implements AutoCloseable,
 
     public void setSunk(Collection<Shot> sunk) {
         this.sunk.addAll(sunk);
-        //logger.debug("Size all Sunk: {}", this.sunk.size());
     }
 
     public Collection<Shot> getSunk() {
@@ -572,4 +658,5 @@ public class AI implements AutoCloseable,
     public Collection<Shot> getRequestedShots() {
         return this.requestedShots;
     }
+
 }

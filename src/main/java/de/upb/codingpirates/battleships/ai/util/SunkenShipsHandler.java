@@ -71,7 +71,6 @@ public class SunkenShipsHandler {
             }
             System.out.println();
 
-
         }
         return allSunkenShipIds;
     }
