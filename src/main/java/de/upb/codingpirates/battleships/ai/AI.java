@@ -163,7 +163,7 @@ public class AI implements AutoCloseable,
                 break;
             }
 
-            System.out.println("Choose between the difficulty levels 1, 2 or 3, or type help to get more information about the difficulty level.");
+            System.out.println("Choose between the difficulty levels 1, 2 or 3, or type help for information about the difficulty level.");
             while (true) {
                 String input = new Scanner(System.in).next();
                 if (input.equals("help")) {
