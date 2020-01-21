@@ -46,9 +46,11 @@ public class ShotPlacer {
         }
 
         while (true) {
-            int randomIndex = (int) (Math.random() * numberOfClients);
-            if (randomIndex != aiIndex) {
-                shotClientId = ai.getClientArrayList().get(randomIndex).getId(); //shotClientId is the target for placing shots in the next part
+
+            ArrayList<Client> client = new ArrayList<>(ai.getClientArrayList());
+            Collections.shuffle(client);
+            if (client.get(0).getId() != ai.getAiClientId()) {
+                shotClientId = client.get(0).getId();
                 logger.info(Markers.Ai_ShotPlacer, "Shooting on client with id: {} ", shotClientId);
                 break;
             }
