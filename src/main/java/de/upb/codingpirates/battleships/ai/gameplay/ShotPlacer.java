@@ -143,6 +143,8 @@ public class ShotPlacer {
 
         for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connectedNotClean.entrySet()) {
 
+            if (ai.getSizeOfPointsToHit() == sortedHIts.get(entry.getKey()).size()) continue;
+
             if (entry.getKey() == ai.getAiClientId()) continue;
             int id = entry.getKey();
             LinkedList<LinkedList<Point2D>> clean = new LinkedList<>();

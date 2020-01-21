@@ -667,4 +667,11 @@ public class AI implements AutoCloseable,
         return this.requestedShots;
     }
 
+    public void setSizeOfPointsToHit(int sizeOfPointsToHit) {
+        this.sizeOfPointsToHit = sizeOfPointsToHit;
+    }
+
+    public int getSizeOfPointsToHit() {
+        return this.sizeOfPointsToHit;
+    }
 }
