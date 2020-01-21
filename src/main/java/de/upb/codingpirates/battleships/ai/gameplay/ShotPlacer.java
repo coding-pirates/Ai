@@ -45,10 +45,12 @@ public class ShotPlacer {
             }
         }
 
+        Map<Integer, LinkedList<Point2D>> sortedHIts = new HitsHandler(this.ai).sortTheHits();
         while (true) {
 
             ArrayList<Client> client = new ArrayList<>(ai.getClientArrayList());
             Collections.shuffle(client);
+            if (sortedHIts.get(client.get(0).getId()).size() == ai.getSizeOfPointsToHit()) continue;
             if (client.get(0).getId() != ai.getAiClientId()) {
                 shotClientId = client.get(0).getId();
                 logger.info(Markers.Ai_ShotPlacer, "Shooting on client with id: {} ", shotClientId);
