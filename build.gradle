@@ -48,10 +48,11 @@ test {
 }
 
 jar{
+    baseName = "ai_${project.ai_version}"
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',
                 'Implementation-Version': "${project.ai_version}",
-                'Main-Class': 'de.upb.codingpirates.battleships.ai.AiMain'
+                'Main-Class': 'de.upb.codingpirates.battleships.ai.AI'
     }
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
