@@ -14,7 +14,6 @@ import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
 import de.upb.codingpirates.battleships.client.network.ClientConnector;
-import de.upb.codingpirates.battleships.client.network.ClientModule;
 import de.upb.codingpirates.battleships.logic.*;
 import de.upb.codingpirates.battleships.network.exceptions.BattleshipException;
 import de.upb.codingpirates.battleships.network.message.Message;
@@ -90,7 +89,7 @@ public class AI implements AutoCloseable,
 
     private Configuration configuration;
 
-    private final ClientConnector tcpConnector = ClientApplication.create(new ClientModule<>(ClientConnector.class));
+    private final ClientConnector tcpConnector = ClientApplication.create();
 
     @Nonnull
     private final String name;
@@ -284,11 +283,7 @@ public class AI implements AutoCloseable,
     public void onServerJoinResponse(ServerJoinResponse message, int clientId) {
         logger.info(Markers.Ai, "ServerJoinResponse, AiClientId is: {}", message.getClientId());
         this.setAiClientId(message.getClientId());
-        try {
-            this.tcpConnector.sendMessageToServer(RequestBuilder.lobbyRequest());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.tcpConnector.sendMessageToServer(RequestBuilder.lobbyRequest());
     }
 
     @Override
