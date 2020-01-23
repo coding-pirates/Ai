@@ -1,7 +1,7 @@
 apply plugin: "java"
 apply plugin: "application"
 
-apply from: "${rootProject.rootDir}/gradle/javadoc.gradle"
+apply from: "${rootProject.rootDir}/gradle/java.gradle"
 
 dependencies {
     implementation project(":network")
@@ -54,5 +54,7 @@ jar{
                 'Implementation-Version': "${project.ai_version}",
                 'Main-Class': 'de.upb.codingpirates.battleships.ai.AI'
     }
-    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    from ( configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } ) {
+        exclude 'log4j2.xml'
+    }
 }
