@@ -55,7 +55,6 @@ jar{
                 'Main-Class': 'de.upb.codingpirates.battleships.ai.AI'
     }
     from ( configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } ) {
-        exclude 'META-INF/**'
         exclude 'log4j2.xml'
     }
 }
