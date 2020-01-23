@@ -27,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.*;
 
 /**
@@ -218,7 +217,7 @@ public class AI implements AutoCloseable,
      * @throws IOException network error,
      */
     @Override
-    public void close() throws IOException {
+    public void close() {
         tcpConnector.disconnect();
     }
 
@@ -229,9 +228,8 @@ public class AI implements AutoCloseable,
      * @param port the server port.
      * @throws IOException network error.
      */
-    public void connect(@Nonnull final String host, final int port) throws IOException {
-        tcpConnector.connect(host, port);
-        sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER));
+    public void connect(@Nonnull final String host, final int port) {
+        tcpConnector.connect(host, port, ()->sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)),null);
     }
 
     /**
@@ -309,7 +307,7 @@ public class AI implements AutoCloseable,
      * @param message message to send
      * @throws IOException server connection error
      */
-    public void sendMessage(Message message) throws IOException {
+    public void sendMessage(Message message) {
         tcpConnector.sendMessageToServer(message);
     }
 
@@ -486,22 +484,14 @@ public class AI implements AutoCloseable,
             System.out.println(i);
         }
 
-        try {
-            close();
-        } catch (final IOException exception) {
-            throw new UncheckedIOException(exception);
-        }
+        close();
     }
 
     @Override
     public void onConnectionClosedReport(ConnectionClosedReport message, int clientId) {
         logger.info(Markers.Ai, "------------------------------ConnectionClosedReport------------------------------");
 
-        try {
-            close();
-        } catch (final IOException exception) {
-            throw new UncheckedIOException(exception);
-        }
+        close();
     }
 
     @Override
