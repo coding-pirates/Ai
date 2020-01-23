@@ -7,6 +7,7 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -51,9 +52,13 @@ public class MissesFinder {
         return tempMisses;
     }
 
+    /**
+     * Computes all misses of the running game.
+     *
+     * @return all misses
+     */
     public Collection<Shot> computeMissesAll() {
-        //logger.debug(MARKER.AI, "Compute all misses");
-        Collection<Shot> tempMisses = Lists.newArrayList();
+        Collection<Shot> misses = new ArrayList<>();
         for (Shot s : ai.getRequestedShots()) {
             boolean miss = true; //assume the shot s is a miss
             for (Shot i : ai.getHits()) { //check if shot s is a miss
@@ -63,10 +68,10 @@ public class MissesFinder {
                 }
             }
             if (miss) {
-                tempMisses.add(s); // if its not hit, its a miss
+                misses.add(s); // if its not hit, its a miss
             }
         }
-        return tempMisses;
+        return misses;
     }
 
 
