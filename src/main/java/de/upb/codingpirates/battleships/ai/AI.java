@@ -1,8 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
 import de.upb.codingpirates.battleships.ai.logger.Markers;
@@ -73,20 +71,20 @@ public class AI implements AutoCloseable,
 
     int sizeOfPointsToHit;
 
-    Map<Integer, Integer> points = Maps.newHashMap(); //points of the clients
+    Map<Integer, Integer> points = new HashMap<>(); //points of the clients
 
-    Collection<Shot> sunk = Lists.newArrayList(); //sunks which are updated every round
-    Map<Integer, LinkedList<Point2D>> sortedSunk = Maps.newHashMap(); //sunks sorted by their clients
-    Map<Integer, LinkedList<Integer>> allSunkenShipIds = Maps.newHashMap(); //sunk ship ids by their clients
+    Collection<Shot> sunk = new ArrayList<>(); //sunks which are updated every round
+    Map<Integer, LinkedList<Point2D>> sortedSunk = new HashMap<>(); //sunks sorted by their clients
+    Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //sunk ship ids by their clients
 
-    Map<Integer, Double[][]> heatmapAllClients = Maps.newHashMap(); //heatmaps
+    Map<Integer, Double[][]> heatmapAllClients = new HashMap<>(); //heatmaps
 
-    Map<Integer, LinkedList<Point2D>> invalidPointsAll = Maps.newHashMap(); //invalid points per client id
+    Map<Integer, LinkedList<Point2D>> invalidPointsAll = new HashMap<>(); //invalid points per client id
 
-    Collection<Shot> misses = Lists.newArrayList(); //all misses of this player
+    Collection<Shot> misses = new ArrayList<>(); //all misses of this player
 
-    public Collection<Shot> requestedShotsLastRound = Lists.newArrayList(); //the latest requested shots
-    public Collection<Shot> requestedShots = Lists.newArrayList(); //all requested shots
+    public Collection<Shot> requestedShotsLastRound = new ArrayList<>(); //the latest requested shots
+    public Collection<Shot> requestedShots = new ArrayList<>(); //all requested shots
 
     private Configuration configuration;
 
