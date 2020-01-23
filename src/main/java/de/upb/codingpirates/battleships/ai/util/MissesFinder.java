@@ -15,7 +15,7 @@ import java.util.Collection;
  * @author Benjamin Kasten
  */
 public class MissesFinder {
-    private static final Logger logger = LogManager.getLogger(Markers.Ai_Misses);
+    private static final Logger logger = LogManager.getLogger();
     AI ai;
 
     /**

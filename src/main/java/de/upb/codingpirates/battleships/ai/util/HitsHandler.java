@@ -13,11 +13,23 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+/**
+ * Helper Class which handles and sorts the hits.
+ *
+ * @author Benjamin Kasten
+ * @see de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer
+ * @see SunkenShipsHandler
+ */
 public class HitsHandler {
     private static final Logger logger = LogManager.getLogger();
 
     AI ai;
 
+    /**
+     * Constructor which gets the ai instance to know the gamestates
+     *
+     * @param ai the ai instance of the caller
+     */
     public HitsHandler(AI ai) {
         this.ai = ai;
     }
@@ -41,7 +53,6 @@ public class HitsHandler {
                 }
             }
             if (!success) {
-                //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
                 sortedHits.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
             }
         }
@@ -49,17 +60,6 @@ public class HitsHandler {
             if (!sortedHits.containsKey(c.getId())) {
                 sortedHits.put(c.getId(), new LinkedList<>(Collections.emptyList()));
             }
-        }
-        //logger.info(MARKER.AI, "Sorted the sunken ships by their clients.");
-        for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedHits.entrySet()) {
-            if (entry.getValue().isEmpty()) {
-
-                //logger.info(Markers.Ai_Hits, "Player {} has not yet been hit.", entry.getKey());
-
-                continue;
-            }
-            //logger.info(Markers.Ai_Hits, "Player {} has been hit {} times.", entry.getKey(), entry.getValue().size());
-
         }
         return sortedHits;
     }

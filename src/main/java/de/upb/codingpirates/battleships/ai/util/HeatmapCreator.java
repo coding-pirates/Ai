@@ -78,47 +78,52 @@ public class HeatmapCreator {
         Map<Integer, ShipType> shipConfig = ai.getConfiguration().getShips();
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
             if (sunkenIdsThisClient.contains(entry.getKey())) {
-                continue; //Wenn das Schiff versenkt ist betrachte nächstes Schiff
+                continue; //if this ship is sunk, take the next
             }
-            int shipId = entry.getKey(); //Schiffs Id
-            //Koordinaten des aktuellen Schiffs
+            int shipId = entry.getKey(); //ship id
+            //coordinates of the ship
             ArrayList<Point2D> positions = (ArrayList<Point2D>) entry.getValue().getPositions();
-            //Rotiere das aktuelle Schiff
-            Rotator rotator = new Rotator(this.ai);
-            ArrayList<ArrayList<Point2D>> rotated = rotator.rotateShips(positions);
-            //Betrachte erstes rotiertes Schiff
+            //rotate the ship
+            ArrayList<ArrayList<Point2D>> rotated = new Rotator(this.ai).rotateShips(positions);
+            //Iterate through each rotation
             for (ArrayList<Point2D> tShips : rotated) {
-                ArrayList<Point2D> cShip = new ArrayList<>(tShips); //kopiere erstes rotiertes Schiff
-                ArrayList<Integer> xValues = new ArrayList<>(); //alle X werte des Schiffs
-                ArrayList<Integer> yValues = new ArrayList<>(); //alle y Werte des Schiffs
-                for (Point2D z : cShip) { //füge x und y den Listen hinzu
+                ArrayList<Point2D> cShip = new ArrayList<>(tShips); //copy first ship
+                ArrayList<Integer> xValues = new ArrayList<>(); //all x values
+                ArrayList<Integer> yValues = new ArrayList<>(); //all y values
+                for (Point2D z : cShip) { //put all x and y values to the list above
                     xValues.add(z.getX());
                     yValues.add(z.getY());
                 }
-                Collections.sort(xValues);//sortiere die x, y Listen
-                Collections.sort(yValues);
+                int maxX = Collections.max(xValues);
+                int maxY = Collections.max(yValues);
+
+                int initMaxX = Collections.max(xValues); //the inital max x value (needed for shifting)
+                /*
+                Collections.sort(xValues);//sort the lists
+                Collections.sort(yValues);//~
                 int maxX = xValues.get(xValues.size() - 1); //hole größtes x, y der Schiffe
                 int maxY = yValues.get(yValues.size() - 1);
                 int initMaxX = xValues.get(xValues.size() - 1);//lege initiales x, y fest
                 int initMaxY = yValues.get(yValues.size() - 1);
 
+                 */
+
                 while (maxY < ai.getConfiguration().getHeight()) {
                     while (maxX < ai.getConfiguration().getWidth()) {
                         boolean valid = true;
                         //check if cShip fits on the field
-                        for (Point2D p : cShip) { //jeder Punkt in cShip
-                            for (Point2D s : invalidPointsThisClient) { //jeder invalid Point für diesen Client
+                        for (Point2D p : cShip) {
+                            for (Point2D s : invalidPointsThisClient) { //each invalid point for this ckient
                                 if (p.getX() == s.getX() & p.getY() == s.getY()) {
-                                    //wenn ein Punkt dem Shot Punkt gleich ist, mache nichts und schiebe Schiff einen weiter
+                                    //is not valid for next steps if one point is invalid
                                     valid = false;
                                     break;
                                 }
                             }
                             if (!valid) break;
-
                         }
                         if (valid) {
-                            //increment the array positions by 1
+                            //increment the array positions by 1 if positions are valid
                             for (Point2D i : cShip) {
                                 int x = i.getX();
                                 int y = i.getY();
@@ -143,15 +148,15 @@ public class HeatmapCreator {
                     maxY++;
                 }
             }
-            //logger.info(MARKER.AI, "Finished field with rotated versions of ship " + shipId);
         }
+        //By definition the heatvalue of each point of dead player is 0
         if (ai.getAllSunkenShipIds().get(clientId).size() == ai.getConfiguration().getShips().size()) {
             for (Integer[] i : heatmap) {
                 Arrays.fill(i, 0);
             }
         }
 
-        //die heatmap mit absoluten Werten
+        /*
         Double[][] dHeatmap = new Double[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
 
         for (int i = 0; i < heatmap.length; i++) {
@@ -159,6 +164,8 @@ public class HeatmapCreator {
                 dHeatmap[i][j] = (double) heatmap[i][j];
             }
         }
+
+         */
 
         if (clientId == ai.getAiClientId()) {
             System.out.println(String.format("Heatmap of my field (%s)", ai.getAiClientId()));
@@ -224,7 +231,6 @@ public class HeatmapCreator {
             System.out.println();
         }
     }
-
 }
 
 

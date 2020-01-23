@@ -19,7 +19,6 @@ import java.util.Map;
  * @author Benjamin Kasten
  */
 public class InvalidPointsHandler {
-    //Logger
     private static final Logger logger = LogManager.getLogger();
 
     AI ai;
@@ -51,7 +50,6 @@ public class InvalidPointsHandler {
             }
         }
 
-        //logger.info("Size of invalid points of client {}: {} ", clientId, temp.size());
         return temp;
     }
 
@@ -65,7 +63,6 @@ public class InvalidPointsHandler {
      * @return The set of invalid points around one ship.
      */
     public LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(List<Point2D> shipPos) {
-        //todo prevent multiple insertion of the same point
         LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
         for (Point2D point : shipPos) {
             int x = point.getX();

@@ -105,7 +105,7 @@ public class ShotPlacer {
 
 
     /**
-     * Implements the hunt & target algorithm mentioned on datagenetics blog.
+     * Implements the hunt & target algorithm mentioned on datagenetics blog. Difficulty level 2.
      *
      * @return shots to fire
      */
@@ -124,16 +124,22 @@ public class ShotPlacer {
         }
 
 
+        //connected collection includes all related hits which are valid for use in next step
         Map<Integer, LinkedList<LinkedList<Point2D>>> connected = new HashMap<>();
-
 
         boolean isValid;
 
         for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connectedNotClean.entrySet()) {
 
-            if (ai.getSizeOfPointsToHit() == sortedHIts.get(entry.getKey()).size()) continue;
-
-            if (entry.getKey() == ai.getAiClientId()) continue;
+            //replace with idDead attribute of clients could be useful
+            //shooting on a field of a dead player has no sense
+            if (ai.getSizeOfPointsToHit() == sortedHIts.get(entry.getKey()).size()) {
+                continue;
+            }
+            //own connected hit are not valid
+            if (entry.getKey() == ai.getAiClientId()) {
+                continue;
+            }
             int id = entry.getKey();
             LinkedList<LinkedList<Point2D>> clean = new LinkedList<>();
             for (LinkedList<Point2D> l : entry.getValue()) {
@@ -154,19 +160,20 @@ public class ShotPlacer {
                     for (Point2D p : temp1) {
                         surroundingInv.add(new Shot(id, p));
                     }
-
                     clean.add(l);
                 }
             }
             connected.put(id, new LinkedList<>(clean));
         }
 
+        //pots is the map which stores the potential surrounding hits for each opponent
         Map<Integer, LinkedList<Set<Shot>>> pots = new HashMap<>();
         for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connected.entrySet()) {
 
             if (entry.getKey() == ai.getAiClientId()) {
                 continue;
             }
+
             LinkedList<Set<Shot>> temp = new LinkedList<>();
             int id = entry.getKey();
 
@@ -205,14 +212,15 @@ public class ShotPlacer {
             }
 
             if (!temp.isEmpty()) {
-                //logger.debug("Added this points {} of client {}", temp, id);
                 pots.put(id, temp);
             }
         }
 
+
         Collection<Shot> myShots = new ArrayList<>();
-        for (
-                Map.Entry<Integer, LinkedList<Set<Shot>>> entry : pots.entrySet()) {
+
+        //add possible shots myShots
+        for (Map.Entry<Integer, LinkedList<Set<Shot>>> entry : pots.entrySet()) {
             for (Set<Shot> l : entry.getValue()) {
                 for (Shot s : l) {
                     myShots.add(s);
@@ -225,16 +233,19 @@ public class ShotPlacer {
             }
         }
 
+        //if there are not enough shots in pots, shoot random
         while (myShots.size() < ai.getConfiguration().getShotCount()) {
-            //get random shots
+            //get random shots: shuffle client list first and take first element
             Collections.shuffle(ai.getClientArrayList());
 
             int targetClientId = ai.getClientArrayList().get(0).getId();
 
             if (targetClientId != ai.getAiClientId()) {
                 Shot targetShot = new Shot(targetClientId, new RandomPointCreator(this.ai.getConfiguration()).getRandomPoint2D());
+
                 boolean valid = true;
 
+                //check if random shot is valid
                 for (Shot s : surroundingInv) {
                     if (PositionComparator.compareShots(targetShot, s)) {
                         valid = false;
@@ -275,9 +286,15 @@ public class ShotPlacer {
             }
         }
         return myShots;
-
     }
 
+    /**
+     * Called by placeShots_2 method for checking if shots are valid
+     *
+     * @param s the shot to check
+     * @return if the shot is valid
+     * @see #placeShots_2()
+     */
     public boolean checkValid(Shot s) {
 
         if (s.getTargetField().getX() < 0
@@ -285,7 +302,6 @@ public class ShotPlacer {
                 | s.getTargetField().getX() > ai.getConfiguration().getWidth() - 1
                 | s.getTargetField().getY() > ai.getConfiguration().getHeight() - 1) {
             return false;
-
         }
 
         for (Shot d : ai.getHits()) {
@@ -305,9 +321,8 @@ public class ShotPlacer {
 
     //difficulty level 3 ---------------------------------------------------------
 
-
     /**
-     * Placing shots based on the relative value. Heatmaps will be created with relative values.
+     * Places shots using a heatmap for each opponent. Difficulty level 3.
      *
      * @return shots to fire
      */
@@ -360,7 +375,6 @@ public class ShotPlacer {
 
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = Lists.newArrayList();
-
 
         for (Triple<Integer, Point2D, Double> t : allHeatVal) {
 

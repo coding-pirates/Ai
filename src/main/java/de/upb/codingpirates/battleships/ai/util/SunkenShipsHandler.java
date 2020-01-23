@@ -13,14 +13,14 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 
 /**
- * The class for computing the sunken ships out of the sunk collection.
+ * The class for handling sunken ships uding the hits and the sunk points
  *
  * @author Benjamin Kasten
  */
 public class SunkenShipsHandler {
     private static final Logger logger = LogManager.getLogger();
-    AI ai;
 
+    AI ai;
 
     /**
      * Constructor for {@link MissesFinder}. Gets an instance of the ai object which creates the {@link MissesFinder}
@@ -33,8 +33,7 @@ public class SunkenShipsHandler {
         this.ai = ai;
     }
 
-    // alle Punkte, aus denen bereits ein Schiff identifiziert wurde. Mit diesen Punkten kann kein weiteres Schiff
-    //identifiziert werden
+    //all points which are used for identification already
     public Collection<Point2D> used = new ArrayList<>();
 
 
@@ -75,11 +74,16 @@ public class SunkenShipsHandler {
         return allSunkenShipIds;
     }
 
+    /**
+     * Computes all points of the sunken ships per client in one collection
+     *
+     * @return sunken ships per client in one collection
+     */
     public HashMap<Integer, LinkedList<Point2D>> createSortedSunk() {
         HashMap<Integer, LinkedList<Point2D>> sortedSunkAll = new HashMap<>();
         for (Client c : ai.getClientArrayList()) {
             LinkedList<Point2D> sortedSunkOne = new LinkedList<>();
-            LinkedList<Point2D> hitsTC = Lists.newLinkedList();
+            LinkedList<Point2D> hitsTC = new LinkedList<>();
 
             for (Shot s : ai.getHits()) {
                 if (s.getClientId() == c.getId()) {
@@ -105,12 +109,11 @@ public class SunkenShipsHandler {
      * @return connected Points
      */
     public LinkedList<LinkedList<Point2D>> findConnectedPoints(LinkedList<Point2D> hitsThisClient, int clientId) {
-        LinkedList<LinkedList<Point2D>> sunkPositions = new LinkedList<>(); //die initiale liste die wieder aktualisiert wird
-        LinkedList<LinkedList<Point2D>> p; //die temporäre linkedlist zum bearbeiten
+        LinkedList<LinkedList<Point2D>> sunkPositions = new LinkedList<>(); //the initial list which will be updated and returned at the end
+        LinkedList<LinkedList<Point2D>> p; //the temporary list for edit
 
-
-        //Algorithmus zum Finden von zusammenhängenden Punkten (Schiffe finden)
-        //1. Bilden einer initialen Verteilung der Schiffe
+        //Algorithm for finding related points (points of ships)
+        //1. Creating a initial allocation
         for (Point2D z : hitsThisClient) {
             boolean proofed = false;
 
@@ -166,11 +169,8 @@ public class SunkenShipsHandler {
             temp.clear();
         }
 
-        //2. Ausgehend von der initialen Verteilung der Schiffe werden die anderen zugehörigen
-        //   Punkte gesucht und passenden, schon zusammenhängenden Punkteverteilungen hinzugefügt
-        //   Aufgrund der Notwendigkeit des Ersetzens des Iterables wird mit einer Kopie gearbeitet.
-        //   Dann wird über die Kopie iteriert und die "haupt" Liste wird bearbeitet. Zwischen den Loops
-        //   werden die Listen synchronisiert
+        //2. Using the initial allocation  of points the other relarted points will be searched and
+        //  will be added to already related point allocations if they fit.
 
         p = new LinkedList<>(sunkPositions);
 
@@ -245,8 +245,14 @@ public class SunkenShipsHandler {
         return sunkPositions;
     }
 
-    public LinkedList<LinkedList<Point2D>> getSunksOfHits(LinkedList<LinkedList<Point2D>> sortedHitsByPosition,
-                                                          int clientId) {
+    /**
+     * Computes the collection of hits which are sunk collections.
+     *
+     * @param sortedHitsByPosition the sorted hits which also includes not sunk collections.
+     * @param clientId             the id of the client
+     * @return only the sorted sunk
+     */
+    public LinkedList<LinkedList<Point2D>> getSunksOfHits(LinkedList<LinkedList<Point2D>> sortedHitsByPosition, int clientId) {
         LinkedList<LinkedList<Point2D>> sortedSunksByPosition = Lists.newLinkedList();
         boolean isSunkShip;
         for (LinkedList<Point2D> l : sortedHitsByPosition) {
@@ -267,14 +273,15 @@ public class SunkenShipsHandler {
     }
 
 
+    /**
+     * Finds the ids of sunken ships of one client.
+     *
+     * @param sortedSunkByPosition The sorted sunk points of one client
+     * @param clientId             the client id
+     * @return the sunken ship ids of the client
+     */
     public LinkedList<Integer> findIds(LinkedList<LinkedList<Point2D>> sortedSunkByPosition, int clientId) {
-        //3. Finden der zu den gefundenen Schiffsverteilungen passenden Schiffen aus der shipConfig
-        //   Dazu wird jedes Schiff aus der config einmal in jeder Rotation über das Spielfeld geschoben
-        //   Sobald ein Schiff aus der config mit einem der versenkten übereinstimmt, wird es in eine Collection
-        //   aufgenommen
 
-        //logger.debug("The points which cannot be accessed for identification for ships of client {}", clientId);
-        //System.out.println(used);
         boolean isValid;
         LinkedList<Integer> sunkenShipIds = new LinkedList<>();
         Map<Integer, ShipType> ships = ai.getConfiguration().getShips();
@@ -283,10 +290,10 @@ public class SunkenShipsHandler {
             int shipId = entry.getKey();
             Rotator rotator = new Rotator(this.ai);
             ArrayList<ArrayList<Point2D>> t = rotator.rotateShips((ArrayList<Point2D>) entry.getValue().getPositions()); //schiff aus der config wird gedreht
-            for (LinkedList<Point2D> a : sortedSunkByPosition) { //erster Eintrag in all (erstes gesunkens Schiff)
+            for (LinkedList<Point2D> a : sortedSunkByPosition) { //entry in all (a sunken ship)
                 boolean find = false;
-                for (ArrayList<Point2D> b : t) {//erster Eintrag in t (erstes rotiertes Schiff aus der shipconfig
-                    ArrayList<Point2D> bCopy = new ArrayList<>(b); //das schiff in der pos, mit der es über das feld geschoben wird
+                for (ArrayList<Point2D> b : t) {//entry in t (a rotation of a ship of the shipconfig)
+                    ArrayList<Point2D> bCopy = new ArrayList<>(b); //the ship which will be shifted over the field
 
                     if (a.size() == b.size()) {
                         ArrayList<Integer> xValues = new ArrayList<>();
@@ -307,7 +314,6 @@ public class SunkenShipsHandler {
                                 for (Point2D s : bCopy) {
                                     for (Point2D f : used) {
                                         if (PositionComparator.comparePoints(s, f)) {
-                                            //logger.debug("{} can not be used for identification anymore", f);
                                             isValid = false;
                                             break;
                                         }
@@ -329,7 +335,6 @@ public class SunkenShipsHandler {
                                             }
                                             if (size == a.size()) {
                                                 sunkenShipIds.add(shipId);
-                                                //logger.debug("Added to sunk: {}", shipId);
                                                 find = true;
                                                 break;
                                             }
@@ -369,7 +374,6 @@ public class SunkenShipsHandler {
                 }
 
                 if (find) {
-                    //logger.info("Find true - break");
                     break;
                 }
             }
@@ -381,6 +385,7 @@ public class SunkenShipsHandler {
      * Creates a map which maps from the clientID on their sunk points
      *
      * @return The map with ordered sunks
+     * @deprecated replaced by {@link #createSortedSunk()}
      */
     public HashMap<Integer, LinkedList<Point2D>> sortTheSunk() {
         HashMap<Integer, LinkedList<Point2D>> sortedSunk = new HashMap<>();
@@ -395,7 +400,6 @@ public class SunkenShipsHandler {
                 }
             }
             if (!success) {
-                //sortedSunk.put(clientId, ai.createArrayListOneArgument(i));
                 sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
             }
         }
@@ -405,7 +409,6 @@ public class SunkenShipsHandler {
                 sortedSunk.put(c.getId(), emptyList);
             }
         }
-        //logger.info( "Sorted the sunken ships by their clients.");
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
             if (entry.getValue().isEmpty()) {
                 logger.info(Markers.Ai_SunkenShips, "No sunk points of client {}", entry.getKey());

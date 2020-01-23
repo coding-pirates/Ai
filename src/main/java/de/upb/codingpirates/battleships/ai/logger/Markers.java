@@ -3,6 +3,9 @@ package de.upb.codingpirates.battleships.ai.logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.MarkerManager;
 
+/**
+ * Implements the markers for log4J logs.
+ */
 public class Markers {
     public final static Marker Ai_Main = MarkerManager.getMarker("Ai_Main");
     public final static Marker Ai = MarkerManager.getMarker("Ai");
