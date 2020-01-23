@@ -108,17 +108,6 @@ public class ShipPlacer {
         }
     }
 
-/*
-    public void placeShipDEBUG() throws IOException {
-        for (Map.Entry<Integer, ShipType> entry : ai.getShips().entrySet()) {
-            logger.debug("Ship {}", entry.getKey());
-            positions.put(entry.getKey(), new PlacementInfo(new Point2D(5, 5), Rotation.NONE));
-        }
-        ai.sendMessage(RequestBuilder.placeShipsRequest(positions));
-    }
-
- */
-
     /**
      * Is called by placeShips() and places the ships randomly on the field. Leave the loop if the placement is not valid.
      *
@@ -129,30 +118,23 @@ public class ShipPlacer {
         usedPoints.clear();
         positions.clear();
 
-        //logger.info(MARKER.Ai_ShipPlacer, "Started random guesser");
-
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
 
             int xOffset = Offset.getXOffset(entry.getValue().getPositions());
             int yOffset = Offset.getYOffset(entry.getValue().getPositions());
-            //logger.info(MARKER.Ai_ShipPlacer, "Try placing ship: " + entry.getKey());
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
             Collection<Point2D> ship = entry.getValue().getPositions();
 
-
-            //making all points positive using ZeroPointMover
-            ZeroPointMover zeroPointMover = new ZeroPointMover();
+            //making all points positive using ZeroPointMo
             //new positive ship values
-            Collection<Point2D> shipPositive = new ArrayList<>(zeroPointMover.moveToZeroPoint((ArrayList<Point2D>) ship));
+            Collection<Point2D> shipPositive = new ArrayList<>(new ZeroPointMover().moveToZeroPoint((ArrayList<Point2D>) ship));
 
             //use a RandomPointCreator to get a random point
-            RandomPointCreator randomPointCreator = new RandomPointCreator(ai.getConfiguration());
-
             //the random point for positioning the ship
-            Point2D guessPoint = randomPointCreator.getRandomPoint2D();
+            Point2D guessPoint = new RandomPointCreator(ai.getConfiguration()).getRandomPoint2D();
 
             //the the distance from zeropoint to random guessPoint
             int distanceX = guessPoint.getX();
@@ -180,9 +162,7 @@ public class ShipPlacer {
                         usedPoints.clear();
                         positions.clear();
                         placedShipMap.clear();
-                        //logger.info(MARKER.Ai_ShipPlacer, "Failed: new point already is not accessible.");
                         return;
-
                     }
                 }
 
@@ -195,7 +175,6 @@ public class ShipPlacer {
                     usedPoints.clear();
                     positions.clear();
                     placedShipMap.clear();
-                    //logger.info(MARKER.Ai_ShipPlacer, "Failed: new point coordinates do not fit the field ");
                     return;
                 } else {
                     // if the newPoint is valid...
@@ -227,7 +206,6 @@ public class ShipPlacer {
                     minX = p.getX();
                 }
             }
-            //logger.debug(MARKER.Ai_ShipPlacer, "Bottom left point for pInfo is: {}", new Point2D(minX, minY));
             PlacementInfo pInfo = new PlacementInfo(new Point2D(minX - xOffset, minY - yOffset), Rotation.NONE);
             positions.put(shipId, pInfo);
             placedShipMap.put(shipId, new ArrayList<>(tempShipPos));
@@ -237,7 +215,7 @@ public class ShipPlacer {
 
         }
         //is called only if the placing of the ships in the positions Map worked for all ships
-        //responsible for leaving the while loop in placeShips()
+        //responsible for leaving the while loop
         successful = true;
 
     }

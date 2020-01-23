@@ -14,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 
 /**
- * Implements the 3 possible shot methods with difficulty levels 1, 2 or 3.
+ * Implements the 3 possible shot algorithms with difficulty level 1, 2 or 3.
  */
 public class ShotPlacer {
     private static final Logger logger = LogManager.getLogger();
@@ -35,22 +35,16 @@ public class ShotPlacer {
      */
     public Collection<Shot> placeShots_1(int shotCount) {
         RandomPointCreator randomPointCreator = new RandomPointCreator(this.ai.getConfiguration());
-        int numberOfClients = ai.getClientArrayList().size();
         int shotClientId;
-        int aiIndex = -1;
-
-        for (Client c : ai.getClientArrayList()) {
-            if (c.getId() == ai.getAiClientId()) {
-                aiIndex = ai.getClientArrayList().indexOf(c);
-            }
-        }
 
         Map<Integer, LinkedList<Point2D>> sortedHIts = new HitsHandler(this.ai).sortTheHits();
-        while (true) {
 
+        while (true) {
             ArrayList<Client> client = new ArrayList<>(ai.getClientArrayList());
-            Collections.shuffle(client);
-            if (sortedHIts.get(client.get(0).getId()).size() == ai.getSizeOfPointsToHit()) continue;
+            Collections.shuffle(client); //random target
+            if (sortedHIts.get(client.get(0).getId()).size() == ai.getSizeOfPointsToHit()) {
+                continue;
+            }
             if (client.get(0).getId() != ai.getAiClientId()) {
                 shotClientId = client.get(0).getId();
                 logger.info(Markers.Ai_ShotPlacer, "Shooting on client with id: {} ", shotClientId);
@@ -64,8 +58,6 @@ public class ShotPlacer {
         //all shots will be placed on the field of only one opponents field(other client)
         int i = 0;
         while (i < shotCount) {
-            //logger.info(MARKER.Ai_ShotPlacer, "Trying to find  {}. shot this round", i + 1);
-
             Point2D aimPoint = randomPointCreator.getRandomPoint2D();
 
             Shot targetShot = new Shot(shotClientId, aimPoint);
@@ -75,7 +67,6 @@ public class ShotPlacer {
             for (Shot s : ai.getRequestedShots()) {
                 if (PositionComparator.compareShots(s, targetShot)) {
                     alreadyChoosen = true;
-                    //logger.info(MARKER.Ai_ShotPlacer, "Shot was requested already: {}", targetShot);
                     break;
                 }
             }
@@ -84,7 +75,6 @@ public class ShotPlacer {
             for (Shot s : ai.getHits()) {
                 if (PositionComparator.compareShots(s, targetShot)) {
                     alreadyChoosen = true;
-                    //logger.info(MARKER.Ai_ShotPlacer, "Shot is a hit already: {}", targetShot);
                     break;
                 }
             }
@@ -93,12 +83,10 @@ public class ShotPlacer {
             for (Shot s : ai.getMisses()) {
                 if (PositionComparator.compareShots(s, targetShot)) {
                     alreadyChoosen = true;
-                    //logger.info(MARKER.Ai_ShotPlacer, "Shot is a miss already: {}", s);
                     break;
                 }
             }
             if (alreadyChoosen) continue;
-
 
             myShots.add(targetShot);
             ai.requestedShots.add(targetShot);
@@ -135,8 +123,6 @@ public class ShotPlacer {
             connectedNotClean.put(c.getId(), temp);
         }
 
-        System.out.println("Connected not cleaned:");
-        System.out.println(connectedNotClean);
 
         Map<Integer, LinkedList<LinkedList<Point2D>>> connected = new HashMap<>();
 
@@ -156,7 +142,6 @@ public class ShotPlacer {
                     for (Shot s : ai.getSunk()) {
                         if (PositionComparator.comparePointShot(p, s, id)) {
                             isValid = false;
-                            //logger.debug("A sunk inside {}: {}", l, s);
                             break;
                         }
                     }
@@ -171,27 +156,19 @@ public class ShotPlacer {
                     }
 
                     clean.add(l);
-                    //logger.debug("Added {} to cleaned --> no sunk inside", l);
                 }
             }
             connected.put(id, new LinkedList<>(clean));
         }
-        //logger.debug("Connected Cleaned:");
-        System.out.println(connected);
 
         Map<Integer, LinkedList<Set<Shot>>> pots = new HashMap<>();
         for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connected.entrySet()) {
 
-            // logger.debug("The connected hits of client {}:", entry.getKey());
-            logger.debug(entry.getValue());
-
             if (entry.getKey() == ai.getAiClientId()) {
-                //  logger.debug("Skip own id for shooting");
                 continue;
             }
             LinkedList<Set<Shot>> temp = new LinkedList<>();
             int id = entry.getKey();
-            //logger.debug("Client id : {}", id);
 
             for (LinkedList<Point2D> l : entry.getValue()) {
 
@@ -244,19 +221,15 @@ public class ShotPlacer {
                     if (myShots.size() == ai.getConfiguration().getShotCount()) {
                         return myShots;
                     }
-
                 }
             }
         }
+
         while (myShots.size() < ai.getConfiguration().getShotCount()) {
             //get random shots
-
-
             Collections.shuffle(ai.getClientArrayList());
 
-
             int targetClientId = ai.getClientArrayList().get(0).getId();
-
 
             if (targetClientId != ai.getAiClientId()) {
                 Shot targetShot = new Shot(targetClientId, new RandomPointCreator(this.ai.getConfiguration()).getRandomPoint2D());
@@ -306,29 +279,23 @@ public class ShotPlacer {
     }
 
     public boolean checkValid(Shot s) {
-        //logger.debug("Checking validity of shot {}", s);
 
         if (s.getTargetField().getX() < 0
                 | s.getTargetField().getY() < 0
                 | s.getTargetField().getX() > ai.getConfiguration().getWidth() - 1
                 | s.getTargetField().getY() > ai.getConfiguration().getHeight() - 1) {
-            //logger.debug("Doesnt fit the field");
             return false;
 
         }
 
-        Map<Integer, LinkedList<Point2D>> sortedHits = new HitsHandler(this.ai).sortTheHits();
-
         for (Shot d : ai.getHits()) {
             if (PositionComparator.compareShots(s, d)) {
-                //logger.debug("{} is a hit already", s);
                 return false;
             }
         }
 
         for (Shot d : ai.getMisses()) {
             if (PositionComparator.compareShots(s, d)) {
-                //logger.debug("{} is a miss already", s);
                 return false;
             }
         }
@@ -344,7 +311,7 @@ public class ShotPlacer {
      *
      * @return shots to fire
      */
-    public Collection<Shot> placeShots_Relative_3() {
+    public Collection<Shot> placeShots_3() {
 
         for (Client c : ai.getClientArrayList()) {
             InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(this.ai);
@@ -369,6 +336,7 @@ public class ShotPlacer {
         LinkedList<Triple<Integer, Point2D, Double>> allHeatVal = Lists.newLinkedList();
 
         //using the class Triple store the triple in allHeatVal if the target is valid
+        //Triple objects can be compared using the comparator interface
         //for use of class Triple see the nested for loops
         for (Map.Entry<Integer, Double[][]> entry : ai.getHeatMapAllClients().entrySet()) {
             int clientId = entry.getKey();
@@ -388,14 +356,11 @@ public class ShotPlacer {
         //using the TripleComparator class we can sort the the triple objects by their heat value
         allHeatVal.sort(new TripleComparator().reversed());
 
-
         ai.setAllHeatVal(allHeatVal);
-
 
         //all shots which will be fired this round
         Collection<Shot> myShotsThisRound = Lists.newArrayList();
 
-        boolean valid;
 
         for (Triple<Integer, Point2D, Double> t : allHeatVal) {
 
@@ -415,7 +380,7 @@ public class ShotPlacer {
                 }
             }
 
-            valid = true;
+            boolean valid = true;
 
             int clientId = t.getVal1(); //client id
             Point2D p = t.getVal2(); //heat point
@@ -423,7 +388,6 @@ public class ShotPlacer {
 
             for (Point2D g : ai.getInvalidPointsAll().get(clientId)) {
                 if (g.getX() == p.getX() & g.getY() == p.getY()) {
-                    logger.debug(Markers.Ai_ShotPlacer, "If this block is called something went wrong. {} is invalid", t);
                     valid = false;
                     break;
                 }

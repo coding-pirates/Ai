@@ -37,7 +37,7 @@ import java.util.*;
  * The model of the ai player. Stores the game configuration and values, handles the message sending,
  * the ship and shot placement.
  * <p>
- * Implements also the message listener interfaces and therefore also the message handling functionality.
+ * Implements the message listener interfaces and therefore also the message handling functionality.
  *
  * @author Benjamin Kasten
  */
@@ -112,6 +112,7 @@ public class AI implements AutoCloseable,
     static Timer timer = new Timer();
 
     public static void main(@Nonnull final String[] args) throws IOException {
+        //timer is not necessary when implementing the AutoClosable interface
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -259,7 +260,7 @@ public class AI implements AutoCloseable,
                 myShots = shotPlacement.placeShots_2();
                 break;
             case 3:
-                myShots = shotPlacement.placeShots_Relative_3();
+                myShots = shotPlacement.placeShots_3();
                 break;
             default: {
                 logger.error("Something went wrong. Start again.");
@@ -288,6 +289,8 @@ public class AI implements AutoCloseable,
 
     /**
      * Calculates the misses of last round and adds them to the misses collection
+     *
+     * @deprecated misses can be added manually
      */
     public void addMisses() {
         MissesFinder missesFinder = new MissesFinder(this);
@@ -585,6 +588,11 @@ public class AI implements AutoCloseable,
         return this.gameId;
     }
 
+    /**
+     * Not a usual setter. Adds new hits to all hits.
+     *
+     * @param hits the new hits each round
+     */
     public void setHits(Collection<Shot> hits) {
         this.hits.addAll(hits);
     }
