@@ -128,7 +128,6 @@ public class AI implements AutoCloseable,
             port = "33100";
             difficulty = 3;
             /*
-            System.out.println("Please answer the following questions for starting the engine player.");
             System.out.println("Give this engine player a name: ");
             while (true) {
 
