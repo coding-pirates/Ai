@@ -22,6 +22,7 @@ import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
 import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
 import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
 import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
+import de.upb.codingpirates.battleships.network.message.response.TournamentParticipantsResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -51,7 +52,8 @@ public class AI implements AutoCloseable,
         TournamentFinishNotificationListener,
         GameJoinPlayerResponseListener,
         ServerJoinResponseListener,
-        LobbyResponseListener {
+        LobbyResponseListener,
+        TournamentParticipantsResponseListener{
 
     private List<Client> clientArrayList = new LinkedList<>();
     private Collection<Shot> hits = new ArrayList<>();
@@ -452,14 +454,21 @@ public class AI implements AutoCloseable,
             System.out.println(i);
         }
 
-        close();
+        sendMessage(RequestBuilder.tournamentParticipantsRequest());
+    }
+
+    @Override
+    public void onTournamentParticipantsResponse(TournamentParticipantsResponse message, int clientId) {
+        if(!message.isParticipating()){
+            close();
+        }
     }
 
     @Override
     public void onConnectionClosedReport(ConnectionClosedReport message, int clientId) {
         logger.info(Markers.AI, "------------------------------ConnectionClosedReport------------------------------");
 
-        close();
+        System.exit(0);
     }
 
     @Override
