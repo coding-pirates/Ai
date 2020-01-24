@@ -106,7 +106,7 @@ public class AI implements AutoCloseable,
 
     static Timer timer = new Timer();
 
-    public static void main(@Nonnull final String[] args) throws IOException {
+    public static void main(@Nonnull final String[] args) {
         //timer is not necessary when implementing the AutoClosable interface
         timer.schedule(new TimerTask() {
             @Override
@@ -220,8 +220,6 @@ public class AI implements AutoCloseable,
 
     /**
      * Disconnects this ai instance from the server.
-     *
-     * @throws IOException network error
      */
     @Override
     public void close() {
@@ -233,7 +231,6 @@ public class AI implements AutoCloseable,
      *
      * @param host the ip address or domain of the server.
      * @param port the server port.
-     * @throws IOException network error.
      */
     public void connect(@Nonnull final String host, final int port) {
         tcpConnector.connect(host, port, ()->sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)),null);
@@ -248,10 +245,8 @@ public class AI implements AutoCloseable,
      * case 1: random
      * case 2: hunt and target
      * case 3: (extended) heatmap
-     *
-     * @throws IOException Server connection error
      */
-    public void placeShots() throws IOException {
+    public void placeShots() {
         ShotPlacer shotPlacement = new ShotPlacer(this);
         Collection<Shot> myShots = Collections.emptyList();
         switch (difficultyLevel) {
@@ -281,7 +276,7 @@ public class AI implements AutoCloseable,
      *
      * @throws IOException Connection error.
      */
-    public void placeShips() throws IOException {
+    public void placeShips() {
         ShipPlacer shipPlacer = new ShipPlacer(this);
 
         setPositions(shipPlacer.placeShipsRandomly());
@@ -312,7 +307,6 @@ public class AI implements AutoCloseable,
      * Can be used to send a message to the server.
      *
      * @param message message to send
-     * @throws IOException server connection error
      */
     public void sendMessage(Message message) {
         tcpConnector.sendMessageToServer(message);
@@ -421,13 +415,9 @@ public class AI implements AutoCloseable,
         }
         logger.debug("Size of points which has to be hit for loosing a game: {}", this.sizeOfPointsToHit);
         this.setClientArrayList(message.getClientList());
-        try {
-            logger.info(Markers.Ai, "Trying to place ships");
-            placeShips();
-        } catch (IOException e) {
-            logger.error(Markers.Ai, "Ship placement failed. Time was not enough or ships do not fit the field size.");
-            e.printStackTrace();
-        }
+
+        logger.info(Markers.Ai, "Trying to place ships");
+        placeShips();
     }
 
     @Override
@@ -435,14 +425,9 @@ public class AI implements AutoCloseable,
         logger.info(Markers.Ai, "------------------------------GameStartNotification------------------------------");
         increaseRoundCounter();
         updateValues();
-        try {
-            //logger.info("Trying to place shots");
-            logger.debug("Place shots with difficulty level {}", this.getDifficultyLevel());
-            placeShots();
-        } catch (IOException e) {
-            logger.error(Markers.Ai, "Shot placement failed");
-            e.printStackTrace();
-        }
+
+        logger.debug("Place shots with difficulty level {}", this.getDifficultyLevel());
+        placeShots();
     }
 
     boolean isFirstCall = true;
@@ -464,12 +449,8 @@ public class AI implements AutoCloseable,
         logger.info(Markers.Ai, "A player has to be hit {} times until he has lost.", this.sizeOfPointsToHit);
         logger.info(Markers.Ai, "Own id is: {}", this.getAiClientId());
         updateValues();
-        try {
-            placeShots();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
+        placeShots();
     }
 
     @Override
