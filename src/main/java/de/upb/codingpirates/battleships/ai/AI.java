@@ -101,7 +101,6 @@ public class AI implements AutoCloseable,
     public AI(@Nonnull final String name, final int difficultyLevel) {
         this.name = name;
         this.difficultyLevel = difficultyLevel;
-
         ListenerHandler.registerListener(this);
     }
 
@@ -195,7 +194,7 @@ public class AI implements AutoCloseable,
         } else {
             //if arguments were passed, use them
             if (args.length != 4) {
-                System.err.println("Use this order: host ip difficultyLevel aiName");
+                System.err.println("Use this order: host port difficultyLevel aiName");
                 System.exit(1);
             }
             name = args[3];
@@ -214,7 +213,7 @@ public class AI implements AutoCloseable,
     /**
      * Disconnects this ai instance from the server.
      *
-     * @throws IOException network error,
+     * @throws IOException network error
      */
     @Override
     public void close() {

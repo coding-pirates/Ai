@@ -47,7 +47,7 @@ test {
     }
 }
 
-jar{
+jar {
     baseName = "ai_${project.ai_version}"
     manifest {
         attributes 'Implementation-Title': 'Battleships Server',

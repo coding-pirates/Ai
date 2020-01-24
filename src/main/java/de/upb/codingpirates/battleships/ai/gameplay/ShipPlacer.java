@@ -123,6 +123,9 @@ public class ShipPlacer {
 
             int xOffset = Offset.getXOffset(entry.getValue().getPositions());
             int yOffset = Offset.getYOffset(entry.getValue().getPositions());
+            logger.debug("Offset x: {} ", xOffset);
+            logger.debug("Offset y: {}", yOffset);
+
             //ship Id
             int shipId = entry.getKey();
             //all points of the ship
@@ -206,7 +209,11 @@ public class ShipPlacer {
                     minX = p.getX();
                 }
             }
-            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX - xOffset, minY - yOffset), Rotation.NONE);
+            PlacementInfo pInfo = new PlacementInfo(new Point2D(minX, minY), Rotation.NONE);
+
+            //PlacementInfo pInfo = new PlacementInfo(new Point2D(minX - xOffset, minY - yOffset), Rotation.NONE);
+            logger.debug("pInfo of ship {}: {}", ship, pInfo);
+
             positions.put(shipId, pInfo);
             placedShipMap.put(shipId, new ArrayList<>(tempShipPos));
 
