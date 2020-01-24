@@ -26,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -273,8 +272,6 @@ public class AI implements AutoCloseable,
      * Creates a {@link ShipPlacer} instance and calls {@link ShipPlacer#guessRandomShipPositions(Map)} method.
      * Sets the placement by calling {@link #setPositions(Map)} and calls {@link #sendMessage(Message)} (Message)} for
      * sending the {@link PlaceShipsRequest} to the server.
-     *
-     * @throws IOException Connection error.
      */
     public void placeShips() {
         ShipPlacer shipPlacer = new ShipPlacer(this);
@@ -555,10 +552,6 @@ public class AI implements AutoCloseable,
         this.gameId = gameId;
     }
 
-    public int getGameId() {
-        return this.gameId;
-    }
-
     /**
      * Not a usual setter. Adds new hits to all hits.
      *
@@ -630,10 +623,6 @@ public class AI implements AutoCloseable,
         this.allHeatVal = allHeatVal;
     }
 
-    public List<Triple<Integer, Point2D, Double>> getAllHeatVal() {
-        return this.allHeatVal;
-    }
-
     public void setUpdate(PlayerUpdateNotification message) {
         this.update = message;
     }
@@ -644,10 +633,6 @@ public class AI implements AutoCloseable,
 
     public Collection<Shot> getRequestedShots() {
         return this.requestedShots;
-    }
-
-    public void setSizeOfPointsToHit(int sizeOfPointsToHit) {
-        this.sizeOfPointsToHit = sizeOfPointsToHit;
     }
 
     public int getSizeOfPointsToHit() {
