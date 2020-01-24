@@ -16,8 +16,6 @@ public class AiTest {
 
     @BeforeAll
     public static void create() {
-
-
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
         //ship1 id = 1
@@ -48,7 +46,6 @@ public class AiTest {
         ShipType s4 = new ShipType(pos4);
         shipconfig.put(4, s4);
 
-
         //Clients erstellen
         Client c1 = new Client(1, "c1");
         Client c2 = new Client(2, "c2");
@@ -58,7 +55,6 @@ public class AiTest {
         clientList.add(c1);
         clientList.add(c2);
         clientList.add(c3);
-
 
         //sunk erstellen
 
@@ -108,9 +104,7 @@ public class AiTest {
         ai.setClientArrayList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
-
     }
-
 
     @Test
     public void create_LinkedList_One_Element_Test() {
@@ -120,5 +114,4 @@ public class AiTest {
         assertEquals(list.size(), 1);
         assertSame(list.get(0).getClass(), Shot.class);
     }
-
 }

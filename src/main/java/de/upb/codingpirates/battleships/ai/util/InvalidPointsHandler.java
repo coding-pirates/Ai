@@ -5,6 +5,7 @@ import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 /**
@@ -37,9 +38,8 @@ public class InvalidPointsHandler {
         List<Point2D> temp = new LinkedList<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
 
         for (Shot s : ai.getMisses()) {
-            if (s.getClientId() == clientId) {
+            if (s.getClientId() == clientId)
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
-            }
         }
         return temp;
     }
@@ -53,7 +53,7 @@ public class InvalidPointsHandler {
      * @param shipPos The positions of one ship.
      * @return The set of invalid points around one ship.
      */
-    public Set<Point2D> addSurroundingPointsToUsedPoints(List<Point2D> shipPos) {
+    public Set<Point2D> addSurroundingPointsToUsedPoints(@Nonnull final List<Point2D> shipPos) {
         Set<Point2D> temp = new LinkedHashSet<>();
         for (Point2D point : shipPos) {
             int x = point.getX();

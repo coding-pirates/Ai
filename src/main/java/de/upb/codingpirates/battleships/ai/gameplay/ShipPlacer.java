@@ -3,7 +3,6 @@ package de.upb.codingpirates.battleships.ai.gameplay;
 import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.ai.logger.Markers;
 import de.upb.codingpirates.battleships.ai.util.InvalidPointsHandler;
-import de.upb.codingpirates.battleships.ai.util.Offset;
 import de.upb.codingpirates.battleships.ai.util.RandomPointCreator;
 import de.upb.codingpirates.battleships.ai.util.ZeroPointMover;
 import de.upb.codingpirates.battleships.logic.PlacementInfo;
@@ -13,6 +12,7 @@ import de.upb.codingpirates.battleships.logic.ShipType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 /**
@@ -113,16 +113,15 @@ public class ShipPlacer {
      *
      * @param shipConfig A map, which maps from the shipId to the ShipType (from the configuration)
      */
-    public void guessRandomShipPositions(Map<Integer, ShipType> shipConfig) {
+    public void guessRandomShipPositions(@Nonnull final Map<Integer, ShipType> shipConfig) {
         //clear all used values from the recent call for safety
         usedPoints.clear();
         positions.clear();
 
         //iterate through the the shipConfig Map for getting every key value pair
         for (Map.Entry<Integer, ShipType> entry : shipConfig.entrySet()) {
-
-            int xOffset = Offset.getXOffset(entry.getValue().getPositions());
-            int yOffset = Offset.getYOffset(entry.getValue().getPositions());
+            int xOffset = Collections.min(entry.getValue().getPositions(), Comparator.comparingInt(Point2D::getX)).getX();
+            int yOffset = Collections.min(entry.getValue().getPositions(), Comparator.comparingInt(Point2D::getY)).getY();
             logger.debug("Offset x: {} ", xOffset);
             logger.debug("Offset y: {}", yOffset);
 

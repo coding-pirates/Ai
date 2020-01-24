@@ -10,6 +10,7 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -53,11 +54,11 @@ public class SunkenShipsHandler {
         for (Entry<Integer, List<Point2D>> entry : sortedHits.entrySet()) {
             used.clear();
             int clientId = entry.getKey();
-            List<List<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue(), clientId);
+            List<List<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue());
             List<List<Point2D>> sortedSunkByPosition = getSunksOfHits(sortedHitsByPosition, clientId);
 
 
-            List<Integer> sunkenShipIds = findIds(sortedSunkByPosition, clientId);
+            List<Integer> sunkenShipIds = findIds(sortedSunkByPosition);
             allSunkenShipIds.put(clientId, sunkenShipIds);
             if (sunkenShipIds.isEmpty()) {
                 logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Player {} has no sunken ships yet", clientId);
@@ -66,11 +67,9 @@ public class SunkenShipsHandler {
 
             logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Sunken ship ids of player {} are: ", clientId);
 
-            for (int i : sunkenShipIds) {
+            for (int i : sunkenShipIds)
                 System.out.print(i + " ");
-            }
             System.out.println();
-
         }
         return allSunkenShipIds;
     }
@@ -92,7 +91,7 @@ public class SunkenShipsHandler {
                 }
             }
 
-            List<List<Point2D>> connectedHits = findConnectedPoints(hitsTC, c.getId());
+            List<List<Point2D>> connectedHits = findConnectedPoints(hitsTC);
             List<List<Point2D>> connectedSunks = getSunksOfHits(connectedHits, c.getId());
             for (List<Point2D> l : connectedSunks)
                 sortedSunkOne.addAll(l);
@@ -108,7 +107,7 @@ public class SunkenShipsHandler {
      * @param hitsThisClient All shots on one client
      * @return connected Points
      */
-    public List<List<Point2D>> findConnectedPoints(List<Point2D> hitsThisClient, int clientId) {
+    public List<List<Point2D>> findConnectedPoints(@Nonnull final List<Point2D> hitsThisClient) {
         List<List<Point2D>> sunkPositions = new LinkedList<>(); //the initial list which will be updated and returned at the end
         List<List<Point2D>> p; //the temporary list for edit
 
@@ -277,10 +276,9 @@ public class SunkenShipsHandler {
      * Finds the ids of sunken ships of one client.
      *
      * @param sortedSunkByPosition The sorted sunk points of one client
-     * @param clientId             the client id
      * @return the sunken ship ids of the client
      */
-    public List<Integer> findIds(List<List<Point2D>> sortedSunkByPosition, int clientId) {
+    public List<Integer> findIds(List<List<Point2D>> sortedSunkByPosition) {
         boolean isValid;
         List<Integer> sunkenShipIds = new LinkedList<>();
         Map<Integer, ShipType> ships = ai.getConfiguration().getShips();
@@ -306,7 +304,6 @@ public class SunkenShipsHandler {
                         int maxX = xValues.get(xValues.size() - 1);
                         int maxY = yValues.get(yValues.size() - 1);
                         int initMaxX = xValues.get(xValues.size() - 1);
-                        int initMaxY = yValues.get(yValues.size() - 1);
                         while (maxY < ai.getConfiguration().getHeight()) {
                             while (maxX < ai.getConfiguration().getWidth()) {
                                 isValid = true;

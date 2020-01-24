@@ -34,17 +34,6 @@ public class PositionComparator {
     }
 
     /**
-     * Point2D to Shot comparison without id
-     *
-     * @param p point
-     * @param s shot
-     * @return tru if point == targetfield of shot, else false
-     */
-    public static boolean comparePointShot(Point2D p, Shot s) {
-        return p.getX() == s.getTargetField().getX() & p.getY() == s.getTargetField().getY();
-    }
-
-    /**
      * Point2D to shot comparison with id
      *
      * @param p  point
@@ -55,16 +44,5 @@ public class PositionComparator {
     public static boolean comparePointShot(Point2D p, Shot s, int id) {
         return p.getX() == s.getTargetField().getX() & p.getY() == s.getTargetField().getY() & id == s.getClientId();
 
-    }
-
-    /**
-     * Compare two Triple objects by their values
-     *
-     * @param t1 first
-     * @param t2 second
-     * @return true if first == second, else false
-     */
-    public static boolean compareTriple(Triple<Integer, Point2D, Double> t1, Triple<Integer, Point2D, Double> t2) {
-        return t1.getVal1().equals(t2.getVal1()) & t1.getVal2().getX() == t2.getVal2().getX() & t1.getVal2().getY() == t2.getVal2().getY() & t1.getVal3().equals(t2.getVal3());
     }
 }

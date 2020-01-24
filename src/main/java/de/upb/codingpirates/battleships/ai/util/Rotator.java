@@ -3,6 +3,7 @@ package de.upb.codingpirates.battleships.ai.util;
 import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Point2D;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class Rotator {
      * @param positions all points of a ship
      * @return a ArrayList of points, which includes the 90 degree turned and (now) positive points.
      */
-    public List<Point2D> turn90(List<Point2D> positions) {
+    public List<Point2D> turn90(@Nonnull final List<Point2D> positions) {
         List<Point2D> turned = new ArrayList<>();
 
         for (Point2D p : positions) {

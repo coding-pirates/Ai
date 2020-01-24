@@ -67,9 +67,8 @@ public class MissesFinder {
                     break;
                 }
             }
-            if (miss) {
+            if (miss)
                 misses.add(s); // if its not hit, its a miss
-            }
         }
         return misses;
     }

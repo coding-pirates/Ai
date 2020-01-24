@@ -5,8 +5,6 @@ import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -18,8 +16,6 @@ import java.util.Map.Entry;
  * @see SunkenShipsHandler
  */
 public class HitsHandler {
-    private static final Logger logger = LogManager.getLogger();
-
     AI ai;
 
     /**
@@ -49,14 +45,12 @@ public class HitsHandler {
                     success = true;
                 }
             }
-            if (!success) {
+            if (!success)
                 sortedHits.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
-            }
         }
         for (Client c : ai.getClientArrayList()) {
-            if (!sortedHits.containsKey(c.getId())) {
+            if (!sortedHits.containsKey(c.getId()))
                 sortedHits.put(c.getId(), new LinkedList<>(Collections.emptyList()));
-            }
         }
         return sortedHits;
     }

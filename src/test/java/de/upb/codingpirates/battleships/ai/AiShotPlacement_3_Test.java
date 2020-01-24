@@ -6,17 +6,17 @@ import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AiShotPlacement_3_Test {
-    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.HEAT_MAP);
+public final class AiShotPlacement_3_Test {
+
+    private static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.HEAT_MAP);
 
     @BeforeAll
-    public static void create() {
+    public static void setUpClass() {
         //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
         //ship1 id = 1
@@ -140,7 +140,7 @@ public class AiShotPlacement_3_Test {
     }
 
     @Test
-    public void place_shots_3_test() {
+    public void testPlaceShots() {
         ai.placeShots();
     }
 }

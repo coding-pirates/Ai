@@ -2,6 +2,7 @@ package de.upb.codingpirates.battleships.ai.util;
 
 import de.upb.codingpirates.battleships.logic.Point2D;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +20,7 @@ public class ZeroPointMover {
      * @param tp the shot collection which should be shifted
      * @return the shifted collection
      */
-    public List<Point2D> moveToZeroPoint(List<Point2D> tp) {
+    public List<Point2D> moveToZeroPoint(@Nonnull final List<Point2D> tp) {
         List<Integer> xVal = new ArrayList<>();
         List<Integer> yVal = new ArrayList<>();
         for (Point2D i : tp) {

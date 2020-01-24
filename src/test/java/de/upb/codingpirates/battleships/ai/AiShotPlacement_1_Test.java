@@ -8,15 +8,15 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class AiShotPlacement_1_Test {
-    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.RANDOM);
+public final class AiShotPlacement_1_Test {
+
+    private static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.RANDOM);
 
     @BeforeAll
-    public static void create() {
+    public static void setUpClass() {
         //Clients erstellen
         Client client1 = new Client(111, "c1");
         Client client2 = new Client(222, "c2");
@@ -55,15 +55,15 @@ public class AiShotPlacement_1_Test {
         ai.setMisses(temp2);
 
         ai.setConfiguration(
-                new Configuration.Builder()
-                        .shotCount(3)
-                        .width(5)
-                        .height(5)
-                        .build());
+            new Configuration.Builder()
+                .shotCount(3)
+                .width(5)
+                .height(5)
+                .build());
     }
 
     @Test
-    public void place_shots_level_1_test() {
+    public void testPlaceShots() {
         ai.placeShots();
     }
 }

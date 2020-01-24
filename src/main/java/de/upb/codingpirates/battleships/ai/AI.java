@@ -75,7 +75,7 @@ public class AI implements AutoCloseable,
     Map<Integer, List<Point2D>> sortedSunk = new HashMap<>(); //sunks sorted by their clients
     Map<Integer, List<Integer>> allSunkenShipIds = new HashMap<>(); //sunk ship ids by their clients
 
-    Map<Integer, Double[][]> heatMapAllClients = new HashMap<>();
+    Map<Integer, double[][]> heatMapAllClients = new HashMap<>();
 
     Map<Integer, List<Point2D>> invalidPointsAll = new HashMap<>(); //invalid points per client id
 
@@ -578,11 +578,11 @@ public class AI implements AutoCloseable,
         return this.positions;
     }
 
-    public void setHeatMapAllClients(Map<Integer, Double[][]> heatMap) {
+    public void setHeatMapAllClients(Map<Integer, double[][]> heatMap) {
         this.heatMapAllClients = heatMap;
     }
 
-    public Map<Integer, Double[][]> getHeatMapAllClients() {
+    public Map<Integer, double[][]> getHeatMapAllClients() {
         return this.heatMapAllClients;
     }
 

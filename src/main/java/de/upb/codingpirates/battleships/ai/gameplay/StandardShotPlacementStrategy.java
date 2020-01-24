@@ -116,10 +116,9 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
 
             Map<Integer, List<List<Point2D>>> connectedNotClean = new HashMap<>();
             for (Client c : ai.getClientArrayList()) {
-                List<List<Point2D>> temp = sunkenShipsHandler.findConnectedPoints(sortedHIts.get(c.getId()), c.getId());
+                List<List<Point2D>> temp = sunkenShipsHandler.findConnectedPoints(sortedHIts.get(c.getId()));
                 connectedNotClean.put(c.getId(), temp);
             }
-
 
             //connected collection includes all related hits which are valid for use in next step
             Map<Integer, List<List<Point2D>>> connected = new HashMap<>();
@@ -299,7 +298,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             //using the class Triple store the triple in allHeatVal if the target is valid
             //Triple objects can be compared using the comparator interface
             //for use of class Triple see the nested for loops
-            for (Entry<Integer, Double[][]> entry : ai.getHeatMapAllClients().entrySet()) {
+            for (Entry<Integer, double[][]> entry : ai.getHeatMapAllClients().entrySet()) {
                 int clientId = entry.getKey();
                 if (!validTargets.containsKey(clientId)) continue;
                 for (int i = 0; i < entry.getValue().length; i++) {
