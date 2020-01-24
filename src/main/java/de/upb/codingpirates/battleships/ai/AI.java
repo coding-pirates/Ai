@@ -119,8 +119,15 @@ public class AI implements AutoCloseable,
         String port;
         int difficulty;
 
-        //Use scanner instead direct input if there are nor passed arguments
+
+        //interactive scanner is disabled (Endabgabe)
         if (args.length == 0) {
+            //use this default config for Ai if no arguments were passed
+            name = "EP" + (Math.random() * 100000);
+            host = "localhost";
+            port = "33100";
+            difficulty = 3;
+            /*
             System.out.println("Please answer the following questions for starting the engine player.");
             System.out.println("Give this engine player a name: ");
             while (true) {
@@ -191,10 +198,12 @@ public class AI implements AutoCloseable,
                 break;
             }
 
+
+             */
         } else {
             //if arguments were passed, use them
             if (args.length != 4) {
-                System.err.println("Use this order: host port difficultyLevel aiName");
+                System.err.println("Use this order: host port difficultyLevel name");
                 System.exit(1);
             }
             name = args[3];
