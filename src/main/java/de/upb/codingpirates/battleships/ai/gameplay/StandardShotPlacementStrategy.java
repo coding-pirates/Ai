@@ -1,43 +1,41 @@
 package de.upb.codingpirates.battleships.ai.gameplay;
 
+import com.google.common.collect.Lists;
+import de.upb.codingpirates.battleships.ai.AI;
+import de.upb.codingpirates.battleships.ai.logger.Markers;
+import de.upb.codingpirates.battleships.ai.util.*;
+import de.upb.codingpirates.battleships.logic.Client;
+import de.upb.codingpirates.battleships.logic.Point2D;
+import de.upb.codingpirates.battleships.logic.Shot;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-
-import com.google.common.collect.Lists;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import de.upb.codingpirates.battleships.ai.AI;
-import de.upb.codingpirates.battleships.ai.logger.Markers;
-import de.upb.codingpirates.battleships.logic.Client;
-import de.upb.codingpirates.battleships.logic.Point2D;
-import de.upb.codingpirates.battleships.logic.Shot;
-import de.upb.codingpirates.battleships.ai.util.*;
-
-import static java.util.stream.Collectors.toList;
-
 public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
 
     RANDOM(1) {
-        private Client selectRandomOpponent(final AI ai) {
-            final Map<Integer, List<Point2D>> sortedHits = new HitsHandler(ai).sortTheHits();
-
-            final List<Client> remainingOpponents =
-                ai.getClientArrayList()
-                    .stream()
-                    .filter(client -> client.getId() != ai.getAiClientId())
-                    .filter(client -> sortedHits.get(client.getId()).size() != ai.getSizeOfPointsToHit())
-                    .collect(toList());
-            return remainingOpponents.get(RAND.nextInt(remainingOpponents.size()));
-        }
-
         @Override
         public Collection<Shot> calculateShots(final AI ai, final int shotCount) {
-            final int targetOpponentId = selectRandomOpponent(ai).getId();
+            int shotClientId;
+
+            Map<Integer, List<Point2D>> sortedHIts = new HitsHandler(ai).sortTheHits();
+
+            while (true) {
+                List<Client> client = new ArrayList<>(ai.getClientArrayList());
+                Collections.shuffle(client); //random target
+                if (sortedHIts.get(client.get(0).getId()).size() == ai.getSizeOfPointsToHit()) {
+                    continue;
+                }
+                if (client.get(0).getId() != ai.getAiClientId()) {
+                    shotClientId = client.get(0).getId();
+                    LOGGER.info(Markers.AI_SHOT_PLACER, "Shooting on client with id: {} ", shotClientId);
+                    break;
+                }
+            }
 
             final List<Shot> myShots = new ArrayList<>(shotCount);
 
@@ -47,7 +45,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             while (i < shotCount) {
                 Point2D aimPoint = new RandomPointCreator(ai.getConfiguration()).getRandomPoint2D();
 
-                Shot targetShot = new Shot(targetOpponentId, aimPoint);
+                Shot targetShot = new Shot(shotClientId, aimPoint);
                 boolean alreadyChosen = false;
 
                 for (Shot s : ai.getRequestedShots()) {
@@ -373,8 +371,6 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
     private final int difficultyLevel;
 
     private static final Logger LOGGER = LogManager.getLogger();
-
-    protected static final Random RAND = new Random();
 
     StandardShotPlacementStrategy(final int difficultyLevel) {
         this.difficultyLevel = difficultyLevel;
