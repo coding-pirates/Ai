@@ -8,7 +8,6 @@ import de.upb.codingpirates.battleships.ai.logger.Markers;
 import de.upb.codingpirates.battleships.ai.util.HeatMapCreator;
 import de.upb.codingpirates.battleships.ai.util.MissesFinder;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
-import de.upb.codingpirates.battleships.ai.util.Triple;
 import de.upb.codingpirates.battleships.client.ListenerHandler;
 import de.upb.codingpirates.battleships.client.listener.*;
 import de.upb.codingpirates.battleships.client.network.ClientApplication;
@@ -229,7 +228,10 @@ public class AI implements AutoCloseable,
      * @param port the server port.
      */
     public void connect(@Nonnull final String host, final int port) {
-        tcpConnector.connect(host, port, ()->sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)),null);
+        tcpConnector.connect(host, port, ()->sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)),() -> {
+            logger.error("could not find server");
+            System.exit(1);
+        });
     }
 
     /**
