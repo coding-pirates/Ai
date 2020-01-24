@@ -55,7 +55,7 @@ public class ShipPlacer {
             //    logger.info(MARKER.Ai_ShipPlacer, "Placing ships failed/ships are not placed");
             guessRandomShipPositions(ai.getConfiguration().getShips());
         }
-        logger.info(Markers.Ai_ShipPlacer, "Placing ships successful");
+        logger.info(Markers.AI_SHIP_PLACER, "Placing ships successful");
         shipPrinter();
         return positions;
     }

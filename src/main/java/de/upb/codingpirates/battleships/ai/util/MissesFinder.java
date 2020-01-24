@@ -41,12 +41,12 @@ public class MissesFinder {
             for (Shot i : ai.getHits()) { //check if shot s is a miss
                 if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {
                     miss = false; //no miss, its a hit
-                    logger.info(Markers.Ai_Misses, "A hit {}", s);
+                    logger.info(Markers.AI_MISSES_FINDER, "A hit {}", s);
                 }
             }
             if (miss) {
                 tempMisses.add(s); // if its not hit, its a miss
-                logger.info(Markers.Ai_Misses, "A miss {}", s);
+                logger.info(Markers.AI_MISSES_FINDER, "A miss {}", s);
             }
         }
         return tempMisses;

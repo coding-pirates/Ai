@@ -333,7 +333,7 @@ public class AI implements AutoCloseable,
     public void increaseRoundCounter() {
         this.roundCounter++;
         System.out.println();
-        logger.info(Markers.Ai, "------------------------------Round {}------------------------------", this.roundCounter);
+        logger.info(Markers.AI, "------------------------------Round {}------------------------------", this.roundCounter);
         System.out.println();
     }
 
@@ -347,21 +347,21 @@ public class AI implements AutoCloseable,
             this.setSunk(new ArrayList<>());
         } else {
             if (this.getUpdate().getHits().isEmpty()) {
-                logger.debug(Markers.Ai, "No new hits.");
+                logger.debug(Markers.AI, "No new hits.");
             } else {
-                logger.debug(Markers.Ai, "New hits are:");
+                logger.debug(Markers.AI, "New hits are:");
                 for (Shot s : this.getUpdate().getHits()) {
-                    logger.debug(Markers.Ai, s);
+                    logger.debug(Markers.AI, s);
                 }
             }
             this.setHits(this.getUpdate().getHits());
 
             if (this.getUpdate().getSunk().isEmpty()) {
-                logger.debug(Markers.Ai, "No new sunks.");
+                logger.debug(Markers.AI, "No new sunks.");
             } else {
-                logger.debug(Markers.Ai, "New sunks are: ");
+                logger.debug(Markers.AI, "New sunks are: ");
                 for (Shot s : this.getUpdate().getSunk()) {
-                    logger.debug(Markers.Ai, s);
+                    logger.debug(Markers.AI, s);
                 }
             }
             this.setSunk(this.getUpdate().getSunk());
@@ -381,31 +381,31 @@ public class AI implements AutoCloseable,
     // <editor-fold desc="Listeners">
     @Override
     public void onServerJoinResponse(ServerJoinResponse message, int clientId) {
-        logger.info(Markers.Ai, "ServerJoinResponse, AiClientId is: {}", message.getClientId());
+        logger.info(Markers.AI, "ServerJoinResponse, AiClientId is: {}", message.getClientId());
         this.setAiClientId(message.getClientId());
         this.tcpConnector.sendMessageToServer(RequestBuilder.lobbyRequest());
     }
 
     @Override
     public void onLobbyResponse(LobbyResponse message, int clientId) {
-        logger.info(Markers.Ai, "------------------------------LobbyResponse------------------------------");
+        logger.info(Markers.AI, "------------------------------LobbyResponse------------------------------");
     }
 
     @Override
     public void onGameJoinPlayerResponse(GameJoinPlayerResponse message, int clientId) {
-        logger.info(Markers.Ai, "GameJoinPlayerResponse: joined game with iId: {}", message.getGameId());
+        logger.info(Markers.AI, "GameJoinPlayerResponse: joined game with iId: {}", message.getGameId());
         this.setGameId(message.getGameId());
     }
 
     @Override
     public void onGameInitNotification(GameInitNotification message, int clientId) {
-        logger.info(Markers.Ai, "GameInitNotification: got clients and configuration");
-        logger.info(Markers.Ai, "Connected clients size: {}", message.getClientList().size());
-        logger.info(Markers.Ai, "Connected clients are: ");
+        logger.info(Markers.AI, "GameInitNotification: got clients and configuration");
+        logger.info(Markers.AI, "Connected clients size: {}", message.getClientList().size());
+        logger.info(Markers.AI, "Connected clients are: ");
         for (Client c : message.getClientList()) {
-            logger.info(Markers.Ai, "Client name {}, client id {}", c.getName(), c.getId());
+            logger.info(Markers.AI, "Client name {}, client id {}", c.getName(), c.getId());
         }
-        logger.debug(Markers.Ai, "Own id is {}, selected difficulty level is {}.", getAiClientId(), getDifficultyLevel());
+        logger.debug(Markers.AI, "Own id is {}, selected difficulty level is {}.", getAiClientId(), getDifficultyLevel());
         configuration = message.getConfiguration();
         for (Map.Entry<Integer, ShipType> entry : configuration.getShips().entrySet()) {
             sizeOfPointsToHit = sizeOfPointsToHit + entry.getValue().getPositions().size();
@@ -413,13 +413,13 @@ public class AI implements AutoCloseable,
         logger.debug("Size of points which has to be hit for loosing a game: {}", this.sizeOfPointsToHit);
         this.setClientArrayList(message.getClientList());
 
-        logger.info(Markers.Ai, "Trying to place ships");
+        logger.info(Markers.AI, "Trying to place ships");
         placeShips();
     }
 
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
-        logger.info(Markers.Ai, "------------------------------GameStartNotification------------------------------");
+        logger.info(Markers.AI, "------------------------------GameStartNotification------------------------------");
         increaseRoundCounter();
         updateValues();
 
@@ -435,16 +435,16 @@ public class AI implements AutoCloseable,
         if (!isFirstCall) {
             increaseRoundCounter();
         }
-        logger.info(Markers.Ai, "Size all requested shots until now: {}", getRequestedShots().size());
+        logger.info(Markers.AI, "Size all requested shots until now: {}", getRequestedShots().size());
         isFirstCall = false;
-        logger.debug(Markers.Ai, "------------------------------PlayerUpdateNotification------------------------------");
+        logger.debug(Markers.AI, "------------------------------PlayerUpdateNotification------------------------------");
     }
 
     @Override
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
-        logger.info(Markers.Ai, "------------------------------RoundStartNotification------------------------------");
-        logger.info(Markers.Ai, "A player has to be hit {} times until he has lost.", this.sizeOfPointsToHit);
-        logger.info(Markers.Ai, "Own id is: {}", this.getAiClientId());
+        logger.info(Markers.AI, "------------------------------RoundStartNotification------------------------------");
+        logger.info(Markers.AI, "A player has to be hit {} times until he has lost.", this.sizeOfPointsToHit);
+        logger.info(Markers.AI, "Own id is: {}", this.getAiClientId());
         updateValues();
 
         placeShots();
@@ -452,10 +452,10 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onFinishNotification(FinishNotification message, int clientId) {
-        logger.info(Markers.Ai, "------------------------------FinishNotification------------------------------");
+        logger.info(Markers.AI, "------------------------------FinishNotification------------------------------");
         updateValues();
         if (this.getDifficultyLevel() == 3) {
-            logger.info(Markers.Ai, "Calculate heatmap in finished state:");
+            logger.info(Markers.AI, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
             this.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
         }
@@ -474,32 +474,32 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onConnectionClosedReport(ConnectionClosedReport message, int clientId) {
-        logger.info(Markers.Ai, "------------------------------ConnectionClosedReport------------------------------");
+        logger.info(Markers.AI, "------------------------------ConnectionClosedReport------------------------------");
 
         close();
     }
 
     @Override
     public void onBattleshipException(BattleshipException error, int clientId) {
-        logger.error(Markers.Ai, "BattleshipException");
+        logger.error(Markers.AI, "BattleshipException");
     }
 
     @Override
     public void onErrorNotification(ErrorNotification message, int clientId) {
-        logger.error(Markers.Ai, "Received an ErrorNotification with type {} in Message {}. Reason: {} ", message.getErrorType(), message.getReferenceMessageId(),
+        logger.error(Markers.AI, "Received an ErrorNotification with type {} in Message {}. Reason: {} ", message.getErrorType(), message.getReferenceMessageId(),
                 message.getReason());
     }
 
 
     @Override
     public void onLeaveNotification(LeaveNotification message, int clientId) {
-        logger.info(Markers.Ai, "LeaveNotification: left player id is: " + message.getPlayerId());
+        logger.info(Markers.AI, "LeaveNotification: left player id is: " + message.getPlayerId());
         this.handleLeaveOfPlayer(message.getPlayerId());
     }
 
     @Override
     public void onPauseNotification(PauseNotification message, int clientId) {
-        logger.info(Markers.Ai, "PauseNotification");
+        logger.info(Markers.AI, "PauseNotification");
     }
 
     PlayerUpdateNotification update;
@@ -507,7 +507,7 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onTournamentFinishNotification(TournamentFinishNotification message, int clientId) {
-        logger.info(Markers.Ai, "TournamentFinishNotification: ");
+        logger.info(Markers.AI, "TournamentFinishNotification: ");
     }
     // </editor-fold>
 

@@ -59,11 +59,11 @@ public class SunkenShipsHandler {
             LinkedList<Integer> sunkenShipIds = findIds(sortedSunkByPosition, clientId);
             allSunkenShipIds.put(clientId, sunkenShipIds);
             if (sunkenShipIds.isEmpty()) {
-                logger.info(Markers.Ai_SunkenShips, "Player {} has no sunken ships yet", clientId);
+                logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Player {} has no sunken ships yet", clientId);
                 continue;
             }
 
-            logger.info(Markers.Ai_SunkenShips, "Sunken ship ids of player {} are: ", clientId);
+            logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Sunken ship ids of player {} are: ", clientId);
 
             for (int i : sunkenShipIds) {
                 System.out.print(i + " ");
@@ -411,12 +411,12 @@ public class SunkenShipsHandler {
         }
         for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedSunk.entrySet()) {
             if (entry.getValue().isEmpty()) {
-                logger.info(Markers.Ai_SunkenShips, "No sunk points of client {}", entry.getKey());
+                logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "No sunk points of client {}", entry.getKey());
                 continue;
             }
-            logger.info(Markers.Ai_SunkenShips, "Sunk points of client {} are", entry.getKey());
+            logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Sunk points of client {} are", entry.getKey());
             for (Point2D s : entry.getValue()) {
-                logger.info(Markers.Ai_SunkenShips, s);
+                logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, s);
             }
         }
         return sortedSunk;

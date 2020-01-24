@@ -47,7 +47,7 @@ public class ShotPlacer {
             }
             if (client.get(0).getId() != ai.getAiClientId()) {
                 shotClientId = client.get(0).getId();
-                logger.info(Markers.Ai_ShotPlacer, "Shooting on client with id: {} ", shotClientId);
+                logger.info(Markers.AI_SHORT_PLACER, "Shooting on client with id: {} ", shotClientId);
                 break;
             }
         }
@@ -90,7 +90,7 @@ public class ShotPlacer {
 
             myShots.add(targetShot);
             ai.requestedShots.add(targetShot);
-            logger.info(Markers.Ai_ShotPlacer, "Found shot {}", targetShot);
+            logger.info(Markers.AI_SHORT_PLACER, "Found shot {}", targetShot);
             i++;
 
         }
@@ -416,7 +416,7 @@ public class ShotPlacer {
 
             Shot targetShot = new Shot(clientId, p);
             myShotsThisRound.add(targetShot);
-            logger.info(Markers.Ai_ShotPlacer, "Added shot {} with value {}", targetShot, fieldVal);
+            logger.info(Markers.AI_SHORT_PLACER, "Added shot {} with value {}", targetShot, fieldVal);
             if (myShotsThisRound.size() >= ai.getConfiguration().getShotCount()) {
                 break;
             }
