@@ -12,7 +12,7 @@ import de.upb.codingpirates.battleships.logic.Point2D;
  *
  * @author Benjamin Kasten
  */
-public class RandomPointCreator {
+public final class RandomPointCreator {
 
     @Nonnull
     private final Configuration configuration;

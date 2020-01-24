@@ -104,9 +104,9 @@ public final class AiShotPlacement_3_Test {
 
         ai.setSunk(sunk);
 
-        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(6, 6)));
-        ai.requestedShotsLastRound.add(new Shot(2, new Point2D(1, 6)));
-        ai.requestedShotsLastRound.add(new Shot(3, new Point2D(3, 3)));
+        ai.getRequestedShotsLastRound().add(new Shot(3, new Point2D(6, 6)));
+        ai.getRequestedShotsLastRound().add(new Shot(2, new Point2D(1, 6)));
+        ai.getRequestedShotsLastRound().add(new Shot(3, new Point2D(3, 3)));
 
         Collection<Shot> hits = new ArrayList<>();
         hits.add(new Shot(3, new Point2D(1, 1)));

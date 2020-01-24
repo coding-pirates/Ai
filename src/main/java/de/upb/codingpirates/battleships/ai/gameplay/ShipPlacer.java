@@ -14,14 +14,17 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Creates a random ship placement.
  *
  * @author Benjamin Kasten
  */
-public class ShipPlacer {
-    AI ai;
+public final class ShipPlacer {
+
+    private final AI ai;
+
     private static final Logger logger = LogManager.getLogger();
 
     /**
@@ -30,19 +33,19 @@ public class ShipPlacer {
      *
      * @param ai The instance of the ai who called the constructor.
      */
-    public ShipPlacer(AI ai) {
+    public ShipPlacer(@Nonnull final AI ai) {
         this.ai = ai;
     }
 
     //contains all the Points which can not be accessed anymore like the distance to a ship or the ship positions;
     //is used for checking if a point can be used for placing a ship
-    ArrayList<Point2D> usedPoints = new ArrayList<>();
+    List<Point2D> usedPoints = new ArrayList<>();
     //remains false until a valid ship placement is found
     boolean successful = false;
     //the requested argument for the PlaceShipsRequest
     Map<Integer, PlacementInfo> positions = new HashMap<>();
 
-    Map<Integer, ArrayList<Point2D>> placedShipMap = new HashMap<>();
+    Map<Integer, List<Point2D>> placedShipMap = new HashMap<>();
 
     /**
      * Calls the {link {@link #guessRandomShipPositions(Map)}} method.
@@ -51,20 +54,18 @@ public class ShipPlacer {
      */
     public Map<Integer, PlacementInfo> placeShipsRandomly() {
         logger.info("Try placing ships");
-        while (!successful) {
-            //    logger.info(MARKER.Ai_ShipPlacer, "Placing ships failed/ships are not placed");
+        while (!successful)
             guessRandomShipPositions(ai.getConfiguration().getShips());
-        }
         logger.info(Markers.AI_SHIP_PLACER, "Placing ships successful");
         shipPrinter();
         return positions;
     }
 
     public void shipPrinter() {
-        ArrayList<Point2D> placedShipsPos = new ArrayList<>();
+        List<Point2D> placedShipsPos = new ArrayList<>();
 
         logger.debug("Placed ships are:");
-        for (Map.Entry<Integer, ArrayList<Point2D>> entry : placedShipMap.entrySet()) {
+        for (Entry<Integer, List<Point2D>> entry : placedShipMap.entrySet()) {
             placedShipsPos.addAll(entry.getValue());
             logger.debug("Ship positions of ship : " + entry.getKey());
             for (Point2D p : entry.getValue()) {
@@ -143,7 +144,7 @@ public class ShipPlacer {
             int distanceY = guessPoint.getY();
 
             //the positions (points) of a ship will be stored here
-            ArrayList<Point2D> tempShipPos = new ArrayList<>();
+            List<Point2D> tempShipPos = new ArrayList<>();
 
             //iterates through every point of the ship (all points in shipPos)
             for (Point2D i : shipPositive) {
@@ -223,8 +224,5 @@ public class ShipPlacer {
         //is called only if the placing of the ships in the positions Map worked for all ships
         //responsible for leaving the while loop
         successful = true;
-
     }
-
-
 }

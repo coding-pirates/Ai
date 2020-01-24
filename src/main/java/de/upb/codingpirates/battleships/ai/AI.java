@@ -54,35 +54,29 @@ public class AI implements AutoCloseable,
         ServerJoinResponseListener,
         LobbyResponseListener {
 
+    private List<Client> clientArrayList = new LinkedList<>();
+    private Collection<Shot> hits = new ArrayList<>();
 
-    public List<Triple<Integer, Point2D, Double>> allHeatVal;
+    private int aiClientId;
 
-    LinkedList<Client> clientArrayList = new LinkedList<>();
-    Collection<Shot> hits = new ArrayList<>();
+    private int roundCounter = 0;
 
-    int aiClientId;
-    int gameId;
+    private Map<Integer, PlacementInfo> positions; //ship positions of Ais field
 
-    int roundCounter = 0;
+    private int sizeOfPointsToHit;
 
-    Map<Integer, PlacementInfo> positions; //ship positions of Ais field
+    private Collection<Shot> sunk = new ArrayList<>(); //sunks which are updated every round
+    private Map<Integer, List<Point2D>> sortedSunk = new HashMap<>(); //sunks sorted by their clients
+    private Map<Integer, List<Integer>> allSunkenShipIds = new HashMap<>(); //sunk ship ids by their clients
 
-    int sizeOfPointsToHit;
+    private Map<Integer, double[][]> heatMapAllClients = new HashMap<>();
 
-    Map<Integer, Integer> points = new HashMap<>(); //points of the clients
+    private Map<Integer, List<Point2D>> invalidPointsAll = new HashMap<>(); //invalid points per client id
 
-    Collection<Shot> sunk = new ArrayList<>(); //sunks which are updated every round
-    Map<Integer, List<Point2D>> sortedSunk = new HashMap<>(); //sunks sorted by their clients
-    Map<Integer, List<Integer>> allSunkenShipIds = new HashMap<>(); //sunk ship ids by their clients
+    private Collection<Shot> misses = new ArrayList<>(); //all misses of this player
 
-    Map<Integer, double[][]> heatMapAllClients = new HashMap<>();
-
-    Map<Integer, List<Point2D>> invalidPointsAll = new HashMap<>(); //invalid points per client id
-
-    Collection<Shot> misses = new ArrayList<>(); //all misses of this player
-
-    public Collection<Shot> requestedShotsLastRound = new ArrayList<>(); //the latest requested shots
-    public Collection<Shot> requestedShots = new ArrayList<>(); //all requested shots
+    private Collection<Shot> requestedShotsLastRound = new ArrayList<>(); //the latest requested shots
+    private Collection<Shot> requestedShots = new ArrayList<>(); //all requested shots
 
     private Configuration configuration;
 
@@ -381,8 +375,7 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onGameJoinPlayerResponse(GameJoinPlayerResponse message, int clientId) {
-        logger.info(Markers.AI, "GameJoinPlayerResponse: joined game with iId: {}", message.getGameId());
-        this.setGameId(message.getGameId());
+        logger.info(Markers.AI, "GameJoinPlayerResponse: joined game with id: {}", message.getGameId());
     }
 
     @Override
@@ -508,7 +501,7 @@ public class AI implements AutoCloseable,
         clientArrayList.addAll(clientList);
     }
 
-    public LinkedList<Client> getClientArrayList() {
+    public List<Client> getClientArrayList() {
         return this.clientArrayList;
     }
 
@@ -536,10 +529,6 @@ public class AI implements AutoCloseable,
         return this.aiClientId;
     }
 
-    public void setGameId(int gameId) {
-        this.gameId = gameId;
-    }
-
     /**
      * Not a usual setter. Adds new hits to all hits.
      *
@@ -564,11 +553,6 @@ public class AI implements AutoCloseable,
     public Map<Integer, List<Point2D>> getInvalidPointsAll() {
         return this.invalidPointsAll;
     }
-
-    public void setPoints(Map<Integer, Integer> points) {
-        this.points = points;
-    }
-
 
     public void setPositions(Map<Integer, PlacementInfo> positions) {
         this.positions = positions;
@@ -603,10 +587,6 @@ public class AI implements AutoCloseable,
         this.configuration = configuration;
     }
 
-    public void setAllHeatVal(List<Triple<Integer, Point2D, Double>> allHeatVal) {
-        this.allHeatVal = allHeatVal;
-    }
-
     public void setUpdate(PlayerUpdateNotification message) {
         this.update = message;
     }
@@ -621,5 +601,9 @@ public class AI implements AutoCloseable,
 
     public int getSizeOfPointsToHit() {
         return this.sizeOfPointsToHit;
+    }
+
+    public Collection<Shot> getRequestedShotsLastRound() {
+        return requestedShotsLastRound;
     }
 }

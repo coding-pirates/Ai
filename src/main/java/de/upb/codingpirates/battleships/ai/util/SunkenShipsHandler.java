@@ -285,7 +285,7 @@ public class SunkenShipsHandler {
 
         for (Entry<Integer, ShipType> entry : ships.entrySet()) {
             int shipId = entry.getKey();
-            Rotator rotator = new Rotator(this.ai);
+            Rotator rotator = new Rotator();
             List<List<Point2D>> t = rotator.rotateShips((List<Point2D>) entry.getValue().getPositions()); //schiff aus der config wird gedreht
             for (List<Point2D> a : sortedSunkByPosition) { //entry in all (a sunken ship)
                 boolean find = false;

@@ -75,7 +75,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
                 if (alreadyChosen) continue;
 
                 myShots.add(targetShot);
-                ai.requestedShots.add(targetShot);
+                ai.getRequestedShots().add(targetShot);
                 LOGGER.info(Markers.AI_SHOT_PLACER, "Found shot {}", targetShot);
                 i++;
             }
@@ -206,7 +206,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
                     for (Shot s : l) {
                         myShots.add(s);
                         LOGGER.debug("Added shot {} to myShots", s);
-                        ai.requestedShots.add(s);
+                        ai.getRequestedShots().add(s);
                         if (myShots.size() == ai.getConfiguration().getShotCount())
                             return myShots;
                     }
@@ -261,7 +261,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
                     if (!valid) continue;
 
                     myShots.add(targetShot);
-                    ai.requestedShots.add(targetShot);
+                    ai.getRequestedShots().add(targetShot);
                     LOGGER.debug("Added random shot {}", targetShot);
                 }
             }
@@ -316,8 +316,6 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             //using the TripleComparator class we can sort the the triple objects by their heat value
             allHeatVal.sort(new TripleComparator().reversed());
 
-            ai.setAllHeatVal(allHeatVal);
-
             //all shots which will be fired this round
             Collection<Shot> myShotsThisRound = Lists.newArrayList();
 
@@ -366,7 +364,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
                     break;
                 }
             }
-            ai.requestedShots.addAll(myShotsThisRound);
+            ai.getRequestedShots().addAll(myShotsThisRound);
 
             return myShotsThisRound;
         }

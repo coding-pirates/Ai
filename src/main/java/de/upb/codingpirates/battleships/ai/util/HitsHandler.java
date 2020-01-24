@@ -6,6 +6,7 @@ import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -15,15 +16,17 @@ import java.util.Map.Entry;
  * @author Benjamin Kasten
  * @see SunkenShipsHandler
  */
-public class HitsHandler {
-    AI ai;
+public final class HitsHandler {
+
+    @Nonnull
+    private final AI ai;
 
     /**
      * Constructor which gets the ai instance to know the gamestates
      *
      * @param ai the ai instance of the caller
      */
-    public HitsHandler(AI ai) {
+    public HitsHandler(@Nonnull final AI ai) {
         this.ai = ai;
     }
 
@@ -32,9 +35,9 @@ public class HitsHandler {
      *
      * @return The map with ordered sunks
      */
-    public HashMap<Integer, List<Point2D>> sortTheHits() {
-
-        HashMap<Integer, List<Point2D>> sortedHits = Maps.newHashMap();
+    @Nonnull
+    public Map<Integer, List<Point2D>> sortTheHits() {
+        Map<Integer, List<Point2D>> sortedHits = Maps.newHashMap();
 
         for (Shot i : ai.getHits()) {
             int clientId = i.getClientId();

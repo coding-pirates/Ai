@@ -36,10 +36,9 @@ public final class AiShotPlacement_2_Test {
         Shot s5 = new Shot(111, new Point2D(3, 3));
         Shot s6 = new Shot(333, new Point2D(2, 0));
 
-        ai.requestedShotsLastRound.add(s1);
-        ai.requestedShotsLastRound.add(s5);
-        ai.requestedShotsLastRound.add(s6);
-
+        ai.getRequestedShotsLastRound().add(s1);
+        ai.getRequestedShotsLastRound().add(s5);
+        ai.getRequestedShotsLastRound().add(s6);
 
         Shot hit1 = new Shot(111, new Point2D(2, 1));
         Shot hit2 = new Shot(222, new Point2D(1, 3));

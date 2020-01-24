@@ -14,13 +14,14 @@ import java.util.*;
  *
  * @author Benjamin Kasten
  */
-public class InvalidPointsHandler {
-    AI ai;
+public final class InvalidPointsHandler {
 
-    public InvalidPointsHandler(AI ai) {
+    @Nonnull
+    private final AI ai;
+
+    public InvalidPointsHandler(@Nonnull final AI ai) {
         this.ai = ai;
     }
-
 
     /**
      * Computes the new updated collection of invalid Points of one client.
@@ -29,8 +30,8 @@ public class InvalidPointsHandler {
      * @param clientId The clientId for computing the invalid points
      * @return the updated collection of invalid points of this client
      */
-
-    public List<Point2D> createInvalidPointsOne(int clientId) {
+    @Nonnull
+    public List<Point2D> createInvalidPointsOne(final int clientId) {
         ai.getInvalidPointsAll().putIfAbsent(clientId, null);
 
         List<Point2D> sortedSunkPointsTC = ai.getSortedSunk().get(clientId);
@@ -44,7 +45,6 @@ public class InvalidPointsHandler {
         return temp;
     }
 
-
     /**
      * Adds the surrounding points of one points collection to the usedPoints based on the rules for the game:
      * each ship must have a minimal distance of one point in each direction to other ships.
@@ -53,6 +53,7 @@ public class InvalidPointsHandler {
      * @param shipPos The positions of one ship.
      * @return The set of invalid points around one ship.
      */
+    @Nonnull
     public Set<Point2D> addSurroundingPointsToUsedPoints(@Nonnull final List<Point2D> shipPos) {
         Set<Point2D> temp = new LinkedHashSet<>();
         for (Point2D point : shipPos) {

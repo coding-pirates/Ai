@@ -14,8 +14,10 @@ import java.util.*;
  *
  * @author Benjamin Kasten
  */
-public class HeatMapCreator {
-    AI ai;
+public final class HeatMapCreator {
+
+    @Nonnull
+    private final AI ai;
 
     /**
      * /**
@@ -24,7 +26,7 @@ public class HeatMapCreator {
      *
      * @param ai The instance of the ai who called the constructor.
      */
-    public HeatMapCreator(AI ai) {
+    public HeatMapCreator(@Nonnull final AI ai) {
         this.ai = ai;
     }
 
@@ -58,7 +60,7 @@ public class HeatMapCreator {
      * @param clientId The clientId for whom the heatmap is to be created
      * @return a heatmap for the client
      */
-    public double[][] createHeatMapOneClient(int clientId) {
+    public double[][] createHeatMapOneClient(final int clientId) {
         int[][] heatMap = new int[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
 
         List<Point2D> invalidPointsThisClient = ai.getInvalidPointsAll().get(clientId);
@@ -73,7 +75,7 @@ public class HeatMapCreator {
             //coordinates of the ship
             List<Point2D> positions = new ArrayList<>(entry.getValue().getPositions());
             //rotate the ship
-            List<List<Point2D>> rotated = new Rotator(this.ai).rotateShips(positions);
+            List<List<Point2D>> rotated = new Rotator().rotateShips(positions);
             //Iterate through each rotation
             for (List<Point2D> tShips : rotated) {
                 ArrayList<Point2D> cShip = new ArrayList<>(tShips); //copy first ship
@@ -143,7 +145,6 @@ public class HeatMapCreator {
         double[][] probHeatMap = createProbHeatMap(heatMap);
         printHeatMap(probHeatMap);
         return probHeatMap;
-
     }
 
     /**
@@ -153,6 +154,7 @@ public class HeatMapCreator {
      * @param heatMap the absolute heatMap
      * @return teh relative heatMap
      */
+    @Nonnull
     public double[][] createProbHeatMap(@Nonnull final int[][] heatMap) {
         int counter = 0;
 
@@ -161,7 +163,6 @@ public class HeatMapCreator {
                 counter = counter + j;
             }
         }
-
         double[][] probHeat = new double[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
         for (int i = 0; i < heatMap.length; i++) {
             for (int j = 0; j < heatMap[i].length; j++)

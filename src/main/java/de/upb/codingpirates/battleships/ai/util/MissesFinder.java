@@ -36,7 +36,7 @@ public class MissesFinder {
      */
     public Collection<Shot> computeMisses() {
         Collection<Shot> tempMisses = Lists.newArrayList();
-        for (Shot s : ai.requestedShotsLastRound) {
+        for (Shot s : ai.getRequestedShotsLastRound()) {
             boolean miss = true; //assume the shot s is a miss
             for (Shot i : ai.getHits()) { //check if shot s is a miss
                 if (i.getTargetField().getX() == s.getTargetField().getX() & i.getTargetField().getY() == s.getTargetField().getY() & s.getClientId() == i.getClientId()) {

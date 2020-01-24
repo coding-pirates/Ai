@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.ai.util;
 
-import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.logic.Point2D;
 
 import javax.annotation.Nonnull;
@@ -16,20 +15,10 @@ import java.util.List;
  *
  * @author Benjamin Kasten
  */
-public class Rotator {
-    ZeroPointMover mover = new ZeroPointMover();
-    AI ai;
+public final class Rotator {
 
-
-    /**
-     * Constructor for {@link Rotator}. Gets an instance of the ai object which creates the {@link Rotator}
-     * instance. Not necessary in this version.
-     *
-     * @param ai The instance of the ai who called the constructor.
-     */
-    public Rotator(AI ai) {
-        this.ai = ai;
-    }
+    @Nonnull
+    private final ZeroPointMover mover = new ZeroPointMover();
 
     /**
      * Creates a collection of collections of all possible ship rotations
@@ -37,8 +26,8 @@ public class Rotator {
      * @param ships Collection of points which represents a ship
      * @return allPossibleTurns ArrayList of arrayLists for each possible rotation
      */
-    public List<List<Point2D>> rotateShips(List<Point2D> ships) {
-        ZeroPointMover mover = new ZeroPointMover();
+    @Nonnull
+    public List<List<Point2D>> rotateShips(@Nonnull final List<Point2D> ships) {
         List<List<Point2D>> allPossibleTurns = new ArrayList<>();
         //no turn
         allPossibleTurns.add(mover.moveToZeroPoint(ships));
@@ -58,7 +47,6 @@ public class Rotator {
         allPossibleTurns.add(temp270);
 
         return allPossibleTurns;
-
     }
 
     /**

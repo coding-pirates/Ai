@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author Benjamin Kasten
  */
-public class ZeroPointMover {
+public final class ZeroPointMover {
 
     /**
      * Moves the ship to the field (only positive values and as near as possible  to the x and y axis)
