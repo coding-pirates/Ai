@@ -140,7 +140,7 @@ public class AiShotPlacement_3_Test {
     }
 
     @Test
-    public void place_shots_3_test() throws IOException {
+    public void place_shots_3_test() {
         ai.placeShots();
     }
 }

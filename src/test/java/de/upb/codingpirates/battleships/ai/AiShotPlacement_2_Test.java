@@ -58,7 +58,7 @@ public class AiShotPlacement_2_Test {
     }
 
     @Test
-    public void place_shots_level_2_test() throws IOException {
+    public void place_shots_level_2_test() {
         ai.placeShots();
     }
 }

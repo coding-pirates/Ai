@@ -4,23 +4,16 @@ import de.upb.codingpirates.battleships.ai.AI;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Handles the invalid Points which can not be accessed anymore. Is called by {@link ShipPlacer} and
- * {@link HeatmapCreator}.
+ * {@link HeatMapCreator}.
  *
  * @author Benjamin Kasten
  */
 public class InvalidPointsHandler {
-    private static final Logger logger = LogManager.getLogger();
-
     AI ai;
 
     public InvalidPointsHandler(AI ai) {
@@ -36,20 +29,18 @@ public class InvalidPointsHandler {
      * @return the updated collection of invalid points of this client
      */
 
-    public LinkedList<Point2D> createInvalidPointsOne(int clientId) {
-
+    public List<Point2D> createInvalidPointsOne(int clientId) {
         ai.getInvalidPointsAll().putIfAbsent(clientId, null);
 
-        LinkedList<Point2D> sortedSunkPointsTC = ai.getSortedSunk().get(clientId);
+        List<Point2D> sortedSunkPointsTC = ai.getSortedSunk().get(clientId);
 
-        LinkedList<Point2D> temp = new LinkedList<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
+        List<Point2D> temp = new LinkedList<>(addSurroundingPointsToUsedPoints(sortedSunkPointsTC));
 
         for (Shot s : ai.getMisses()) {
             if (s.getClientId() == clientId) {
                 temp.add(new Point2D(s.getTargetField().getX(), s.getTargetField().getY()));
             }
         }
-
         return temp;
     }
 
@@ -62,8 +53,8 @@ public class InvalidPointsHandler {
      * @param shipPos The positions of one ship.
      * @return The set of invalid points around one ship.
      */
-    public LinkedHashSet<Point2D> addSurroundingPointsToUsedPoints(List<Point2D> shipPos) {
-        LinkedHashSet<Point2D> temp = new LinkedHashSet<>();
+    public Set<Point2D> addSurroundingPointsToUsedPoints(List<Point2D> shipPos) {
+        Set<Point2D> temp = new LinkedHashSet<>();
         for (Point2D point : shipPos) {
             int x = point.getX();
             int y = point.getY();
@@ -82,7 +73,7 @@ public class InvalidPointsHandler {
             temp.add(new Point2D(x, y + 1));
             temp.add(new Point2D(x, y - 1));
         }
-        temp.removeIf(p -> p.getX() < 0 | p.getY() < 0);
+        temp.removeIf(p -> p.getX() < 0 || p.getY() < 0);
         return temp;
     }
 }

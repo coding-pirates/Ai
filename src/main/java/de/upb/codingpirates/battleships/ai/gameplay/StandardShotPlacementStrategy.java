@@ -1,11 +1,13 @@
 package de.upb.codingpirates.battleships.ai.gameplay;
 
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.Lists;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,64 +18,61 @@ import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.Shot;
 import de.upb.codingpirates.battleships.ai.util.*;
 
+import static java.util.stream.Collectors.toList;
+
 public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
 
     RANDOM(1) {
+        private Client selectRandomOpponent(final AI ai) {
+            final Map<Integer, List<Point2D>> sortedHits = new HitsHandler(ai).sortTheHits();
+
+            final List<Client> remainingOpponents =
+                ai.getClientArrayList()
+                    .stream()
+                    .filter(client -> client.getId() != ai.getAiClientId())
+                    .filter(client -> sortedHits.get(client.getId()).size() != ai.getSizeOfPointsToHit())
+                    .collect(toList());
+            return remainingOpponents.get(RAND.nextInt(remainingOpponents.size()));
+        }
+
         @Override
         public Collection<Shot> calculateShots(final AI ai, final int shotCount) {
-            RandomPointCreator randomPointCreator = new RandomPointCreator(ai.getConfiguration());
-            int shotClientId;
+            final int targetOpponentId = selectRandomOpponent(ai).getId();
 
-            Map<Integer, LinkedList<Point2D>> sortedHIts = new HitsHandler(ai).sortTheHits();
-
-            while (true) {
-                ArrayList<Client> client = new ArrayList<>(ai.getClientArrayList());
-                Collections.shuffle(client); //random target
-                if (sortedHIts.get(client.get(0).getId()).size() == ai.getSizeOfPointsToHit()) {
-                    continue;
-                }
-                if (client.get(0).getId() != ai.getAiClientId()) {
-                    shotClientId = client.get(0).getId();
-                    LOGGER.info(Markers.AI_SHOT_PLACER, "Shooting on client with id: {} ", shotClientId);
-                    break;
-                }
-            }
-
-            ArrayList<Shot> myShots = new ArrayList<>();
+            final List<Shot> myShots = new ArrayList<>(shotCount);
 
             //placing the shots randomly until the max of shots is not reached
             //all shots will be placed on the field of only one opponents field(other client)
             int i = 0;
             while (i < shotCount) {
-                Point2D aimPoint = randomPointCreator.getRandomPoint2D();
+                Point2D aimPoint = new RandomPointCreator(ai.getConfiguration()).getRandomPoint2D();
 
-                Shot targetShot = new Shot(shotClientId, aimPoint);
-                boolean alreadyChoosen = false;
-
+                Shot targetShot = new Shot(targetOpponentId, aimPoint);
+                boolean alreadyChosen = false;
 
                 for (Shot s : ai.getRequestedShots()) {
                     if (PositionComparator.compareShots(s, targetShot)) {
-                        alreadyChoosen = true;
+                        alreadyChosen = true;
                         break;
                     }
                 }
-                if (alreadyChoosen) continue;
+                if (alreadyChosen) continue;
 
                 for (Shot s : ai.getHits()) {
                     if (PositionComparator.compareShots(s, targetShot)) {
-                        alreadyChoosen = true;
+                        alreadyChosen = true;
                         break;
                     }
                 }
-                if (alreadyChoosen) continue;
+                if (alreadyChosen) continue;
 
                 for (Shot s : ai.getMisses()) {
                     if (PositionComparator.compareShots(s, targetShot)) {
-                        alreadyChoosen = true;
+                        alreadyChosen = true;
                         break;
                     }
                 }
-                if (alreadyChoosen) continue;
+                if (alreadyChosen) continue;
 
                 myShots.add(targetShot);
                 ai.requestedShots.add(targetShot);
@@ -112,23 +111,22 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
         public Collection<Shot> calculateShots(final AI ai, final int shotCount) {
             Collection<Shot> surroundingInv = new HashSet<>();
 
-
-            Map<Integer, LinkedList<Point2D>> sortedHIts = new HitsHandler(ai).sortTheHits();
+            Map<Integer, List<Point2D>> sortedHIts = new HitsHandler(ai).sortTheHits();
             SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
 
-            Map<Integer, LinkedList<LinkedList<Point2D>>> connectedNotClean = new HashMap<>();
+            Map<Integer, List<List<Point2D>>> connectedNotClean = new HashMap<>();
             for (Client c : ai.getClientArrayList()) {
-                LinkedList<LinkedList<Point2D>> temp = sunkenShipsHandler.findConnectedPoints(sortedHIts.get(c.getId()), c.getId());
+                List<List<Point2D>> temp = sunkenShipsHandler.findConnectedPoints(sortedHIts.get(c.getId()), c.getId());
                 connectedNotClean.put(c.getId(), temp);
             }
 
 
             //connected collection includes all related hits which are valid for use in next step
-            Map<Integer, LinkedList<LinkedList<Point2D>>> connected = new HashMap<>();
+            Map<Integer, List<List<Point2D>>> connected = new HashMap<>();
 
             boolean isValid;
 
-            for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connectedNotClean.entrySet()) {
+            for (Entry<Integer, List<List<Point2D>>> entry : connectedNotClean.entrySet()) {
 
                 //replace with idDead attribute of clients could be useful
                 //shooting on a field of a dead player has no sense
@@ -140,8 +138,8 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
                     continue;
                 }
                 int id = entry.getKey();
-                LinkedList<LinkedList<Point2D>> clean = new LinkedList<>();
-                for (LinkedList<Point2D> l : entry.getValue()) {
+                List<List<Point2D>> clean = new LinkedList<>();
+                for (List<Point2D> l : entry.getValue()) {
                     isValid = true;
                     for (Point2D p : l) {
                         for (Shot s : ai.getSunk()) {
@@ -154,8 +152,8 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
                     }
 
                     if (isValid) {
-                        ArrayList<Point2D> temp = new ArrayList<>(l);
-                        ArrayList<Point2D> temp1 = new ArrayList<>(new InvalidPointsHandler(ai).addSurroundingPointsToUsedPoints(temp));
+                        List<Point2D> temp = new ArrayList<>(l);
+                        List<Point2D> temp1 = new ArrayList<>(new InvalidPointsHandler(ai).addSurroundingPointsToUsedPoints(temp));
                         for (Point2D p : temp1) {
                             surroundingInv.add(new Shot(id, p));
                         }
@@ -166,68 +164,52 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             }
 
             //pots is the map which stores the potential surrounding hits for each opponent
-            Map<Integer, LinkedList<Set<Shot>>> pots = new HashMap<>();
-            for (Map.Entry<Integer, LinkedList<LinkedList<Point2D>>> entry : connected.entrySet()) {
-
-                if (entry.getKey() == ai.getAiClientId()) {
+            Map<Integer, List<Set<Shot>>> pots = new HashMap<>();
+            for (Entry<Integer, List<List<Point2D>>> entry : connected.entrySet()) {
+                if (entry.getKey() == ai.getAiClientId())
                     continue;
-                }
-
-                LinkedList<Set<Shot>> temp = new LinkedList<>();
+                List<Set<Shot>> temp = new LinkedList<>();
                 int id = entry.getKey();
 
-                for (LinkedList<Point2D> l : entry.getValue()) {
-
+                for (List<Point2D> l : entry.getValue()) {
                     Set<Shot> temp2 = new HashSet<>();
                     for (Point2D p : l) {
-                        //west
                         Shot west = new Shot(id, new Point2D(p.getX() - 1, p.getY()));
-
-                        if (checkValid(ai, west)) {
+                        if (checkValid(ai, west))
                             temp2.add(west);
-                        }
-                        //south
+
                         Shot south = new Shot(id, new Point2D(p.getX(), p.getY() - 1));
-
-                        if (checkValid(ai, south)) {
+                        if (checkValid(ai, south))
                             temp2.add(south);
-                        }
-                        //east
+
                         Shot east = new Shot(id, new Point2D(p.getX() + 1, p.getY()));
-
-                        if (checkValid(ai, east)) {
+                        if (checkValid(ai, east))
                             temp2.add(east);
-                        }
-                        //north
+
                         Shot north = new Shot(id, new Point2D(p.getX(), p.getY() + 1));
-
-                        if (checkValid(ai, north)) {
+                        if (checkValid(ai, north))
                             temp2.add(north);
-                        }
                     }
-                    if (!temp2.isEmpty()) {
+                    if (!temp2.isEmpty())
                         temp.add(temp2);
-                    }
                 }
 
-                if (!temp.isEmpty()) {
+                if (!temp.isEmpty())
                     pots.put(id, temp);
-                }
             }
 
 
             Collection<Shot> myShots = new ArrayList<>();
 
             //add possible shots myShots
-            for (Map.Entry<Integer, LinkedList<Set<Shot>>> entry : pots.entrySet()) {
+            for (Entry<Integer, List<Set<Shot>>> entry : pots.entrySet()) {
                 for (Set<Shot> l : entry.getValue()) {
                     for (Shot s : l) {
                         myShots.add(s);
                         LOGGER.debug("Added shot {} to myShots", s);
                         ai.requestedShots.add(s);
-                        if (myShots.size() == ai.getConfiguration().getShotCount()) {
+                        if (myShots.size() == ai.getConfiguration().getShotCount())
                             return myShots;
-                        }
                     }
                 }
             }
@@ -294,16 +276,16 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
         public Collection<Shot> calculateShots(final AI ai, final int shotCount) {
             for (Client c : ai.getClientArrayList()) {
                 InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(ai);
-                LinkedList<Point2D> inv = invalidPointsHandler.createInvalidPointsOne(c.getId());
+                List<Point2D> inv = invalidPointsHandler.createInvalidPointsOne(c.getId());
                 ai.addPointsToInvalid(inv, c.getId());
             }
 
-            HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-            ai.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
+            HeatMapCreator heatmapCreator = new HeatMapCreator(ai);
+            ai.setHeatMapAllClients(heatmapCreator.createHeatMapAllClients());
             //valid targets are the clients which are connected and can be targets for firing shots
-            Map<Integer, LinkedList<Integer>> validTargets = new HashMap<>();
+            Map<Integer, List<Integer>> validTargets = new HashMap<>();
             //search for valid targets: all clients which are not this ai and have ships and have less invalid points than the field has points
-            for (Map.Entry<Integer, LinkedList<Integer>> entry : ai.getAllSunkenShipIds().entrySet()) {
+            for (Entry<Integer, List<Integer>> entry : ai.getAllSunkenShipIds().entrySet()) {
                 if (!(ai.getInvalidPointsAll().get(entry.getKey()).size() == (ai.getConfiguration().getWidth() * ai.getConfiguration().getHeight())
                         | entry.getValue().size() == ai.getConfiguration().getShips().size() | entry.getKey() == ai.getAiClientId())) {
                     validTargets.put(entry.getKey(), entry.getValue());
@@ -312,12 +294,12 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
 
 
             //allHeatVal is the collection of all valid points of all clients and those heat value
-            LinkedList<Triple<Integer, Point2D, Double>> allHeatVal = Lists.newLinkedList();
+            List<Triple<Integer, Point2D, Double>> allHeatVal = Lists.newLinkedList();
 
             //using the class Triple store the triple in allHeatVal if the target is valid
             //Triple objects can be compared using the comparator interface
             //for use of class Triple see the nested for loops
-            for (Map.Entry<Integer, Double[][]> entry : ai.getHeatMapAllClients().entrySet()) {
+            for (Entry<Integer, Double[][]> entry : ai.getHeatMapAllClients().entrySet()) {
                 int clientId = entry.getKey();
                 if (!validTargets.containsKey(clientId)) continue;
                 for (int i = 0; i < entry.getValue().length; i++) {
@@ -360,7 +342,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
 
                 boolean valid = true;
 
-                int clientId = t.getVal1(); //client id
+                int clientId = t.getVal1();
                 Point2D p = t.getVal2(); //heat point
                 double fieldVal = t.getVal3(); //heat value
 
@@ -394,6 +376,8 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
     private final int difficultyLevel;
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    protected static final Random RAND = new Random();
 
     StandardShotPlacementStrategy(final int difficultyLevel) {
         this.difficultyLevel = difficultyLevel;

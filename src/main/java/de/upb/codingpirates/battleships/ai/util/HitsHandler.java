@@ -8,16 +8,13 @@ import de.upb.codingpirates.battleships.logic.Shot;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * Helper Class which handles and sorts the hits.
  *
  * @author Benjamin Kasten
- * @see de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer
  * @see SunkenShipsHandler
  */
 public class HitsHandler {
@@ -39,14 +36,14 @@ public class HitsHandler {
      *
      * @return The map with ordered sunks
      */
-    public HashMap<Integer, LinkedList<Point2D>> sortTheHits() {
+    public HashMap<Integer, List<Point2D>> sortTheHits() {
 
-        HashMap<Integer, LinkedList<Point2D>> sortedHits = Maps.newHashMap();
+        HashMap<Integer, List<Point2D>> sortedHits = Maps.newHashMap();
 
         for (Shot i : ai.getHits()) {
             int clientId = i.getClientId();
             boolean success = false;
-            for (Map.Entry<Integer, LinkedList<Point2D>> entry : sortedHits.entrySet()) {
+            for (Entry<Integer, List<Point2D>> entry : sortedHits.entrySet()) {
                 if (entry.getKey() == clientId) {
                     entry.getValue().add(i.getTargetField());
                     success = true;

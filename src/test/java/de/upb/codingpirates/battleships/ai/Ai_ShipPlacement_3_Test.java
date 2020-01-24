@@ -41,7 +41,7 @@ public class Ai_ShipPlacement_3_Test {
     }
 
     @Test
-    public void place_ships_test() throws IOException {
+    public void place_ships_test() {
         ai.placeShips();
 
         assertEquals(ai.getPositions().size(), ai.getConfiguration().getShips().values().size());

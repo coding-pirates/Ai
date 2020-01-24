@@ -5,7 +5,7 @@ import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.logger.Markers;
-import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
+import de.upb.codingpirates.battleships.ai.util.HeatMapCreator;
 import de.upb.codingpirates.battleships.ai.util.MissesFinder;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.ai.util.Triple;
@@ -72,12 +72,12 @@ public class AI implements AutoCloseable,
     Map<Integer, Integer> points = new HashMap<>(); //points of the clients
 
     Collection<Shot> sunk = new ArrayList<>(); //sunks which are updated every round
-    Map<Integer, LinkedList<Point2D>> sortedSunk = new HashMap<>(); //sunks sorted by their clients
-    Map<Integer, LinkedList<Integer>> allSunkenShipIds = new HashMap<>(); //sunk ship ids by their clients
+    Map<Integer, List<Point2D>> sortedSunk = new HashMap<>(); //sunks sorted by their clients
+    Map<Integer, List<Integer>> allSunkenShipIds = new HashMap<>(); //sunk ship ids by their clients
 
-    Map<Integer, Double[][]> heatmapAllClients = new HashMap<>(); //heatmaps
+    Map<Integer, Double[][]> heatMapAllClients = new HashMap<>();
 
-    Map<Integer, LinkedList<Point2D>> invalidPointsAll = new HashMap<>(); //invalid points per client id
+    Map<Integer, List<Point2D>> invalidPointsAll = new HashMap<>(); //invalid points per client id
 
     Collection<Shot> misses = new ArrayList<>(); //all misses of this player
 
@@ -444,8 +444,8 @@ public class AI implements AutoCloseable,
         updateValues();
         if (shotPlacementStrategy == StandardShotPlacementStrategy.HEAT_MAP) {
             logger.info(Markers.AI, "Calculate heatmap in finished state:");
-            HeatmapCreator heatmapCreator = new HeatmapCreator(this);
-            this.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
+            HeatMapCreator heatmapCreator = new HeatMapCreator(this);
+            this.setHeatMapAllClients(heatmapCreator.createHeatMapAllClients());
         }
         System.out.printf("Own Id: %d%n", this.getAiClientId());
         System.out.println("Points: ");
@@ -512,11 +512,11 @@ public class AI implements AutoCloseable,
         return this.clientArrayList;
     }
 
-    public void setSortedSunk(HashMap<Integer, LinkedList<Point2D>> sortedSunk) {
+    public void setSortedSunk(Map<Integer, List<Point2D>> sortedSunk) {
         this.sortedSunk = sortedSunk;
     }
 
-    public Map<Integer, LinkedList<Point2D>> getSortedSunk() {
+    public Map<Integer, List<Point2D>> getSortedSunk() {
         return this.sortedSunk;
     }
 
@@ -561,7 +561,7 @@ public class AI implements AutoCloseable,
         return this.sunk;
     }
 
-    public Map<Integer, LinkedList<Point2D>> getInvalidPointsAll() {
+    public Map<Integer, List<Point2D>> getInvalidPointsAll() {
         return this.invalidPointsAll;
     }
 
@@ -579,18 +579,18 @@ public class AI implements AutoCloseable,
     }
 
     public void setHeatMapAllClients(Map<Integer, Double[][]> heatMap) {
-        this.heatmapAllClients = heatMap;
+        this.heatMapAllClients = heatMap;
     }
 
     public Map<Integer, Double[][]> getHeatMapAllClients() {
-        return this.heatmapAllClients;
+        return this.heatMapAllClients;
     }
 
-    public void setSunkenShipIdsAll(Map<Integer, LinkedList<Integer>> sunkenIds) {
+    public void setSunkenShipIdsAll(Map<Integer, List<Integer>> sunkenIds) {
         this.allSunkenShipIds = sunkenIds;
     }
 
-    public Map<Integer, LinkedList<Integer>> getAllSunkenShipIds() {
+    public Map<Integer, List<Integer>> getAllSunkenShipIds() {
         return this.allSunkenShipIds;
     }
 
@@ -603,7 +603,7 @@ public class AI implements AutoCloseable,
         this.configuration = configuration;
     }
 
-    public void setAllHeatVal(LinkedList<Triple<Integer, Point2D, Double>> allHeatVal) {
+    public void setAllHeatVal(List<Triple<Integer, Point2D, Double>> allHeatVal) {
         this.allHeatVal = allHeatVal;
     }
 

@@ -52,7 +52,7 @@ public class AiShotPlacement_1_Test {
         temp2.add(miss1);
         temp2.add(miss2);
         temp2.add(miss3);
-        ai.setMisses(temp2); //todo getter für misses fehlt
+        ai.setMisses(temp2);
 
         ai.setConfiguration(
                 new Configuration.Builder()
@@ -63,7 +63,7 @@ public class AiShotPlacement_1_Test {
     }
 
     @Test
-    public void place_shots_level_1_test() throws IOException {
+    public void place_shots_level_1_test() {
         ai.placeShots();
     }
 }

@@ -1,7 +1,7 @@
 package de.upb.codingpirates.battleships.ai;
 
 import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
-import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
+import de.upb.codingpirates.battleships.ai.util.HeatMapCreator;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,7 +18,6 @@ public class Ai_Heatmap_Test {
 
     @BeforeAll
     public static void create() {
-        //shipConfig erstellen
         Map<Integer, ShipType> shipconfig = new HashMap<>();
         //ship1 id = 1
         ArrayList<Point2D> pos1 = new ArrayList<>();
@@ -119,14 +118,14 @@ public class Ai_Heatmap_Test {
     @Test
     @Disabled
     public void create_heat_map_all_clients_Test() {
-        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        ai.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
+        HeatMapCreator heatmapCreator = new HeatMapCreator(ai);
+        ai.setHeatMapAllClients(heatmapCreator.createHeatMapAllClients());
     }
 
     @Test
     @Disabled
     public void create_Heatmap_one_Client_Test() {
-        HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
-        heatmapCreator.createHeatmapOneClient(3);
+        HeatMapCreator heatmapCreator = new HeatMapCreator(ai);
+        heatmapCreator.createHeatMapOneClient(3);
     }
 }

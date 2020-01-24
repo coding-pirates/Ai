@@ -1,6 +1,5 @@
 package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
@@ -105,7 +104,7 @@ public class Ai_SunkenShipsHandler_Test {
     @Test
     public void sort_The_Sunk_Test() {
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        HashMap<Integer, LinkedList<Point2D>> sortedSunk = sunkenShipsHandler.sortTheSunk();
+        Map<Integer, List<Point2D>> sortedSunk = sunkenShipsHandler.sortTheSunk();
         assertEquals(sortedSunk.get(1).size(), 12);
         assertEquals(sortedSunk.get(2).size(), 5);
     }
@@ -116,7 +115,7 @@ public class Ai_SunkenShipsHandler_Test {
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
         assertEquals(3, ai.getSortedSunk().size());
         ai.setSunkenShipIdsAll(sunkenShipsHandler.findSunkenShipIdsAll());
-        Map<Integer, LinkedList<Integer>> sunken = ai.getAllSunkenShipIds();
+        Map<Integer, List<Integer>> sunken = ai.getAllSunkenShipIds();
         assertNotNull(sunken);
         assertEquals(sunken.size(), 3);
         assertEquals(sunken.get(1).size(), 4);
