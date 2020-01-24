@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AiShotPlacement_3_Test {
-    static AI ai = new AI("AiPlayer", 3);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.HEAT_MAP);
 
     @BeforeAll
     public static void create() {

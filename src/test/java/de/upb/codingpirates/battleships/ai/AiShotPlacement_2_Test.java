@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.logic.Client;
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class AiShotPlacement_2_Test {
-    static AI ai = new AI("AiPlayer", 2);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.HUNT_AND_TARGET);
 
     @BeforeAll
     public static void create() {

@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
@@ -13,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Ai_Heatmap_Test {
-    static AI ai = new AI("AiPlayer", 3);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.HEAT_MAP);
 
     @BeforeAll
     public static void create() {
@@ -117,7 +118,7 @@ public class Ai_Heatmap_Test {
 
     @Test
     @Disabled
-    public void create_heatmap_all_clients_Test() {
+    public void create_heat_map_all_clients_Test() {
         HeatmapCreator heatmapCreator = new HeatmapCreator(ai);
         ai.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
     }

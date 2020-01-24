@@ -1,13 +1,12 @@
 package de.upb.codingpirates.battleships.ai;
 
-import de.upb.codingpirates.battleships.ai.AI;
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,7 +17,7 @@ import java.util.Map;
  * Tests if also ships positions with high negative values can be placed.
  */
 public class Ai_ShipPlacement_1_Test {
-    static AI ai = new AI("AiPlayer", 1);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.RANDOM);
 
     @BeforeAll
     public static void create() {
@@ -47,7 +46,7 @@ public class Ai_ShipPlacement_1_Test {
     }
 
     @Test
-    public void place_ships_test() throws IOException {
+    public void place_ships_test() {
         ai.placeShips();
     }
 }

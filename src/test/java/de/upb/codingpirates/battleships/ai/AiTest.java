@@ -1,6 +1,7 @@
 package de.upb.codingpirates.battleships.ai;
 
 import com.google.common.collect.Lists;
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -11,7 +12,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AiTest {
-    static AI ai = new AI("AiPlayer", 1);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.RANDOM);
 
     @BeforeAll
     public static void create() {
@@ -98,7 +99,7 @@ public class AiTest {
         ai.setAiClientId(999);
 
         SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
-        //Has to be set before creating heatmaps
+        //Has to be set before creating heat maps
         ai.setConfiguration(new Configuration.Builder()
                 .width(7)
                 .height(7)

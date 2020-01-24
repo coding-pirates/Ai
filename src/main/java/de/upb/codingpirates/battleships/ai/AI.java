@@ -2,7 +2,8 @@ package de.upb.codingpirates.battleships.ai;
 
 import com.google.common.annotations.VisibleForTesting;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
-import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacer;
+import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacementStrategy;
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.logger.Markers;
 import de.upb.codingpirates.battleships.ai.util.HeatmapCreator;
 import de.upb.codingpirates.battleships.ai.util.MissesFinder;
@@ -90,16 +91,14 @@ public class AI implements AutoCloseable,
     @Nonnull
     private final String name;
 
-    private final int difficultyLevel;
+    private final ShotPlacementStrategy shotPlacementStrategy;
 
     private static final Logger logger = LogManager.getLogger();
 
-    /**
-     * Constructor which is needed for register this ai instance as message listener.
-     */
-    public AI(@Nonnull final String name, final int difficultyLevel) {
-        this.name = name;
-        this.difficultyLevel = difficultyLevel;
+    public AI(@Nonnull final String name, final ShotPlacementStrategy shotPlacementStrategy) {
+        this.name                  = name;
+        this.shotPlacementStrategy = shotPlacementStrategy;
+
         ListenerHandler.registerListener(this);
     }
 
@@ -210,8 +209,12 @@ public class AI implements AutoCloseable,
             port = args[1];
 
         }
-
-        final AI ai = new AI(name, difficulty);
+        final ShotPlacementStrategy shotPlacementStrategy =
+            ShotPlacementStrategy
+                .fromDifficultyLevel(difficulty)
+                .orElseThrow(
+                    () -> new RuntimeException(String.format(Locale.ROOT, "Invalid difficultyLevel: '%d'", difficulty)));
+        final AI ai = new AI(name, shotPlacementStrategy);
 
         ai.connect(host, Integer.parseInt(port));
 
@@ -236,7 +239,7 @@ public class AI implements AutoCloseable,
     }
 
     /**
-     * Is called every round for placing shots. Using a {@link ShotPlacer} object and the difficulty level,
+     * Is called every round for placing shots. Using a object and the difficulty level,
      * the method calls the matching method for shot placement and sends the result (the
      * calculated shots) to the server using the {@link #sendMessage} method.
      * <p>
@@ -246,25 +249,10 @@ public class AI implements AutoCloseable,
      * case 3: (extended) heatmap
      */
     public void placeShots() {
-        ShotPlacer shotPlacement = new ShotPlacer(this);
-        Collection<Shot> myShots = Collections.emptyList();
-        switch (difficultyLevel) {
-            case 1:
-                myShots = shotPlacement.placeShots_1(this.getConfiguration().getShotCount());
-                break;
-            case 2:
-                myShots = shotPlacement.placeShots_2();
-                break;
-            case 3:
-                myShots = shotPlacement.placeShots_3();
-                break;
-            default: {
-                logger.error("Something went wrong. Start again.");
-                this.close();
-            }
+        final Collection<Shot> shots = shotPlacementStrategy.calculateShots(this, getConfiguration().getShotCount());
 
-        }
-        sendMessage(RequestBuilder.shotsRequest(myShots));
+        logger.info("Calculated the following shots: {}", shots);
+        sendMessage(RequestBuilder.shotsRequest(shots));
 
     }
 
@@ -405,7 +393,7 @@ public class AI implements AutoCloseable,
         for (Client c : message.getClientList()) {
             logger.info(Markers.AI, "Client name {}, client id {}", c.getName(), c.getId());
         }
-        logger.debug(Markers.AI, "Own id is {}, selected difficulty level is {}.", getAiClientId(), getDifficultyLevel());
+        logger.debug(Markers.AI, "Own id is {}, selected ShotPlacementStrategy is {}.", getAiClientId(), shotPlacementStrategy.getName());
         configuration = message.getConfiguration();
         for (Map.Entry<Integer, ShipType> entry : configuration.getShips().entrySet()) {
             sizeOfPointsToHit = sizeOfPointsToHit + entry.getValue().getPositions().size();
@@ -423,7 +411,7 @@ public class AI implements AutoCloseable,
         increaseRoundCounter();
         updateValues();
 
-        logger.debug("Place shots with difficulty level {}", this.getDifficultyLevel());
+        logger.debug("Placing shots with ShotPlacementStrategy '{}'.", shotPlacementStrategy.getName());
         placeShots();
     }
 
@@ -454,7 +442,7 @@ public class AI implements AutoCloseable,
     public void onFinishNotification(FinishNotification message, int clientId) {
         logger.info(Markers.AI, "------------------------------FinishNotification------------------------------");
         updateValues();
-        if (this.getDifficultyLevel() == 3) {
+        if (shotPlacementStrategy == StandardShotPlacementStrategy.HEAT_MAP) {
             logger.info(Markers.AI, "Calculate heatmap in finished state:");
             HeatmapCreator heatmapCreator = new HeatmapCreator(this);
             this.setHeatMapAllClients(heatmapCreator.createHeatmapAllClients());
@@ -604,10 +592,6 @@ public class AI implements AutoCloseable,
 
     public Map<Integer, LinkedList<Integer>> getAllSunkenShipIds() {
         return this.allSunkenShipIds;
-    }
-
-    public int getDifficultyLevel() {
-        return this.difficultyLevel;
     }
 
     public Configuration getConfiguration() {

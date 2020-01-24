@@ -1,5 +1,7 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacementStrategy;
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.util.SunkenShipsHandler;
 import de.upb.codingpirates.battleships.logic.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -12,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class Ai_SunkenShipsHandler_Test {
-    static AI ai = new AI("AiPlayer", 3);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.HEAT_MAP);
 
     @BeforeAll
     public static void create() {

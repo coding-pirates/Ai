@@ -7,7 +7,7 @@ import org.apache.logging.log4j.MarkerManager;
 public final class Markers {
 
     public final static Marker AI                      = MarkerManager.getMarker("AI");
-    public final static Marker AI_SHORT_PLACER         = MarkerManager.getMarker("AI ShotPlacer");
+    public final static Marker AI_SHOT_PLACER          = MarkerManager.getMarker("AI ShotPlacer");
     public final static Marker AI_MISSES_FINDER        = MarkerManager.getMarker("AI MissesFinder");
     public final static Marker AI_SUNKEN_SHIPS_HANDLER = MarkerManager.getMarker("AI SunkenShipsHandler");
     public final static Marker AI_SHIP_PLACER          = MarkerManager.getMarker("AI ShipPlacer");

@@ -1,5 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
+import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
 import de.upb.codingpirates.battleships.logic.Configuration;
 import de.upb.codingpirates.battleships.logic.Point2D;
 import de.upb.codingpirates.battleships.logic.ShipType;
@@ -18,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests if Ship placement also works with ships with no (0,0) point.
  */
 public class Ai_ShipPlacement_3_Test {
-    static AI ai = new AI("AiPlayer", 1);
+    static AI ai = new AI("AiPlayer", StandardShotPlacementStrategy.RANDOM);
 
     @BeforeAll
     public static void create() {
