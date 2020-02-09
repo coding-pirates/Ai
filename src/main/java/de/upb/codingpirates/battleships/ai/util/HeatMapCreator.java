@@ -61,6 +61,37 @@ public final class HeatMapCreator {
      * @return a heatmap for the client
      */
     public double[][] createHeatMapOneClient(final int clientId) {
+
+        List<Point2D> thisHits = new HitsHandler(this.ai).sortTheHits().get(clientId); // die hits des clients
+        List<List<Point2D>> thisConHits = new SunkenShipsHandler(this.ai).findConnectedPoints(thisHits); // connected hits
+        List<List<Point2D>> thisConSunk = new SunkenShipsHandler(this.ai).getSunksOfHits(thisConHits, clientId); //connected sunks
+
+        boolean focusedMode = false;
+
+        System.out.println("Check for focused mode: ");
+        System.out.println("All hits:" + thisHits);
+        System.out.println("This conSunk" + thisConSunk);
+        if (!(thisConHits.size() == thisConSunk.size())) {
+            for (Point2D p : thisHits) {
+                if (thisConSunk.isEmpty()) {
+                    focusedMode = true;
+                    break;
+                }
+                for (List<Point2D> l : thisConSunk) {
+                    for (Point2D k : l) {
+                        if (!PositionComparator.comparePoints(p, k)) {
+                            focusedMode = true;
+                            break;
+                        }
+                    }
+                    if (focusedMode) break;
+                }
+                if (focusedMode) break;
+            }
+        }
+        System.out.println("Focused Mode: " + focusedMode);
+
+
         int[][] heatMap = new int[ai.getConfiguration().getHeight()][ai.getConfiguration().getWidth()];
 
         List<Point2D> invalidPointsThisClient = ai.getInvalidPointsAll().get(clientId);
@@ -88,14 +119,14 @@ public final class HeatMapCreator {
                 int maxX = Collections.max(xValues);
                 int maxY = Collections.max(yValues);
 
-                int initMaxX = Collections.max(xValues); //the inital max x value (needed for shifting)
+                int initMaxX = Collections.max(xValues); //the initial max x value (needed for shifting)
 
                 while (maxY < ai.getConfiguration().getHeight()) {
                     while (maxX < ai.getConfiguration().getWidth()) {
                         boolean valid = true;
                         //check if cShip fits on the field
                         for (Point2D p : cShip) {
-                            for (Point2D s : invalidPointsThisClient) { //each invalid point for this ckient
+                            for (Point2D s : invalidPointsThisClient) { //each invalid point for this client
                                 if (p.getX() == s.getX() & p.getY() == s.getY()) {
                                     //is not valid for next steps if one point is invalid
                                     valid = false;
@@ -103,6 +134,30 @@ public final class HeatMapCreator {
                                 }
                             }
                             if (!valid) break;
+                        }
+
+                        //check focusedMode
+
+                        if (focusedMode) {
+                            boolean included = false;
+                            for (List<Point2D> l : thisConHits) {
+                                int counter = 0;
+                                for (Point2D p : l) {
+                                    for (Point2D k : cShip) {
+                                        if (PositionComparator.comparePoints(p, k)) {
+                                            counter += 1;
+                                        }
+                                    }
+                                }
+                                if (counter == l.size()) {
+                                    included = true;
+                                    break;
+                                }
+
+                            }
+                            if (!included) {
+                                valid = false;
+                            }
                         }
                         if (valid) {
                             //increment the array positions by 1 if positions are valid

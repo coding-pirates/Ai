@@ -196,7 +196,9 @@ public class AI implements AutoCloseable,
             //if arguments were passed, use them
             if (args.length != 4) {
                 System.err.println("Use this order: host port difficultyLevel name");
-                System.exit(1);
+                timer.purge();
+                timer.cancel();
+                return;
             }
             name = args[3];
             difficulty = Integer.parseInt(args[2]);
@@ -232,7 +234,7 @@ public class AI implements AutoCloseable,
     public void connect(@Nonnull final String host, final int port) {
         tcpConnector.connect(host, port, ()->sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)),() -> {
             logger.error("could not find server");
-            System.exit(1);
+            close();
         });
     }
 
@@ -407,7 +409,6 @@ public class AI implements AutoCloseable,
         logger.info(Markers.AI, "------------------------------GameStartNotification------------------------------");
         increaseRoundCounter();
         updateValues();
-
         logger.debug("Placing shots with ShotPlacementStrategy '{}'.", shotPlacementStrategy.getName());
         placeShots();
     }
