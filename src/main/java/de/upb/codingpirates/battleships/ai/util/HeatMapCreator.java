@@ -68,9 +68,6 @@ public final class HeatMapCreator {
 
         boolean focusedMode = false;
 
-        System.out.println("Check for focused mode: ");
-        System.out.println("This hits:" + thisHits);
-        System.out.println("This conSunk" + thisConSunk);
         if (!(thisConHits.size() == thisConSunk.size())) {
             for (Point2D p : thisHits) {
                 if (thisConSunk.isEmpty()) {
