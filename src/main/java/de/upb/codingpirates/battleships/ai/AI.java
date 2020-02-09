@@ -19,10 +19,7 @@ import de.upb.codingpirates.battleships.network.message.notification.*;
 import de.upb.codingpirates.battleships.network.message.report.ConnectionClosedReport;
 import de.upb.codingpirates.battleships.network.message.request.PlaceShipsRequest;
 import de.upb.codingpirates.battleships.network.message.request.RequestBuilder;
-import de.upb.codingpirates.battleships.network.message.response.GameJoinPlayerResponse;
-import de.upb.codingpirates.battleships.network.message.response.LobbyResponse;
-import de.upb.codingpirates.battleships.network.message.response.ServerJoinResponse;
-import de.upb.codingpirates.battleships.network.message.response.TournamentParticipantsResponse;
+import de.upb.codingpirates.battleships.network.message.response.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -59,8 +56,11 @@ public class AI implements AutoCloseable,
     private Collection<Shot> hits = new ArrayList<>();
 
     private int aiClientId;
+    //boolean isDead = false; //some problems currently occur through threads
 
     private int roundCounter = 0;
+
+    private PlayerUpdateNotification update;
 
     private Map<Integer, PlacementInfo> positions; //ship positions of Ais field
 
@@ -91,7 +91,7 @@ public class AI implements AutoCloseable,
     private static final Logger logger = LogManager.getLogger();
 
     public AI(@Nonnull final String name, final ShotPlacementStrategy shotPlacementStrategy) {
-        this.name                  = name;
+        this.name = name;
         this.shotPlacementStrategy = shotPlacementStrategy;
 
         ListenerHandler.registerListener(this);
@@ -113,85 +113,13 @@ public class AI implements AutoCloseable,
         int difficulty;
 
 
-        //interactive scanner is disabled (Endabgabe)
         if (args.length == 0) {
             //use this default config for Ai if no arguments were passed
             name = "EP" + (Math.random() * 100000);
             host = "localhost";
             port = "33100";
             difficulty = 3;
-            /*
-            System.out.println("Give this engine player a name: ");
-            while (true) {
 
-                name = new Scanner(System.in).next();
-                if (name == null) {
-                    System.err.println("The name has to be a word and cannot start with a number. Try again...");
-                    continue;
-                }
-                break;
-            }
-
-            System.out.println("The host (ip address or domain) to connect to: ");
-            while (true) {
-                host = new Scanner(System.in).next();
-                if (host == null) {
-                    System.err.println("You need a host to connect this engine player. Try again...");
-                    continue;
-                }
-                break;
-            }
-
-            System.out.println("Give me the port of the server: ");
-            while (true) {
-                port = new Scanner(System.in).next();
-                if (port == null) {
-                    System.err.println("Give me a valid port please. Try again...");
-                    continue;
-                }
-                try {
-                    Integer.parseInt(port);
-                } catch (Exception e) {
-                    System.err.println("Please type in a valid port. It has to be a number. Try again...");
-                    continue;
-                }
-                break;
-            }
-
-            System.out.println("Choose between the difficulty levels 1, 2 or 3, or type help for information about the difficulty level.");
-            while (true) {
-                String input = new Scanner(System.in).next();
-                if (input.equals("help")) {
-                    System.out.print("Explanations of the difficulty level:\n" +
-                            "1: Random: Shots will be fired randomly.\n" +
-                            "2: Hunt & Target: The main goal is to sink ships. Based on the hits, the algorithm tries to hit all surrounding fields\n" +
-                            "until the ship is sunk. If there are no hits anymore, shots will be fired randomly. Use this if points for a sunken ship are high.\n" +
-                            "3: Heatmap: Shots will be fired on the field with the highest probability. Choose this algorithm if sunk points are low\n" +
-                            "or you have only one opponent.\n");
-                    continue;
-                }
-                switch (input) {
-                    case "1": {
-                        difficulty = 1;
-                        break;
-                    }
-                    case "2": {
-                        difficulty = 2;
-                        break;
-                    }
-                    case "3": {
-                        difficulty = 3;
-                        break;
-                    }
-                    default:
-                        System.err.println("Please type in a valid level or type help for getting more information. Try again...");
-                        continue;
-                }
-                break;
-            }
-
-
-             */
         } else {
             //if arguments were passed, use them
             if (args.length != 4) {
@@ -207,10 +135,10 @@ public class AI implements AutoCloseable,
 
         }
         final ShotPlacementStrategy shotPlacementStrategy =
-            ShotPlacementStrategy
-                .fromDifficultyLevel(difficulty)
-                .orElseThrow(
-                    () -> new RuntimeException(String.format(Locale.ROOT, "Invalid difficultyLevel: '%d'", difficulty)));
+                ShotPlacementStrategy
+                        .fromDifficultyLevel(difficulty)
+                        .orElseThrow(
+                                () -> new RuntimeException(String.format(Locale.ROOT, "Invalid difficultyLevel: '%d'", difficulty)));
         final AI ai = new AI(name, shotPlacementStrategy);
 
         ai.connect(host, Integer.parseInt(port));
@@ -232,7 +160,7 @@ public class AI implements AutoCloseable,
      * @param port the server port.
      */
     public void connect(@Nonnull final String host, final int port) {
-        tcpConnector.connect(host, port, ()->sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)),() -> {
+        tcpConnector.connect(host, port, () -> sendMessage(RequestBuilder.serverJoinRequest(name, ClientType.PLAYER)), () -> {
             logger.error("could not find server");
             close();
         });
@@ -250,7 +178,6 @@ public class AI implements AutoCloseable,
      */
     public void placeShots() {
         final Collection<Shot> shots = shotPlacementStrategy.calculateShots(this, getConfiguration().getShotCount());
-
         logger.info("Calculated the following shots: {}", shots);
         sendMessage(RequestBuilder.shotsRequest(shots));
 
@@ -428,11 +355,11 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onRoundStartNotification(RoundStartNotification message, int clientId) {
+        //if (!isDead) sendMessage(RequestBuilder.playerGameStateRequest());
         logger.info(Markers.AI, "------------------------------RoundStartNotification------------------------------");
         logger.info(Markers.AI, "A player has to be hit {} times until he has lost.", this.sizeOfPointsToHit);
         logger.info(Markers.AI, "Own id is: {}", this.getAiClientId());
         updateValues();
-
         placeShots();
     }
 
@@ -460,7 +387,7 @@ public class AI implements AutoCloseable,
 
     @Override
     public void onTournamentParticipantsResponse(TournamentParticipantsResponse message, int clientId) {
-        if(!message.isParticipating()){
+        if (!message.isParticipating()) {
             close();
         }
     }
@@ -468,8 +395,6 @@ public class AI implements AutoCloseable,
     @Override
     public void onConnectionClosedReport(ConnectionClosedReport message, int clientId) {
         logger.info(Markers.AI, "------------------------------ConnectionClosedReport------------------------------");
-
-        System.exit(0);
     }
 
     @Override
@@ -494,8 +419,6 @@ public class AI implements AutoCloseable,
     public void onPauseNotification(PauseNotification message, int clientId) {
         logger.info(Markers.AI, "PauseNotification");
     }
-
-    PlayerUpdateNotification update;
 
 
     @Override

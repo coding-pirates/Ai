@@ -57,19 +57,11 @@ public class SunkenShipsHandler {
             List<List<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue());
             List<List<Point2D>> sortedSunkByPosition = getSunksOfHits(sortedHitsByPosition, clientId);
 
-
             List<Integer> sunkenShipIds = findIds(sortedSunkByPosition);
             allSunkenShipIds.put(clientId, sunkenShipIds);
-            if (sunkenShipIds.isEmpty()) {
-                logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Player {} has no sunken ships yet", clientId);
-                continue;
-            }
 
-            logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Sunken ship ids of player {} are: ", clientId);
-
-            for (int i : sunkenShipIds)
-                System.out.print(i + " ");
-            System.out.println();
+            logger.info(Markers.AI_SUNKEN_SHIPS_HANDLER, "Sunken ship ids of player {}: ", clientId);
+            System.out.println(sunkenShipIds);
         }
         return allSunkenShipIds;
     }
