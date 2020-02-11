@@ -123,7 +123,7 @@ public class AI implements AutoCloseable,
         } else {
             //if arguments were passed, use them
             if (args.length != 4) {
-                System.err.println("Use this order: host port difficultyLevel name");
+                System.err.println("Use this order: host port shotplacememtstrategy name");
                 timer.purge();
                 timer.cancel();
                 return;
