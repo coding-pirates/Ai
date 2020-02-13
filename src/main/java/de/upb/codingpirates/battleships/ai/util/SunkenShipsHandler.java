@@ -55,7 +55,23 @@ public class SunkenShipsHandler {
             used.clear();
             int clientId = entry.getKey();
             List<List<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue());
+            logger.debug(sortedHitsByPosition);
+
+            List<List<Point2D>> newListAll = new ArrayList<>();
+
+            for (List<Point2D> list : sortedHitsByPosition) {
+                ArrayList<Point2D> newList = new ArrayList<>();
+                for (Point2D p : list) {
+                    if (!newList.contains(p)) {
+                        newList.add(p);
+                    }
+                }
+                newListAll.add(newList);
+            }
+            sortedHitsByPosition = new ArrayList<>(newListAll);
+
             List<List<Point2D>> sortedSunkByPosition = getSunksOfHits(sortedHitsByPosition, clientId);
+            logger.debug(sortedSunkByPosition);
 
             List<Integer> sunkenShipIds = findIds(sortedSunkByPosition);
             allSunkenShipIds.put(clientId, sunkenShipIds);
