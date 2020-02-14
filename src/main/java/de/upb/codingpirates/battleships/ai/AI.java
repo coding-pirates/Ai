@@ -1,6 +1,8 @@
 package de.upb.codingpirates.battleships.ai;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
@@ -50,7 +52,7 @@ public class AI implements AutoCloseable,
         GameJoinPlayerResponseListener,
         ServerJoinResponseListener,
         LobbyResponseListener,
-        TournamentParticipantsResponseListener{
+        TournamentParticipantsResponseListener {
 
     private List<Client> clientArrayList = new LinkedList<>();
     private Collection<Shot> hits = new ArrayList<>();
@@ -293,6 +295,21 @@ public class AI implements AutoCloseable,
         this.setSortedSunk(sunkenShipsHandler.createSortedSunk());
     }
 
+    private void resetValues() {
+        logger.info("Clear Values");
+        this.roundCounter = 0;
+        this.hits.clear();
+        this.positions.clear();
+        this.sunk.clear();
+        this.sortedSunk.clear();
+        this.allSunkenShipIds.clear();
+        this.heatMapAllClients.clear();
+        this.invalidPointsAll.clear();
+        this.misses.clear();
+        this.requestedShotsLastRound.clear();
+        this.requestedShots.clear();
+    }
+
     // <editor-fold desc="Listeners">
     @Override
     public void onServerJoinResponse(ServerJoinResponse message, int clientId) {
@@ -381,8 +398,8 @@ public class AI implements AutoCloseable,
         for (int i : message.getWinner()) {
             System.out.println(i);
         }
-
         sendMessage(RequestBuilder.tournamentParticipantsRequest());
+        this.resetValues();
     }
 
     @Override
@@ -395,6 +412,7 @@ public class AI implements AutoCloseable,
     @Override
     public void onConnectionClosedReport(ConnectionClosedReport message, int clientId) {
         logger.info(Markers.AI, "------------------------------ConnectionClosedReport------------------------------");
+        this.resetValues();
     }
 
     @Override
@@ -424,6 +442,7 @@ public class AI implements AutoCloseable,
     @Override
     public void onTournamentFinishNotification(TournamentFinishNotification message, int clientId) {
         logger.info(Markers.AI, "TournamentFinishNotification: ");
+        this.resetValues();
     }
     // </editor-fold>
 
