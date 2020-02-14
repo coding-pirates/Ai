@@ -25,7 +25,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             Map<Integer, List<Point2D>> sortedHIts = new HitsHandler(ai).sortTheHits();
 
             while (true) {
-                List<Client> client = new ArrayList<>(ai.getClientArrayList());
+                List<Client> client = new ArrayList<>(ai.getClientList());
                 Collections.shuffle(client); //random target
                 if (sortedHIts.get(client.get(0).getId()).size() == ai.getSizeOfPointsToHit()) {
                     continue;
@@ -113,7 +113,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             SunkenShipsHandler sunkenShipsHandler = new SunkenShipsHandler(ai);
 
             Map<Integer, List<List<Point2D>>> connectedNotClean = new HashMap<>();
-            for (Client c : ai.getClientArrayList()) {
+            for (Client c : ai.getClientList()) {
                 List<List<Point2D>> temp = sunkenShipsHandler.findConnectedPoints(sortedHIts.get(c.getId()));
                 connectedNotClean.put(c.getId(), temp);
             }
@@ -214,9 +214,9 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
             //if there are not enough shots in pots, shoot random
             while (myShots.size() < ai.getConfiguration().getShotCount()) {
                 //get random shots: shuffle client list first and take first element
-                Collections.shuffle(ai.getClientArrayList());
+                Collections.shuffle(ai.getClientList());
 
-                int targetClientId = ai.getClientArrayList().get(0).getId();
+                int targetClientId = ai.getClientList().get(0).getId();
 
                 if (targetClientId != ai.getAiClientId()) {
                     Shot targetShot = new Shot(targetClientId, new RandomPointCreator(ai.getConfiguration()).getRandomPoint2D());
@@ -271,7 +271,7 @@ public enum StandardShotPlacementStrategy implements ShotPlacementStrategy {
     HEAT_MAP(3) {
         @Override
         public Collection<Shot> calculateShots(final AI ai, final int shotCount) {
-            for (Client c : ai.getClientArrayList()) {
+            for (Client c : ai.getClientList()) {
                 InvalidPointsHandler invalidPointsHandler = new InvalidPointsHandler(ai);
                 List<Point2D> inv = invalidPointsHandler.createInvalidPointsOne(c.getId());
                 ai.addPointsToInvalid(inv, c.getId());

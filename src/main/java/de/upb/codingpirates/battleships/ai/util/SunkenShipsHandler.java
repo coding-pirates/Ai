@@ -55,7 +55,6 @@ public class SunkenShipsHandler {
             used.clear();
             int clientId = entry.getKey();
             List<List<Point2D>> sortedHitsByPosition = findConnectedPoints(entry.getValue());
-            logger.debug(sortedHitsByPosition);
 
             List<List<Point2D>> newListAll = new ArrayList<>();
 
@@ -71,7 +70,6 @@ public class SunkenShipsHandler {
             sortedHitsByPosition = new ArrayList<>(newListAll);
 
             List<List<Point2D>> sortedSunkByPosition = getSunksOfHits(sortedHitsByPosition, clientId);
-            logger.debug(sortedSunkByPosition);
 
             List<Integer> sunkenShipIds = findIds(sortedSunkByPosition);
             allSunkenShipIds.put(clientId, sunkenShipIds);
@@ -89,7 +87,7 @@ public class SunkenShipsHandler {
      */
     public Map<Integer, List<Point2D>> createSortedSunk() {
         Map<Integer, List<Point2D>> sortedSunkAll = new HashMap<>();
-        for (Client c : ai.getClientArrayList()) {
+        for (Client c : ai.getClientList()) {
             List<Point2D> sortedSunkOne = new LinkedList<>();
             List<Point2D> hitsTC = new LinkedList<>();
 
@@ -407,7 +405,7 @@ public class SunkenShipsHandler {
                 sortedSunk.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
             }
         }
-        for (Client c : ai.getClientArrayList()) {
+        for (Client c : ai.getClientList()) {
             if (!sortedSunk.containsKey(c.getId())) {
                 List<Point2D> emptyList = new LinkedList<>();
                 sortedSunk.put(c.getId(), emptyList);

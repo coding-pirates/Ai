@@ -100,7 +100,7 @@ public class Ai_Heatmap_Test {
                 .width(7)
                 .height(7)
                 .build());
-        ai.setClientArrayList(clientList);
+        ai.setClientList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
 

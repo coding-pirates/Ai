@@ -101,7 +101,7 @@ public class AiTest {
                 .height(7)
                 .ships(shipconfig)
                 .build());
-        ai.setClientArrayList(clientList);
+        ai.setClientList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
     }

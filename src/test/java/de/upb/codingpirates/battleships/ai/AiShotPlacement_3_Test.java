@@ -62,7 +62,7 @@ public final class AiShotPlacement_3_Test {
         clientList.add(c4);
         clientList.add(cAi);
 
-        ai.setClientArrayList(clientList);
+        ai.setClientList(clientList);
 
 
         //sunk erstellen

@@ -51,7 +51,7 @@ public final class HitsHandler {
             if (!success)
                 sortedHits.put(clientId, new LinkedList<>(Collections.singletonList(i.getTargetField())));
         }
-        for (Client c : ai.getClientArrayList()) {
+        for (Client c : ai.getClientList()) {
             if (!sortedHits.containsKey(c.getId()))
                 sortedHits.put(c.getId(), new LinkedList<>(Collections.emptyList()));
         }

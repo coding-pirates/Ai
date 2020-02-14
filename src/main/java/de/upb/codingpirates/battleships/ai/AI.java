@@ -1,8 +1,6 @@
 package de.upb.codingpirates.battleships.ai;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import de.upb.codingpirates.battleships.ai.gameplay.ShipPlacer;
 import de.upb.codingpirates.battleships.ai.gameplay.ShotPlacementStrategy;
 import de.upb.codingpirates.battleships.ai.gameplay.StandardShotPlacementStrategy;
@@ -54,7 +52,7 @@ public class AI implements AutoCloseable,
         LobbyResponseListener,
         TournamentParticipantsResponseListener {
 
-    private List<Client> clientArrayList = new LinkedList<>();
+    private ArrayList<Client> clientList = new ArrayList<>();
     private Collection<Shot> hits = new ArrayList<>();
 
     private int aiClientId;
@@ -214,7 +212,7 @@ public class AI implements AutoCloseable,
      * @param leftPlayerID ID of the PLayer who left the Game
      */
     public void handleLeaveOfPlayer(int leftPlayerID) {
-        clientArrayList.removeIf(i -> i.getId() == leftPlayerID);
+        clientList.removeIf(i -> i.getId() == leftPlayerID);
     }
 
     /**
@@ -297,7 +295,6 @@ public class AI implements AutoCloseable,
 
     private void resetValues() {
         logger.info("Clear Values");
-        this.roundCounter = 0;
         this.hits.clear();
         this.positions.clear();
         this.sunk.clear();
@@ -342,7 +339,7 @@ public class AI implements AutoCloseable,
             sizeOfPointsToHit = sizeOfPointsToHit + entry.getValue().getPositions().size();
         }
         logger.debug("Size of points which has to be hit for loosing a game: {}", this.sizeOfPointsToHit);
-        this.setClientArrayList(message.getClientList());
+        this.setClientList(message.getClientList());
 
         logger.info(Markers.AI, "Trying to place ships");
         placeShips();
@@ -351,6 +348,7 @@ public class AI implements AutoCloseable,
     @Override
     public void onGameStartNotification(GameStartNotification message, int clientId) {
         logger.info(Markers.AI, "------------------------------GameStartNotification------------------------------");
+        this.roundCounter = 0;
         increaseRoundCounter();
         updateValues();
         logger.debug("Placing shots with ShotPlacementStrategy '{}'.", shotPlacementStrategy.getName());
@@ -451,12 +449,13 @@ public class AI implements AutoCloseable,
      *
      * @param clientList of the configuration
      */
-    public void setClientArrayList(Collection<Client> clientList) {
-        clientArrayList.addAll(clientList);
+    public void setClientList(Collection<Client> clientList) {
+        this.clientList = (ArrayList<Client>) clientList;
+
     }
 
-    public List<Client> getClientArrayList() {
-        return this.clientArrayList;
+    public ArrayList<Client> getClientList() {
+        return this.clientList;
     }
 
     public void setSortedSunk(Map<Integer, List<Point2D>> sortedSunk) {

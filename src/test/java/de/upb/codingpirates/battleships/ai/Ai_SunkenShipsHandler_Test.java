@@ -96,7 +96,7 @@ public class Ai_SunkenShipsHandler_Test {
                 .width(7)
                 .ships(shipConfig)
                 .build());
-        ai.setClientArrayList(clientList);
+        ai.setClientList(clientList);
         ai.setSunk(sunk);
         ai.setSortedSunk(sunkenShipsHandler.sortTheSunk());
     }

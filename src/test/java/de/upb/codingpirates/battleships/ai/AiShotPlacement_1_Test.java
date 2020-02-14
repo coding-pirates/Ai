@@ -28,7 +28,7 @@ public final class AiShotPlacement_1_Test {
         temp.add(client3);
         temp.add(clientAi);
 
-        ai.setClientArrayList(temp);
+        ai.setClientList(temp);
 
         //ai id festlegen
         ai.setAiClientId(999);
