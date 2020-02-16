@@ -122,16 +122,17 @@ public class AI implements AutoCloseable,
 
         } else {
             //if arguments were passed, use them
-            if (args.length != 4) {
-                System.err.println("Use this order: host port shotplacememtstrategy name");
+            if (args.length != 3) {
+                System.err.println("Use this order: <host port name> , Shotplacementstrategy will be HEATMAP (3) for tournament purpose always");
                 timer.purge();
                 timer.cancel();
                 return;
             }
-            name = args[3];
-            difficulty = Integer.parseInt(args[2]);
+            name = args[2];
             host = args[0];
             port = args[1];
+            //setting difficulty 3 for tournament release version
+            difficulty = 3;
 
         }
         final ShotPlacementStrategy shotPlacementStrategy =
